@@ -1,4 +1,4 @@
-service: castcle-triggers
+service: mongodb-triggers
 
 variablesResolutionMode: 20210326
 
@@ -58,7 +58,7 @@ provider:
   region: ${opt:region, 'us-east-1'}
   memorySize: 128
   timeout: 900
-  stackName: ${self:provider.stage}-posts-trigger
+  stackName: ${self:provider.stage}-mongodb-triggers
   logRetentionInDays: 14
   deploymentBucket:
     name: castcle-data-analytics
@@ -87,11 +87,11 @@ provider:
 
 functions:
   app:
-    name: ${self:provider.stage}-posts-trigger
+    name: ${self:provider.stage}-mongodb-trigger
     image:
       name: app_image
       command:
-        - posts.handle
+        - app.handle
     events:
       - eventBridge:
           eventBus: ${self:custom.postsEventBus.${self:provider.stage}}
