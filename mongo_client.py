@@ -3,8 +3,7 @@ from pymongo import MongoClient
 from pymongo.server_api import ServerApi
 
 local = 'local'
-mongo_uri = 'mongodb+srv://analytics-user:cAqQsy9RceXU53eo@dev-cluster.fg2e5.mongodb.net/?retryWrites=true&w=majority'
-# mongo_uri = 'mongodb://localhost:27017'
+mongo_uri = 'mongodb://localhost:27017'
 env = os.environ.get('ENV') or local
 
 print(f'ENV={env}')
