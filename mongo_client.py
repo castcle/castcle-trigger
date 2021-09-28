@@ -14,6 +14,6 @@ if env != local:
     mongo_password = os.environ.get('MONGO_PASSWORD')
     mongo_uri = f'mongodb+srv://analytics-user:{mongo_password}@{mongo_host}/?retryWrites=true&w=majority'
 
-print(f'mongo_uri={mongo_uri}')
+# print(f'mongo_uri={mongo_uri}')
 
 mongo_client = MongoClient(mongo_uri, server_api=ServerApi('1'))
