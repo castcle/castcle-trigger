@@ -1,0 +1,100 @@
+service: castcle-triggers
+
+variablesResolutionMode: 20210326
+
+plugins:
+  - serverless-stage-manager
+
+custom:
+  stages:
+    - dev
+    - staging
+    - prod
+  mongoHost:
+    dev: dev-cluster-pl-0.fg2e5.mongodb.net
+    staging: dev-cluster-pl-0.fg2e5.mongodb.net
+    prod: dev-cluster-pl-0.fg2e5.mongodb.net
+  mongoPassword:
+    dev: ${ssm:dev-data-analytics-mongodb-password}
+    staging: ${ssm:staging-data-analytics-mongodb-password}
+    prod: ${ssm:prod-data-analytics-mongodb-password}
+  securityGroup:
+    dev: sg-0a85d287510c750fb
+    staging: sg-0a676a88fdcd07038
+    prod: sg-02f9c88c7e05b1f05
+  subnetAzA:
+    dev: subnet-06dd909aac8fd1948
+    staging: subnet-07a1a18b1527f00c7
+    prod: subnet-0290592d406bccc27
+  subnetAzB:
+    dev: subnet-08688e4403d21037e
+    staging: subnet-0587b148568217c70
+    prod: subnet-0790d32929fd45c33
+  subnetAzC:
+    dev: subnet-074ee31c582c2cbfa
+    staging: subnet-0685f5c67f247769a
+    prod: subnet-03aeae9f13764217c
+  subnetAzD:
+    dev: subnet-0734c25674eded0ac
+    staging: subnet-01ebaa837f7ed8258
+    prod: subnet-0e59ee98c9d5c760e
+  subnetAzE:
+    dev: subnet-086b2062d3bfb6fa1
+    staging: subnet-0401577626c6d60e7
+    prod: subnet-03000365f0e4a2cf2
+  subnetAzF:
+    dev: subnet-0a3704862892675cb
+    staging: subnet-081ef1e25f7f56a09
+    prod: subnet-01ce362ad1c488b27
+  postsEventBus:
+    dev: arn:aws:events:us-east-1:044086777883:event-bus/aws.partner/mongodb.com/stitch.trigger/614b4cb6b23f417e5e559c3f
+    staging: arn:aws:events:us-east-1:044086777883:event-bus/aws.partner/mongodb.com/stitch.trigger/614b4cb6b23f417e5e559c3f
+    prod: arn:aws:events:us-east-1:044086777883:event-bus/aws.partner/mongodb.com/stitch.trigger/614b4cb6b23f417e5e559c3f
+
+provider:
+  name: aws
+  lambdaHashingVersion: 20201221
+  stage: ${opt:stage, 'dev'}
+  region: ${opt:region, 'us-east-1'}
+  memorySize: 128
+  timeout: 900
+  stackName: ${self:provider.stage}-posts-trigger
+  logRetentionInDays: 14
+  deploymentBucket:
+    name: castcle-data-analytics
+  iam:
+    role: ${opt:role, 'arn:aws:iam::044086777883:role/dataAnalyticsLambdaRole'}
+  vpc:
+    securityGroupIds:
+      - ${self:custom.securityGroup.${self:provider.stage}}
+    subnetIds:
+      - ${self:custom.subnetAzA.${self:provider.stage}}
+      - ${self:custom.subnetAzB.${self:provider.stage}}
+      - ${self:custom.subnetAzC.${self:provider.stage}}
+      - ${self:custom.subnetAzD.${self:provider.stage}}
+      - ${self:custom.subnetAzE.${self:provider.stage}}
+      - ${self:custom.subnetAzF.${self:provider.stage}}
+  eventBridge:
+    useCloudFormation: true
+  ecr:
+    images:
+      app_image:
+        uri: REPOSITORY_URI@DIGEST
+  environment:
+    ENV: ${self:provider.stage}
+    MONGO_HOST: ${self:custom.mongoHost.${self:provider.stage}}
+    MONGO_PASSWORD: ${self:custom.mongoPassword.${self:provider.stage}}
+
+functions:
+  app:
+    name: ${self:provider.stage}-posts-trigger
+    image:
+      name: app_image
+      command:
+        - posts.handle
+    events:
+      - eventBridge:
+          eventBus: ${self:custom.postsEventBus.${self:provider.stage}}
+          pattern:
+            account:
+              - "044086777883"
