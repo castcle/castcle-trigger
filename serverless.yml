@@ -47,9 +47,17 @@ custom:
     staging: subnet-081ef1e25f7f56a09
     prod: subnet-01ce362ad1c488b27
   postsEventBus:
-    dev: arn:aws:events:us-east-1:044086777883:event-bus/aws.partner/mongodb.com/stitch.trigger/614b4cb6b23f417e5e559c3f
-    staging: arn:aws:events:us-east-1:044086777883:event-bus/aws.partner/mongodb.com/stitch.trigger/614b4cb6b23f417e5e559c3f
-    prod: arn:aws:events:us-east-1:044086777883:event-bus/aws.partner/mongodb.com/stitch.trigger/614b4cb6b23f417e5e559c3f
+    dev: 614b4cb6b23f417e5e559c3f
+    staging: 614b4cb6b23f417e5e559c3f
+    prod: 614b4cb6b23f417e5e559c3f
+  uxSessionStartEventBus:
+    dev: 615401a5cf5aeb8af6e146a4
+    staging: 615401a5cf5aeb8af6e146a4
+    prod: 615401a5cf5aeb8af6e146a4
+  relationshipsUpsertEventBus:
+    dev: 615402c1ac3a15f38bc30527
+    staging: 615402c1ac3a15f38bc30527
+    prod: 615402c1ac3a15f38bc30527
 
 provider:
   name: aws
@@ -86,15 +94,27 @@ provider:
     MONGO_PASSWORD: ${self:custom.mongoPassword.${self:provider.stage}}
 
 functions:
-  app:
-    name: ${self:provider.stage}-mongodb-trigger
+  uxSessionStart:
+    name: ${self:provider.stage}-mongodb-trigger-ux-session-start
     image:
       name: app_image
       command:
-        - app.handle
+        - ux_session_start.handle
     events:
       - eventBridge:
-          eventBus: ${self:custom.postsEventBus.${self:provider.stage}}
+          eventBus: arn:aws:events:us-east-1:044086777883:event-bus/aws.partner/mongodb.com/stitch.trigger/${self:custom.uxSessionStartEventBus.${self:provider.stage}}
+          pattern:
+            account:
+              - "044086777883"
+  relationshipsUpsert:
+    name: ${self:provider.stage}-mongodb-trigger-relationships-upsert
+    image:
+      name: app_image
+      command:
+        - relationships_upsert.handle
+    events:
+      - eventBridge:
+          eventBus: arn:aws:events:us-east-1:044086777883:event-bus/aws.partner/mongodb.com/stitch.trigger/${self:custom.relationshipsUpsertEventBus.${self:provider.stage}}
           pattern:
             account:
               - "044086777883"
