@@ -139,9 +139,10 @@ def handle(event, context):
                 'userQuoteCount': 1, 
                 'hastagSummary': 1
             }
+            # just stage for testing
         }, {
             '$addFields': {
-                'testField': "hooray++++"
+                'testField': "+++++++hooray++++"
             }
         }, {
             '$merge': {
@@ -165,4 +166,3 @@ def handle(event, context):
 
     except ERROR as error:
         print("ERROR", error)
-
