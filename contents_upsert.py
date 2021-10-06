@@ -139,6 +139,10 @@ def handle(event, context):
                 'hastagSummary': 1
             }
         }, {
+            '$addFields': {
+                'testField': "hooray++++"
+            }
+        } {
             '$merge': {
                 'into': {
                     'db': 'analytics-db', 
