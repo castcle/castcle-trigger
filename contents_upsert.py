@@ -1,4 +1,5 @@
 import json
+import sys
 from mongo_client import mongo_client
 from bson.objectid import ObjectId
 from datetime import datetime, timedelta
@@ -155,9 +156,13 @@ def handle(event, context):
         }
     ]
 
-    # perform aggregation
-    contents.aggregate(updateCreatorsCursor)
+    try:
+        # perform aggregation
+        contents.aggregate(updateCreatorsCursor)
 
-    # print message on complete aggregation
-    print('this aggregation has completed at', datetime.now())
+        # print message on complete aggregation
+        print('this aggregation has completed at', datetime.now())
+
+    except ERROR as error:
+        print("ERROR", error)
 
