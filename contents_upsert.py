@@ -142,7 +142,7 @@ def handle(event, context):
             '$addFields': {
                 'testField': "hooray++++"
             }
-        } {
+        }, {
             '$merge': {
                 'into': {
                     'db': 'analytics-db', 
