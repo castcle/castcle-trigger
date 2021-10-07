@@ -1,5 +1,3 @@
-print("this is the first line checking")
-
 import json
 import sys
 from mongo_client import mongo_client
@@ -164,6 +162,8 @@ def handle(event, context):
 
         # print message on complete aggregation
         print('this aggregation has completed at', datetime.now())
+
+        pprint(list(contents.aggregate(updateCreatorsCursor)))
 
     except ERROR as error:
         print("ERROR", error)
