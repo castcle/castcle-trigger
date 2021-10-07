@@ -1,9 +1,9 @@
+# This file is updating content creator among recent contents
 import json
 import sys
 from mongo_client import mongo_client
 from bson.objectid import ObjectId
 from datetime import datetime, timedelta
-from pprint import pprint
 
 appDb = mongo_client['app-db']
 analyticsDb = mongo_client['analytics-db']
