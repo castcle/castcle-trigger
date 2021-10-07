@@ -14,4 +14,5 @@
 2. ordering for obain top potential contents as ranker
 
 ## minor steps
-1. 
+1. filter 'app-db.contents' to obain content statistics
+2. integrate all potential related contents from 
