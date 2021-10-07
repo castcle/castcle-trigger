@@ -242,8 +242,8 @@ def handle(event, context):
     ]
 
     try:
-        # perform aggregation w/ resulting in upsert 'userStats' collection
-        contents.aggregate(updateHashtagcursor)
+        # perform aggregation w/ resulting in upsert 'userStats' & 'hashtagStats' collections
+        contents.aggregate(cursor)
 
         # print message on complete aggregation
         print('this aggregation has completed at', datetime.now())
