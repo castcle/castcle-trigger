@@ -134,10 +134,30 @@ exports = function() {
             'userQuoteCount': 1, 
             'hastagSummary': 1
           }
+        },{
+          '$merge': {
+            'into': {'db': "analytics-db", 'coll': "userStats"},
+            'on': "_id",
+            'whenMatched': "replace", 
+            'whenNotMatched': "insert"
+          }
+        }, {
+            '$merge': {
+                'into': {
+                    'db': 'analytics-db', 
+                    'coll': 'userStats'
+                }, 
+                'on': '_id', 
+                'whenMatched': 'replace', 
+                'whenNotMatched': 'insert'
+            }
         }
     ];
 
     // perform aggregation
-    return contents.aggregate(extractContentByCreatorsCursor);
+    const result = contents.aggregate(extractContentByCreatorsCursor);
+
+    // print the timestamp
+    console.log(`${result.length} documents were updated at ${new Date()}`)
 
 };
