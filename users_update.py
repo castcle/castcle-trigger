@@ -1,4 +1,4 @@
-# This file is updating both content creator & hashtag statistics
+# This file is not work
 import json
 import sys
 from mongo_client import mongo_client
