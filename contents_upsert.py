@@ -139,7 +139,6 @@ def handle(event, context):
                 'userQuoteCount': 1, 
                 'hastagSummary': 1
             }
-            # just stage for testing
         }, {
             '$addFields': {
                 'testField': "+++++++hooray++++"
