@@ -1,4 +1,4 @@
-# This file is updating hashtag statistics among recent contents
+# This file updates collection 'hashtagStats' from 'contents'
 import json
 import sys
 from mongo_client import mongo_client
@@ -16,7 +16,7 @@ def handle(event, context):
     print(json.dumps(event, indent=4))
 
     # define cursor
-    updateHashtagCursor = [
+    cursor = [
     {
         # filter for new than 14 days contents
         '$match': {
@@ -93,8 +93,8 @@ def handle(event, context):
     ]
 
     try:
-        # perform aggregation w/ resulting in upsert 'userStats' collection
-        contents.aggregate(updateHashtagCursor)
+        # perform aggregation w/ resulting in upsert 'hashtagStats' collection
+        contents.aggregate(cursor)
 
         # print message on complete aggregation
         print('this aggregation has completed at', datetime.now())

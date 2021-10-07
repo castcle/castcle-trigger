@@ -1,20 +1,21 @@
-# This file is updating content creator among recent contents
+# This file updates collection 'creatorStats' from 'contents'
 import json
 import sys
 from mongo_client import mongo_client
 from bson.objectid import ObjectId
 from datetime import datetime, timedelta
 
+# setup databases & collections
 appDb = mongo_client['app-db']
 analyticsDb = mongo_client['analytics-db']
 contents = appDb['contents']
-userStats = analyticsDb['userStats']
+userStats = analyticsDb['creatorStats']
 
 def handle(event, context):
     print(json.dumps(event, indent=4))
 
     # define cursor
-    updateCreatorsCursor = [
+    cursor = [
         {
             # filter for new than 14 days contents
             '$match': {
@@ -152,7 +153,7 @@ def handle(event, context):
             '$merge': {
                 'into': {
                     'db': 'analytics-db', 
-                    'coll': 'userStats'
+                    'coll': 'creatorStats'
                 }, 
                 'on': '_id', 
                 'whenMatched': 'replace', 
@@ -163,7 +164,7 @@ def handle(event, context):
 
     try:
         # perform aggregation w/ resulting in upsert 'userStats' collection
-        contents.aggregate(updateCreatorsCursor)
+        contents.aggregate(cursor)
 
         # print message on complete aggregation
         print('this aggregation has completed at', datetime.now())
