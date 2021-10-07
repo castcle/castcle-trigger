@@ -16,12 +16,14 @@ def handle(event, context):
     # define cursor
     updateCreatorsCursor = [
         {
+            # filter for new than 14 days contents
             '$match': {
                 'createdAt': {
                     '$gte': (datetime.now() - timedelta(days=14)) 
                             }
             }
         }, {
+            # summarize by content type
             '$group': {
                 '_id': {
                     '_id': '$author.id', 
@@ -45,6 +47,7 @@ def handle(event, context):
                 }
             }
         }, {
+            # summarize by hastag payload (not id)
             '$group': {
                 '_id': {
                     '_id': '$_id._id', 
@@ -77,6 +80,7 @@ def handle(event, context):
                 }
             }
         }, {
+            # summarize by user (not account)
             '$group': {
                 '_id': '$_id._id', 
                 'userContentCount': {
@@ -107,6 +111,7 @@ def handle(event, context):
                 }
             }
         }, {
+            # join w/ 'users' collections for more info.
             '$lookup': {
                 'from': 'users', 
                 'localField': '_id', 
@@ -114,6 +119,7 @@ def handle(event, context):
                 'as': 'userDetail'
             }
         }, {
+            # setting format
             '$project': {
                 '_id': 1, 
                 'ownerAccount': {
@@ -140,8 +146,10 @@ def handle(event, context):
                 'userRecastCount': 1, 
                 'userQuoteCount': 1, 
                 'hastagSummary': 1
+                , 'testField': "+++++++++hooray+++++++++"  # for testing
             }
         }, {
+            # upsert to 'userStats' collection
             '$merge': {
                 'into': {
                     'db': 'analytics-db', 
