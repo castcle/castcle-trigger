@@ -146,7 +146,6 @@ def handle(event, context):
                 'userRecastCount': 1, 
                 'userQuoteCount': 1, 
                 'hastagSummary': 1
-                , 'testField': "+++++++++hooray+++++++++"  # for testing
             }
         }, {
             # upsert to 'userStats' collection
