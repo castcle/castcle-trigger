@@ -1,3 +1,5 @@
+print("this is the first line checking")
+
 import json
 import sys
 from mongo_client import mongo_client
