@@ -5,8 +5,10 @@ from bson.objectid import ObjectId
 from datetime import datetime, timedelta
 from pprint import pprint
 
-analyticsDb = mongo_client['analytics-db']
-contents = analyticsDb ['testContents']
+appDb = mongo_client['app-db']
+# analyticsDb = mongo_client['analytics-db']
+contents = appDb['contents']
+# userStats = analyticsDb['userStats']
 
 def handle(event, context):
     print(json.dumps(event, indent=4))
@@ -139,27 +141,26 @@ def handle(event, context):
                 'userQuoteCount': 1, 
                 'hastagSummary': 1
             }
-        }, {
-            '$merge': {
-                'into': {
-                    'db': 'analytics-db', 
-                    'coll': 'userStats'
-                }, 
-                'on': '_id', 
-                'whenMatched': 'replace', 
-                'whenNotMatched': 'insert'
-            }
         }
+        # }, {
+        #     '$merge': {
+        #         'into': {
+        #             'db': 'analytics-db', 
+        #             'coll': 'userStats'
+        #         }, 
+        #         'on': '_id', 
+        #         'whenMatched': 'replace', 
+        #         'whenNotMatched': 'insert'
+        #     }
+        # }
     ]
 
     try:
-        # perform aggregation
-        contents.aggregate(updateCreatorsCursor)
+        # perform aggregation w/ resulting in upsert 'userStats' collection
+        pprint(list(contents.aggregate(updateCreatorsCursor)))
 
         # print message on complete aggregation
         print('this aggregation has completed at', datetime.now())
-
-        pprint(list(contents.aggregate(updateCreatorsCursor)))
 
     except ERROR as error:
         print("ERROR", error)
