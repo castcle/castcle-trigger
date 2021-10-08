@@ -25,16 +25,38 @@ def handle(event, context):
                 }
         }
     }, {
-        # deconstruct array hashtags into separate documents
+        # extract hashtags => array
+        '$addFields': {
+            'hashtags': {
+                '$regexFindAll': {
+                    'input': '$payload.message', 
+                    'regex': re.compile(r"#(\\w+)"), 
+                    'options': 'i'
+                }
+            }
+        }
+    }, {
+        # deconstruct hashtags array => hashtag object
         '$unwind': {
-            'path': '$payload.message', 
+            'path': '$hashtags', 
             'preserveNullAndEmptyArrays': True
+        }
+    }, {
+        # extract hashtag object => field
+        '$addFields': {
+            'hashtag': {
+                '$toLower': {
+                    '$arrayElemAt': [
+                        '$hashtags.captures', 0
+                    ]
+                }
+            }
         }
     }, {
         # summarize by user (not account)
         '$group': {
             '_id': {
-                'hashtag': '$payload.message', 
+                'hashtag': '$hashtag', 
                 'authorId': '$author.id'
             }, 
             'contribution': {
@@ -52,7 +74,7 @@ def handle(event, context):
         '$group': {
             '_id': '$_id.hashtag', 
             'hashtagCount': {
-                '$count': {}
+                '$sum': '$contribution'
             }, 
             'createdAt': {
                 '$min': '$createdAt'
@@ -78,7 +100,7 @@ def handle(event, context):
             'updatedAt': 1, 
             'contributorsDetail': 1
         }
-    }, {
+    }
         # upsert to 'hashtagStats' collection
         '$merge': {
             'into': {
