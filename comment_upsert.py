@@ -76,6 +76,7 @@ def handle(event, context):
             'hashtagCount': {
                 '$sum': '$contribution'
             }, 
+            'contributorCount': {'$count': {}},
             'createdAt': {
                 '$min': '$createdAt'
             }, 
@@ -96,6 +97,7 @@ def handle(event, context):
             '_id': 0, 
             'hashtag': '$_id', 
             'hashtagCount': 1, 
+            'contributorCount': 1,
             'createdAt': 1, 
             'updatedAt': 1, 
             'contributorsDetail': 1
@@ -111,7 +113,7 @@ def handle(event, context):
             'whenMatched': 'replace', 
             'whenNotMatched': 'insert'
          }
-        }
+    }
     ]
 
     try:
