@@ -11,7 +11,6 @@ analyticsDb = mongo_client['analytics-db']
 contents = appDb['contents']
 hashtagStats = analyticsDb['hashtagStats']
 
-
 def handle(event, context):
     print(json.dumps(event, indent=4))
 
