@@ -100,7 +100,7 @@ def handle(event, context):
             'updatedAt': 1, 
             'contributorsDetail': 1
         }
-    }
+    }, {
         # upsert to 'hashtagStats' collection
         '$merge': {
             'into': {
