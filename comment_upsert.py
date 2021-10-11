@@ -21,14 +21,16 @@ def handle(event, context):
     pattern = regex.Regex.from_native(re.compile(r"(?<=#)\w+"))
     pattern.flags ^= re.UNICODE
 
+    # define content parameters
+    contentDateThreshold = 14
+
     # define cursor
-# define cursor
     cursor = [
         {
             # filter for new than 14 days contents
             '$match': {
                 'createdAt': {
-                    '$gte': (datetime.now() - timedelta(days=14)) 
+                    '$gte': (datetime.now() - timedelta(days=contentDateThreshold)) 
                     }
             }
         }, {

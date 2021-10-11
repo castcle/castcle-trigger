@@ -14,13 +14,16 @@ userStats = analyticsDb['creatorStats']
 def handle(event, context):
     print(json.dumps(event, indent=4))
 
+    # define content parameters
+    contentDateThreshold = 14
+
     # define cursor
     cursor = [
         {
             # filter for new than 14 days contents
             '$match': {
                 'createdAt': {
-                    '$gte': (datetime.now() - timedelta(days=14)) 
+                    '$gte': (datetime.now() - timedelta(days=contentDateThreshold)) 
                             }
             }
     }, {
