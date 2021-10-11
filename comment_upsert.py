@@ -123,7 +123,6 @@ def handle(event, context):
         }
         ]
 
-
     try:
         # perform aggregation w/ resulting in upsert 'hashtagStats' collection
         contents.aggregate(cursor)
