@@ -102,8 +102,7 @@ def handle(event, context):
         }, {
             # setting format
             '$project': {
-                '_id': 0, 
-                'hashtag': '$_id', 
+                '_id': 1,  
                 'hashtagCount': 1, 
                 'contributorCount': 1,
                 'createdAt': 1, 
