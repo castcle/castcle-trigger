@@ -11,8 +11,8 @@
 # next steps
 ## major steps
 1. filter only potential related contents as aggregator
-2. ordering for obain top potential contents as ranker
+2. ordering for obtain top potential contents as ranker
 
 ## minor steps
-1. filter 'app-db.contents' to obain content statistics
+1. filter 'app-db.contents' to obtain content statistics
 2. integrate all potential related contents from zz
