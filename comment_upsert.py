@@ -20,9 +20,6 @@ def handle(event, context):
     pattern = regex.Regex.from_native(re.compile(r"(?<=#)\w+"))
     pattern.flags ^= re.UNICODE
 
-    # testing
-    print(pattern)
-
     # define cursor
     cursor = [
     {
@@ -130,5 +127,5 @@ def handle(event, context):
         # print message on complete aggregation
         print('this aggregation has completed at', datetime.now())
 
-    except ERROR as error:
+    except Exception as error:
         print("ERROR", error)
