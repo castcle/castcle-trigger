@@ -3,7 +3,9 @@ import json
 import sys
 from mongo_client import mongo_client
 from bson.objectid import ObjectId
+from bson import regex
 from datetime import datetime, timedelta
+import re
 
 # setup databases & collections
 appDb = mongo_client['app-db']
