@@ -104,18 +104,17 @@ def handle(event, context):
             'contributorsDetail': 1
         }
     }, {
-        # upsert to 'hashtagStats' collection
-        '$merge': {
-            'into': {
-                'db': 'analytics-db', 
-                'coll': 'hashtagStats'
-            }, 
-            'on': '_id', 
-            'whenMatched': 'replace', 
-            'whenNotMatched': 'insert'
-         }
-    }
-    , {
+    #     # upsert to 'hashtagStats' collection
+    #     '$merge': {
+    #         'into': {
+    #             'db': 'analytics-db', 
+    #             'coll': 'hashtagStats'
+    #         }, 
+    #         'on': '_id', 
+    #         'whenMatched': 'replace', 
+    #         'whenNotMatched': 'insert'
+    #      }
+    # }
         # for testing
         '$limit': 1
     }
