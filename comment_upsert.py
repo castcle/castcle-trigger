@@ -16,6 +16,13 @@ hashtagStats = analyticsDb['hashtagStats']
 def handle(event, context):
     print(json.dumps(event, indent=4))
 
+    # define RegEx
+    pattern = regex.Regex.from_native(re.compile(r"(?<=#)\w+"))
+    pattern.flags ^= re.UNICODE
+
+    # testing
+    print(pattern)
+
     # define cursor
     cursor = [
     {
@@ -31,8 +38,7 @@ def handle(event, context):
             'hashtags': {
                 '$regexFindAll': {
                     'input': '$payload.message', 
-                    'regex': re.compile(r"#(\\w+)"), 
-                    'options': 'i'
+                    'regex': pattern
                 }
             }
         }
@@ -45,14 +51,10 @@ def handle(event, context):
     }, {
         # extract hashtag object => field
         '$addFields': {
-            'hashtag': {
-                '$toLower': {
-                    '$arrayElemAt': [
-                        '$hashtags.captures', 0
-                    ]
-                }
-            }
+        'hashtag': {
+            '$toLower': '$hashtags.match'
         }
+    }
     }, {
         # summarize by user (not account)
         '$group': {
@@ -114,6 +116,10 @@ def handle(event, context):
             'whenMatched': 'replace', 
             'whenNotMatched': 'insert'
          }
+    }
+    , {
+        # for testing
+        '$limit': 1
     }
     ]
 
