@@ -23,7 +23,32 @@ def handle(event, context):
                     '$gte': (datetime.now() - timedelta(days=14)) 
                             }
             }
-        }, {
+    }, {
+        # extract hashtags part begin
+                # extract hashtags => array
+        '$addFields': {
+            'hashtags': {
+                '$regexFindAll': {
+                    'input': '$payload.message', 
+                    'regex': pattern
+                }
+            }
+        }
+    }, {
+        # deconstruct hashtags array => hashtag object
+        '$unwind': {
+            'path': '$hashtags', 
+            'preserveNullAndEmptyArrays': True
+        }
+    }, {
+        # extract hashtag object => field
+        '$addFields': {
+        'hashtag': {
+            '$toLower': '$hashtags.match'
+            }
+        }
+        # extract hashtags part end
+    }, {
             # summarize by content type
             '$group': {
                 '_id': {
