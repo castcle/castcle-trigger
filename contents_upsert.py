@@ -24,115 +24,55 @@ def handle(event, context):
                             }
             }
     }, {
-        # extract hashtags part begin
-                # extract hashtags => array
-        '$addFields': {
-            'hashtags': {
-                '$regexFindAll': {
-                    'input': '$payload.message', 
-                    'regex': pattern
-                }
-            }
-        }
-    }, {
-        # deconstruct hashtags array => hashtag object
-        '$unwind': {
-            'path': '$hashtags', 
-            'preserveNullAndEmptyArrays': True
-        }
-    }, {
-        # extract hashtag object => field
-        '$addFields': {
-        'hashtag': {
-            '$toLower': '$hashtags.match'
-            }
-        }
-        # extract hashtags part end
-    }, {
             # summarize by content type
             '$group': {
                 '_id': {
                     '_id': '$author.id', 
-                    'hashtag': '$hashtags.payload', 
                     'type': '$type'
                 }, 
                 'contentCount': {
                     '$count': {}
                 }, 
-                'likeCount': {
+                'likedCount': {
                     '$sum': '$engagements.like.count'
                 }, 
-                'commentCount': {
+                'commentedCount': {
                     '$sum': '$engagements.comment.count'
                 }, 
-                'recastCount': {
+                'recastedCount': {
                     '$sum': '$engagements.recast.count'
                 }, 
-                'quoteCount': {
+                'quotedCount': {
                     '$sum': '$engagements.quote.count'
                 }
             }
         }, {
-            # summarize by hastag payload (not id)
+            # summarize by user (not account)
             '$group': {
-                '_id': {
-                    '_id': '$_id._id', 
-                    'hashtag': '$_id.hashtag'
-                }, 
-                'hashtagContentCount': {
+                '_id': '$_id._id',
+                'userContentCount': {
                     '$sum': '$contentCount'
                 }, 
-                'hashtagLikeCount': {
+                'userLikedCount': {
                     '$sum': '$likeCount'
                 }, 
-                'hashtagCommentCount': {
+                'userCommentedCount': {
                     '$sum': '$commentCount'
                 }, 
-                'hashtagRecastCount': {
+                'userRecastedCount': {
                     '$sum': '$recastCount'
                 }, 
-                'hashtagQuoteCount': {
+                'userQuotedCount': {
                     '$sum': '$quoteCount'
                 }, 
                 'contentSummary': {
                     '$push': {
                         'type': '$_id.type', 
                         'typeCount': '$contentCount', 
-                        'likeCount': '$likeCount', 
-                        'commentCount': '$commentCount', 
-                        'recastCount': '$recastCount', 
-                        'quoteCount': '$quoteCount'
-                    }
-                }
-            }
-        }, {
-            # summarize by user (not account)
-            '$group': {
-                '_id': '$_id._id', 
-                'userContentCount': {
-                    '$sum': '$hashtagContentCount'
-                }, 
-                'userLikeCount': {
-                    '$sum': '$hashtagLikeCount'
-                }, 
-                'userCommentCount': {
-                    '$sum': '$hashtagCommentCount'
-                }, 
-                'userRecastCount': {
-                    '$sum': '$hashtagRecastCount'
-                }, 
-                'userQuoteCount': {
-                    '$sum': '$hashtagQuoteCount'
-                }, 
-                'hastagSummary': {
-                    '$push': {
-                        'hashtag': '$_id.hashtag', 
-                        'hashtagContentCount': '$hashtagContentCount', 
-                        'hashtagLikeCount': '$hashtagLikeCount', 
-                        'hashtagCommentCount': '$hashtagCommentCount', 
-                        'hashtagRecastCount': '$hashtagRecastCount', 
-                        'hashtagQuoteCount': '$hashtagQuoteCount', 
-                        'contentSummary': '$contentSummary'
+                        'likedCount': '$likeCount', 
+                        'commentedCount': '$commentCount', 
+                        'recastedCount': '$recastCount', 
+                        'quotedCount': '$quoteCount'
                     }
                 }
             }
@@ -167,11 +107,10 @@ def handle(event, context):
                     '$first': '$userDetail.followerCount'
                 }, 
                 'userContentCount': 1, 
-                'userLikeCount': 1, 
-                'userCommentCount': 1, 
-                'userRecastCount': 1, 
-                'userQuoteCount': 1, 
-                'hastagSummary': 1
+                'userLikedCount': 1, 
+                'userCommentedCount': 1, 
+                'userRecastedCount': 1, 
+                'userQuotedCount': 1
             }
         }, {
             # upsert to 'userStats' collection
