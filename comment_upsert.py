@@ -57,6 +57,7 @@ def handle(event, context):
             }
         }, {
             # summarize by user (not account)
+            # collect contentId as array
             '$group': {
                 '_id': {
                     'hashtag': '$hashtag', 
