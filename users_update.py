@@ -30,81 +30,76 @@ def handle(event, context):
     hashtagThreshold = 5
     hashtagDateThreshold = 7
 
-    # define finding cursors
-    findCursor = {
-        "updatedAt": {
-            '$gte': (datetime.now() - timedelta(days=hashtagDateThreshold))
-        }
-    }
-
-    # define projection cursors
-    projectCursor = {
-        '_id': 1
-    }
-
-    # project sorting cursor
-    sortCursor = [
-        ("hashtagCount", -1)
-    ]
-
-    topHashtagList = list(hashtagStats.find(findCursor, projectCursor)
-            .sort(sortCursor)
-            .limit(hashtagThreshold))
-
-    topHashtags = [hashtag[key] for hashtag in topHashtagList for key in hashtag]
-    
-    #################################################################
-    # aggregate contents from found hashtags
-    #################################################################
-    # define RegEx
-    pattern = regex.Regex.from_native(re.compile(r"(?<=#)\w+"))
-    pattern.flags ^= re.UNICODE
-    
-    # define content parameters
-    contentDateThreshold = 14
-
-    # define cursor
     cursor = [
         {
             # filter for new than 14 days contents
             '$match': {
                 'createdAt': {
-                    '$gte': (datetime.now() - timedelta(days=contentDateThreshold)) 
+                    '$gte': (datetime.now() - timedelta(days=hashtagDateThreshold)) 
                     }
             }
         }, {
-            # extract hashtags => array
-            '$addFields': {
-                'hashtags': {
-                    '$regexFindAll': {
-                        'input': '$payload.message', 
-                        'regex': pattern
-                    }
+            # filter non-hashtag out to prevent bias
+            '$match': {
+                '_id': {
+                    '$ne': ''
                 }
             }
         }, {
-            # deconstruct hashtags array => hashtag object
+            # sort by count
+            '$sort': {
+                'hashtagCount': -1
+            }
+        }, {
+            # slice for top numbers
+            '$limit': hashtagThreshold
+        }, {
+            # deconstruct 
             '$unwind': {
-                'path': '$hashtags', 
-                'preserveNullAndEmptyArrays': True
+                'path': '$contributorsDetail'
             }
         }, {
-            # extract hashtag object => field
-            '$addFields': {
-            'hashtag': {
-                '$toLower': '$hashtags.match'
+            # group all documents together
+            '$group': {
+                '_id': None, 
+                'contents': {
+                    '$push': '$contributorsDetail.contents'
                 }
             }
+            # project deconstruct all contentId into a sigle document with label reason as topHashtag
         }, {
-
+            '$project': {
+                '_id': 'topHashtag', 
+                'contentIds': {
+                    '$reduce': {
+                        'input': '$contents', 
+                        'initialValue': [], 
+                        'in': {
+                            '$concatArrays': [
+                                '$$value', '$$this'
+                            ]
+                        }
+                    }
+                }
+            }
         }
+    ]
 
     try:
-        # perform aggregation w/ resulting in upsert 'hashtagStats' collection
-        contents.aggregate(cursor)
+        # aggregate then keep results as array of contentIds
+        topHashtagContents = list(hashtagStats.aggregate(cursor))[0]['contentIds']
 
         # print message on complete aggregation
         print('this aggregation has completed at', datetime.now())
 
+        print(topHashtagContents)
+
     except Exception as error:
         print("ERROR", error)
+
+    #################################################################
+    # aggregate contents from found hashtags
+    #################################################################
+    
+
+    #################################################################
