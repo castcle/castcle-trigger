@@ -92,7 +92,7 @@ def handle(event, context):
             '$project': {
                 '_id': 1, 
                 'ownerAccount': {
-                    '$first': '$CreatorDetail.ownerAccount'
+                    '$first': '$userDDetail.ownerAccount'
                 }, 
                 'displayId': {
                     '$first': '$userDetail.displayId'
