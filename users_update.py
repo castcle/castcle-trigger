@@ -30,6 +30,7 @@ def handle(event, context):
     hashtagThreshold = 5
     hashtagDateThreshold = 7
 
+    # define cursor
     cursor = [
         {
             # filter for new than 14 days contents
@@ -69,7 +70,7 @@ def handle(event, context):
             # project deconstruct all contentId into a sigle document with label reason as topHashtag
         }, {
             '$project': {
-                '_id': 'topHashtag', 
+                '_id': 'topHashtags', 
                 'contentIds': {
                     '$reduce': {
                         'input': '$contents', 

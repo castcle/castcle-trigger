@@ -51,6 +51,9 @@ def handle(event, context):
                 'lastContentAt': {
                   '$max': '$updatedAt'
                 }, 
+                'contents': {
+                  '$push': "$_id"
+                }
             }
         }, {
             # summarize by user (not account)
@@ -81,7 +84,8 @@ def handle(event, context):
                         'likedCount': '$likeCount', 
                         'commentedCount': '$commentCount', 
                         'recastedCount': '$recastCount', 
-                        'quotedCount': '$quoteCount'
+                        'quotedCount': '$quoteCount',
+                        'contents': '$contents'
                     }
                 }
             }
@@ -98,7 +102,7 @@ def handle(event, context):
             '$project': {
                 '_id': 1, 
                 'ownerAccount': {
-                    '$first': '$userDDetail.ownerAccount'
+                    '$first': '$userDetail.ownerAccount'
                 }, 
                 'displayId': {
                     '$first': '$userDetail.displayId'
@@ -120,7 +124,8 @@ def handle(event, context):
                 'creatorCommentedCount': 1, 
                 'creatorRecastedCount': 1, 
                 'creatorQuotedCount': 1,
-                'lastContentAt': 1
+                'lastContentAt': 1,
+                'contentSummary': 1
             }
         }, {
             # upsert to 'userStats' collection
