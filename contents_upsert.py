@@ -53,19 +53,19 @@ def handle(event, context):
             # summarize by user (not account)
             '$group': {
                 '_id': '$_id._id',
-                'CreatorContentCount': {
+                'creatorContentCount': {
                     '$sum': '$contentCount'
                 }, 
-                'CreatorLikedCount': {
+                'creatorLikedCount': {
                     '$sum': '$likeCount'
                 }, 
-                'CreatorCommentedCount': {
+                'creatorCommentedCount': {
                     '$sum': '$commentCount'
                 }, 
-                'CreatorRecastedCount': {
+                'creatorRecastedCount': {
                     '$sum': '$recastCount'
                 }, 
-                'CreatorQuotedCount': {
+                'creatorQuotedCount': {
                     '$sum': '$quoteCount'
                 }, 
                 'contentSummary': {
@@ -109,11 +109,11 @@ def handle(event, context):
                 'followerCount': {
                     '$first': '$userDetail.followerCount'
                 }, 
-                'CreatorContentCount': 1, 
-                'CreatorLikedCount': 1, 
-                'CreatorCommentedCount': 1, 
-                'CreatorRecastedCount': 1, 
-                'CreatorQuotedCount': 1
+                'creatorContentCount': 1, 
+                'creatorLikedCount': 1, 
+                'creatorCommentedCount': 1, 
+                'creatorRecastedCount': 1, 
+                'creatorQuotedCount': 1
             }
         }, {
             # upsert to 'userStats' collection
