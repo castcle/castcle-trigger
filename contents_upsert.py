@@ -47,7 +47,10 @@ def handle(event, context):
                 }, 
                 'quotedCount': {
                     '$sum': '$engagements.quote.count'
-                }
+                }, 
+                'lastContentAt': {
+                  '$max': '$updatedAt'
+                }, 
             }
         }, {
             # summarize by user (not account)
@@ -68,6 +71,9 @@ def handle(event, context):
                 'creatorQuotedCount': {
                     '$sum': '$quoteCount'
                 }, 
+                'lastContentAt': {
+                  '$max': '$lastContentAt'
+                },
                 'contentSummary': {
                     '$push': {
                         'type': '$_id.type', 
@@ -113,7 +119,8 @@ def handle(event, context):
                 'creatorLikedCount': 1, 
                 'creatorCommentedCount': 1, 
                 'creatorRecastedCount': 1, 
-                'creatorQuotedCount': 1
+                'creatorQuotedCount': 1,
+                'lastContentAt': 1
             }
         }, {
             # upsert to 'userStats' collection
