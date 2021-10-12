@@ -203,6 +203,9 @@ def handle(event, context):
         ## print message on complete combining
         print('aggregatedPool has total', len(topCreatorContents), 'contents')
 
+        ## print message on complete implemtation
+        print('this aggregation has completed at', datetime.now())
+
     except Exception as error:
         print("ERROR", error)
 
