@@ -6,6 +6,7 @@ from bson.objectid import ObjectId
 from bson import regex
 from datetime import datetime, timedelta
 import re
+import math
 
 # setup databases & collections
 appDb = mongo_client['app-db']
@@ -23,18 +24,23 @@ def handle(event, context):
 
     # define content parameters
     contentDateThreshold = 14
+    likedWeight = 1
+    commentedWeight = 1
+    recastedWeight = 1
+    quotedWeight = 1
+    halfLifeHours = 24
 
     # define cursor
     cursor = [
         {
-            # filter for new than 14 days contents
+            # filter contents for newer than specific age
             '$match': {
                 'createdAt': {
-                    '$gte': (datetime.now() - timedelta(days=contentDateThreshold)) 
+                    '$gte': (datetime.utcnow() - timedelta(days=contentDateThreshold)) 
                     }
             }
         }, {
-            # extract hashtags => array
+            # extract hashtag => array
             '$addFields': {
                 'hashtags': {
                     '$regexFindAll': {
@@ -52,20 +58,19 @@ def handle(event, context):
         }, {
             # extract hashtag object => field
             '$addFields': {
-            'hashtag': {
+            'name': {
                 '$toLower': '$hashtags.match'
-                },
-                'contentId': "$_id"
+                }
             }
         }, {
             # summarize by user (not account)
             # collect contentId as array
             '$group': {
                 '_id': {
-                    'hashtag': '$hashtag', 
+                    'name': '$name',
                     'authorId': '$author.id'
                 }, 
-                'contribution': {
+                'contributionCount': {
                     '$count': {}
                 }, 
                 'createdAt': {
@@ -75,15 +80,31 @@ def handle(event, context):
                     '$max': '$updatedAt'
                 },
                 'contents': {
-                    '$push': "$contentId"
+                    '$push': "$_id"
+                },
+                # ! follow app-db.hashtags schema
+                '__v': {
+                    '$max': '$__v'
+                },
+                'likedCount': {
+                    '$sum': '$engagements.like.count'
+                },
+                'commentedCount': {
+                    '$sum': '$engagements.comment.count'
+                },
+                'recastedCount': {
+                    '$sum': '$engagements.recast.recast'
+                },
+                'quotedCount': {
+                    '$sum': '$engagements.quote.recast'
                 }
             }
         }, {
             # summarize by hashtag
             '$group': {
-                '_id': '$_id.hashtag', 
+                '_id': '$_id.name', 
                 'hashtagCount': {
-                    '$sum': '$contribution'
+                    '$sum': '$contributionCount'
                 }, 
                 'contributorCount': {'$count': {}},
                 'createdAt': {
@@ -91,26 +112,103 @@ def handle(event, context):
                 }, 
                 'updatedAt': {
                     '$max': '$updatedAt'
-                }, 
-                'contributorsDetail': {
+                },
+                # ! follow app-db.hashtags schema
+                '__v': {
+                    '$max': '$__v'
+                },
+                'contributions': {
                     '$push': {
                         '_id': '$_id.authorId', 
-                        'contribution': '$contribution', 
-                        'updatedAt': '$updatedAt',
-                        'contents': "$contents"
+                        'contributionCount': '$contributionCount', 
+                        'contents': "$contents",
                     }
+                },
+                'likedCount': {
+                    '$sum': '$likedCount'
+                },
+                'commentedCount': {
+                    '$sum': '$commentedCount'
+                },
+                'recastedCount': {
+                    '$sum': '$recastedCount'
+                },
+                'quotedCount': {
+                    '$sum': '$quotedCount'
                 }
-            }
+            }    
         }, {
-            # setting format
+            # setting output format
             '$project': {
-                '_id': 1,  
-                'hashtagCount': 1, 
-                'contributorCount': 1,
+                '_id': 0,  
+                'name': '$_id',
+                '__v': '$__v',
                 'createdAt': 1, 
                 'updatedAt': 1, 
-                'contributorsDetail': 1
+                'aggregator.contributions': '$contributions',
+                # calculate fraction of hashtag diversity
+                'aggregator.hastagDiversityScore': {
+                    '$divide': [
+                        '$contributorCount', '$hashtagCount'
+                    ]
+                },
+                # calculate linear combination of engagements 
+                'aggregator.engagementScore': {
+                    '$sum': [
+                        {
+                            '$multiply': [
+                                '$commentedCount', commentedWeight
+                            ]
+                        }, {
+                            '$multiply': [
+                                '$recastedCount', recastedWeight
+                            ]
+                        }, {
+                            '$multiply': [
+                                '$quotedCount', quotedWeight
+                            ]
+                        }, {
+                            '$multiply': [
+                                '$quotedCount', quotedWeight
+                            ]
+                        }
+                    ]
+                },
+                # calculate decay from last update time
+                'aggregator.ageScore': {
+                    '$exp': {
+                        '$multiply': [
+                            {
+                                '$multiply': [
+                                    {
+                                        # calculate age from last update time
+                                        '$divide': [
+                                            {
+                                                '$subtract': [datetime.utcnow(), "$updatedAt"]
+                                            }, 60*60*1000
+                                        ]
+                                    }, {
+                                        # define lambda value
+                                        '$divide': [{'$ln': 2}, halfLifeHours]
+                                    }
+                                ]
+                            }, -1
+                        ]
+                    }
+                }            
             }
+        }, {
+            # summarize all scores
+            '$addFields': {
+                'score': {
+                    '$multiply': [
+                        '$aggregator.hastagDiversityScore',
+                        # add 1 as bias
+                        {'$add': ['$aggregator.engagementScore', 1]},
+                        '$aggregator.ageScore'
+                    ]
+                }
+            }   
         }, {
             # upsert to 'hashtagStats' collection
             '$merge': {
@@ -123,14 +221,14 @@ def handle(event, context):
                 'whenNotMatched': 'insert'
             }
         }
-        ]
+    ]
 
     try:
         # perform aggregation w/ resulting in upsert 'hashtagStats' collection
         contents.aggregate(cursor)
 
         # print message on complete aggregation
-        print('this aggregation has completed at', datetime.now())
+        print('this aggregation has completed at', datetime.utcnow())
 
     except Exception as error:
         print("ERROR", error)
