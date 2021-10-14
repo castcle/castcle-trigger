@@ -15,4 +15,4 @@ B. next steps
 
 ## minor steps
 1. filter 'app-db.contents' to obtain content statistics
-2. integrate all potential related contents from zz
+2. integrate all potential related contents from zz?!$@#$%%$^
