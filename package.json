@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "remove": "serverless remove",
     "deploy": "serverless deploy"
   },
   "repository": {
