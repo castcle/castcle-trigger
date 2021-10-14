@@ -313,21 +313,26 @@ def handle(event, context):
                 'aggregator.engagementScore': '$aggregator.engagementScore', 
                 'aggregator.followedScore': '$aggregator.followedScore', 
                 # calculate overall creator score
-                ## equation: score = (ageScore*(engagementScore_{type}/engagementScore)) + followedScore
+                ## equation: score = (ageScore*(engagementScore_{type}/engagementScore)) + (followedScore + 0.1)
                 'score': {
-                    '$add': [
-                        {
-                            '$multiply': [
-                                {
-                                    '$divide': [
-                                        '$aggregator.engagementScore', '$creatorContentCount'
-                                    ]
-                                }, '$ageScore'
-                            ]
-                        }, '$aggregator.followedScore'
-                    ]
-                }
+                '$add': [
+                    {
+                        '$multiply': [
+                            {
+                                '$divide': [
+                                    '$aggregator.engagementScore', '$creatorContentCount'
+                                ]
+                            }, '$ageScore'
+                        ]
+                    }, {
+                        '$add': [
+                            # add bias = 0.01
+                            '$aggregator.followedScore', 0.01
+                        ]
+                    }
+                ]
             }
+        }
         }, {
             # upsert to 'userStats' collection
             '$merge': {
