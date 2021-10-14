@@ -147,12 +147,14 @@ def handle(event, context):
                 'updatedAt': 1, 
                 'aggregator.contributions': '$contributions',
                 # calculate fraction of hashtag diversity
+                ## equation: hastagDiversityScore = n_{user|hashtag}/n_{content|hashtag}
                 'aggregator.hastagDiversityScore': {
                     '$divide': [
                         '$contributorCount', '$hashtagCount'
                     ]
                 },
                 # calculate linear combination of engagements 
+                ## equation: engagementScore = {\sigma}_{k}({\beta}_{k}*x_{k})
                 'aggregator.engagementScore': {
                     '$sum': [
                         {
@@ -175,6 +177,7 @@ def handle(event, context):
                     ]
                 },
                 # calculate decay from last update time
+                ## equation: ageScore = e^(-{\lambda}*t)
                 'aggregator.ageScore': {
                     '$exp': {
                         '$multiply': [
@@ -211,6 +214,7 @@ def handle(event, context):
             }   
         }, {
             # upsert to 'hashtagStats' collection
+            ## equation: score = ageScore*(engagementScore + 1)*(hastagDiversityScore)
             '$merge': {
                 'into': {
                     'db': 'analytics-db', 
