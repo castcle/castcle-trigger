@@ -66,9 +66,9 @@ def handle(event, context):
             # filter non-hashtag contents out
             '$match': {
                 'name': {
-                '$ne': ''
+                    '$ne': ''
+                    }
                 }
-            }
         }, {
             # summarize by user (not account)
             # collect contentId as array
