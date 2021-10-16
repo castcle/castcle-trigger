@@ -12,6 +12,7 @@ analyticsDb = mongo_client['analytics-db']
 contents = appDb['contents']
 userStats = analyticsDb['creatorStats']
 
+
 def handle(event, context):
     print(json.dumps(event, indent=4))
 
@@ -31,7 +32,7 @@ def handle(event, context):
             # filter only visible contents
             '$match': {
                 'createdAt': {
-                    '$gte': (datetime.utcnow() - timedelta(days=contentDateThreshold)) 
+                    '$gte': (datetime.utcnow() - timedelta(days=contentDateThreshold))
                 },
                 'visibility': 'publish'
             }
@@ -39,24 +40,24 @@ def handle(event, context):
             # summarize to get summation of engagements for each content type & user
             '$group': {
                 '_id': {
-                    'authorId': '$author.id', 
+                    'authorId': '$author.id',
                     'type': '$type'
-                }, 
+                },
                 'contentCount': {
                     '$count': {}
-                }, 
+                },
                 'likedCount': {
                     '$sum': '$engagements.like.count'
-                }, 
+                },
                 'commentedCount': {
                     '$sum': '$engagements.comment.count'
-                }, 
+                },
                 'recastedCount': {
                     '$sum': '$engagements.recast.count'
-                }, 
+                },
                 'quotedCount': {
                     '$sum': '$engagements.quote.count'
-                }, 
+                },
                 'updatedAt': {
                     '$max': '$updatedAt'
                 }
@@ -65,7 +66,7 @@ def handle(event, context):
             # add calculated fields
             '$addFields': {
                 # age score: a decay value as time since last update time
-                ## equation: ageScore = e^(-{\lambda}*t)
+                # equation: ageScore = e^(-{\lambda}*t)
                 'aggregator.ageScore': {
                     '$exp': {
                         '$multiply': [
@@ -90,59 +91,59 @@ def handle(event, context):
                             }, -1
                         ]
                     }
-                }, 
+                },
                 # engagement score: a linear combination result among type of available engagements
-                ## equation: engagementScore = {\sigma}_{k}({\beta}_{k}*x_{k})
+                # equation: engagementScore = {\sigma}_{k}({\beta}_{k}*x_{k})
                 'aggregator.engagementScore': {
                     '$sum': [
-                            {
-                                '$multiply': [
-                                    '$commentedCount', commentedWeight
-                                ]
-                            }, {
-                                '$multiply': [
-                                    '$recastedCount', recastedWeight
-                                ]
-                            }, {
-                                '$multiply': [
-                                    '$quotedCount', quotedWeight
-                                ]
-                            }, {
-                                '$multiply': [
-                                    '$quotedCount', quotedWeight
-                                ]
+                        {
+                            '$multiply': [
+                                '$commentedCount', commentedWeight
+                            ]
+                        }, {
+                            '$multiply': [
+                                '$recastedCount', recastedWeight
+                            ]
+                        }, {
+                            '$multiply': [
+                                '$quotedCount', quotedWeight
+                            ]
+                        }, {
+                            '$multiply': [
+                                '$quotedCount', quotedWeight
+                            ]
                             # add bias = 1
-                            }, 1
-                        ]
+                        }, 1
+                    ]
                 }
             }
         }, {
             # summarize to get summation of engagements for each user
             '$group': {
-                '_id': '$_id.authorId', 
+                '_id': '$_id.authorId',
                 'creatorContentCount': {
                     '$sum': '$contentCount'
-                }, 
+                },
                 'creatorLikedCount': {
                     '$sum': '$likeCount'
-                }, 
+                },
                 'creatorCommentedCount': {
                     '$sum': '$commentCount'
-                }, 
+                },
                 'creatorRecastedCount': {
                     '$sum': '$recastCount'
-                }, 
+                },
                 'creatorQuotedCount': {
                     '$sum': '$quoteCount'
-                }, 
+                },
                 'updatedAt': {
                     '$max': '$updatedAt'
-                }, 
+                },
                 'summary': {
                     '$push': {
-                        'type': '$_id.type', 
-                        'typeCount': '$contentCount', 
-                        'updatedAt': '$updatedAt', 
+                        'type': '$_id.type',
+                        'typeCount': '$contentCount',
+                        'updatedAt': '$updatedAt',
                         'aggregator': '$aggregator'
                     }
                 }
@@ -150,7 +151,7 @@ def handle(event, context):
         }, {
             # deconstruct object, named "summary" for furthor calculation
             '$unwind': {
-                'path': '$summary', 
+                'path': '$summary',
                 'preserveNullAndEmptyArrays': True
             }
         }, {
@@ -174,12 +175,12 @@ def handle(event, context):
                             '$multiply': [
                                 '$creatorQuotedCount', quotedWeight
                             ]
-                        # add bias = 1
+                            # add bias = 1
                         }, 1
                     ]
-                }, 
+                },
                 # calculate weights as fractions of content type per total contents
-                ## equation: typeWeight(type) = n_{content|type}/N_{content}
+                # equation: typeWeight(type) = n_{content|type}/N_{content}
                 'summary.typeWeight': {
                     '$divide': [
                         '$summary.typeCount', '$creatorContentCount'
@@ -189,9 +190,9 @@ def handle(event, context):
         }, {
             # join with 'users' for more information
             '$lookup': {
-                'from': 'users', 
-                'localField': '_id', 
-                'foreignField': '_id', 
+                'from': 'users',
+                'localField': '_id',
+                'foreignField': '_id',
                 'as': 'userDetail'
             }
         }, {
@@ -201,7 +202,7 @@ def handle(event, context):
             }
         }, {
             # calculate followed score then add to both aggregator
-            ## equation: followedScore = (\gamma}*N_{follower}
+            # equation: followedScore = (\gamma}*N_{follower}
             '$addFields': {
                 'followedScore': {
                     '$multiply': [
@@ -214,36 +215,36 @@ def handle(event, context):
         }, {
             # map intermediate result format
             '$project': {
-                '_id': 1, 
-                'creatorContentCount': 1, 
-                'summary.type': 1, 
-                'summary.typeCount': 1, 
-                'summary.typeWeight': 1, 
-                'summary.aggregator.ageScore': 1, 
-                'summary.aggregator.engagementScore': 1, 
-                'aggregator.engagementScore': 1, 
-                'aggregator.followedScore': '$followedScore', 
-                'lastContentUpdatedAt': '$updatedAt', 
-                'summary.lastContentUpdatedAt': '$updatedAt', 
-                'summary.aggregator.followedScore': '$followedScore',  
+                '_id': 1,
+                'creatorContentCount': 1,
+                'summary.type': 1,
+                'summary.typeCount': 1,
+                'summary.typeWeight': 1,
+                'summary.aggregator.ageScore': 1,
+                'summary.aggregator.engagementScore': 1,
+                'aggregator.engagementScore': 1,
+                'aggregator.followedScore': '$followedScore',
+                'lastContentUpdatedAt': '$updatedAt',
+                'summary.lastContentUpdatedAt': '$updatedAt',
+                'summary.aggregator.followedScore': '$followedScore',
                 'ownerAccount': {
                     '$first': '$userDetail.ownerAccount'
-                }, 
+                },
                 'displayId': {
                     '$first': '$userDetail.displayId'
-                }, 
+                },
                 'createdAt': {
                     '$first': '$userDetail.createdAt'
-                }, 
+                },
                 'followedCount': {
                     '$first': '$userDetail.followedCount'
-                }, 
+                },
                 'followerCount': {
                     '$first': '$userDetail.followerCount'
-                }, 
-                'summary.aggregator.followedScore': '$followedScore', 
+                },
+                'summary.aggregator.followedScore': '$followedScore',
                 # calculate creator score for each content type
-                ## equation: score = ((typeWeight)*(ageScore)*(engagementScore_{type}/engagementScore)) + followedScore
+                # equation: score = ((typeWeight)*(ageScore)*(engagementScore_{type}/engagementScore)) + followedScore
                 'summary.score': {
                     '$add': [
                         {
@@ -269,34 +270,34 @@ def handle(event, context):
         }, {
             # summarize content type together
             '$group': {
-                '_id': '$_id', 
+                '_id': '$_id',
                 'ownerAccount': {
                     '$max': '$ownerAccount'
-                }, 
+                },
                 'displayId': {
                     '$max': '$displayId'
-                }, 
+                },
                 'userCreatedAt': {
                     '$max': '$createdAt'
-                }, 
+                },
                 'lastContentUpdatedAt': {
                     '$max': '$lastContentUpdatedAt'
-                }, 
+                },
                 'creatorContentCount': {
                     '$max': '$creatorContentCount'
-                }, 
+                },
                 'followedCount': {
                     '$max': '$followedCount'
-                }, 
+                },
                 'followerCount': {
                     '$max': '$followerCount'
-                }, 
+                },
                 'aggregator': {
                     '$max': '$aggregator'
-                }, 
+                },
                 'summary': {
                     '$push': '$summary'
-                }, 
+                },
                 'ageScore': {
                     '$max': '$summary.aggregator.ageScore'
                 }
@@ -304,20 +305,20 @@ def handle(event, context):
         }, {
             # map final result format
             '$project': {
-                '_id': 1, 
-                'ownerAccount': 1, 
-                'displayId': 1, 
-                'userCreatedAt': 1, 
-                'lastContentUpdatedAt': 1, 
-                'followedCount': 1, 
-                'followerCount': 1, 
-                'summary': 1, 
-                'contentCount': '$creatorContentCount', 
-                'aggregator.ageScore': '$ageScore', 
-                'aggregator.engagementScore': '$aggregator.engagementScore', 
-                'aggregator.followedScore': '$aggregator.followedScore',  
+                '_id': 1,
+                'ownerAccount': 1,
+                'displayId': 1,
+                'userCreatedAt': 1,
+                'lastContentUpdatedAt': 1,
+                'followedCount': 1,
+                'followerCount': 1,
+                'summary': 1,
+                'contentCount': '$creatorContentCount',
+                'aggregator.ageScore': '$ageScore',
+                'aggregator.engagementScore': '$aggregator.engagementScore',
+                'aggregator.followedScore': '$aggregator.followedScore',
                 # calculate overall creator score
-                ## equation: score = (ageScore*(engagementScore_{type}/engagementScore)) + (followedScore + bias)
+                # equation: score = (ageScore*(engagementScore_{type}/engagementScore)) + (followedScore + bias)
                 'score': {
                     '$add': [
                         {
@@ -340,11 +341,11 @@ def handle(event, context):
             # upsert to 'userStats' collection
             '$merge': {
                 'into': {
-                    'db': 'analytics-db', 
+                    'db': 'analytics-db',
                     'coll': 'creatorStats'
-                }, 
-                'on': '_id', 
-                'whenMatched': 'replace', 
+                },
+                'on': '_id',
+                'whenMatched': 'replace',
                 'whenNotMatched': 'insert'
             }
         }
