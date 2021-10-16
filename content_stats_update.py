@@ -15,11 +15,12 @@ contents = appDb['contents']
 creatorStats = analyticsDb['creatorStats']
 hashtagStats = analyticsDb['hashtagStats']
 
+
 def handle(event, context):
     print(json.dumps(event, indent=4))
 
 # define cursor
-## now we have 3 effective collections i.e. 'creatorStats', 'hashtagStat', 'contents'
+# now we have 3 effective collections i.e. 'creatorStats', 'hashtagStat', 'contents'
 # 1. filter only potential related contents as aggregator
 # 2. ordering for obain top potential contents as ranker
 
@@ -39,8 +40,8 @@ def handle(event, context):
             # filter for hashtags those are updated within specific days
             '$match': {
                 'updatedAt': {
-                    '$gte': (datetime.now() - timedelta(days=hashtagDateThreshold)) 
-                    }
+                    '$gte': (datetime.now() - timedelta(days=hashtagDateThreshold))
+                }
             }
         }, {
             # filter non-hashtag out to prevent bias
@@ -65,7 +66,7 @@ def handle(event, context):
         }, {
             # summarize all documents into a single array
             '$group': {
-                '_id': None, 
+                '_id': None,
                 'contents': {
                     '$push': '$contributorsDetail.contents'
                 }
@@ -73,11 +74,11 @@ def handle(event, context):
             # project deconstruct all contentId into a sigle document with label reason as topHashtags
         }, {
             '$project': {
-                '_id': 'topHashtags', 
+                '_id': 'topHashtags',
                 'contentIds': {
                     '$reduce': {
-                        'input': '$contents', 
-                        'initialValue': [], 
+                        'input': '$contents',
+                        'initialValue': [],
                         'in': {
                             '$concatArrays': [
                                 '$$value', '$$this'
@@ -98,8 +99,8 @@ def handle(event, context):
             # filter for new than specific days contents
             '$match': {
                 'lastContentAt': {
-                    '$gte': (datetime.now() - timedelta(days=creatorDateThreshold)) 
-                    }
+                    '$gte': (datetime.now() - timedelta(days=creatorDateThreshold))
+                }
             }
         }, {
             # filter for only available creator users
@@ -109,38 +110,38 @@ def handle(event, context):
         }, {
             # map count values into fractions
             '$project': {
-                '_id': 1, 
+                '_id': 1,
                 'likedRate': {
                     '$divide': [
                         '$creatorLikedCount', '$creatorContentCount'
                     ]
-                }, 
+                },
                 'commentedRate': {
                     '$divide': [
                         '$creatorCommentedCount', '$creatorContentCount'
                     ]
-                }, 
+                },
                 'recastedRate': {
                     '$divide': [
                         '$creatorRecastedCount', '$creatorContentCount'
                     ]
-                }, 
+                },
                 'quotedRate': {
                     '$divide': [
                         '$creatorQuotedCount', '$creatorContentCount'
                     ]
-                }, 
-                'followedCount': 1, 
-                'lastContentAt': 1, 
+                },
+                'followedCount': 1,
+                'lastContentAt': 1,
                 'contentSummary': 1
             }
         }, {
             # order by fractions
             '$sort': {
-                'quotedRate': -1, 
-                'recastedRate': -1, 
-                'commentedRate': -1, 
-                'likedRate': -1, 
+                'quotedRate': -1,
+                'recastedRate': -1,
+                'commentedRate': -1,
+                'likedRate': -1,
                 'lastContentAt': -1
             }
         }, {
@@ -154,7 +155,7 @@ def handle(event, context):
         }, {
             # summarize all documents into a single array
             '$group': {
-                '_id': None, 
+                '_id': None,
                 'contents': {
                     '$push': '$contentSummary.contents'
                 }
@@ -162,11 +163,11 @@ def handle(event, context):
         }, {
             # project deconstruct all contentId into a sigle document with label reason as topCreators
             '$project': {
-                '_id': 'topCreators', 
+                '_id': 'topCreators',
                 'contentIds': {
                     '$reduce': {
-                        'input': '$contents', 
-                        'initialValue': [], 
+                        'input': '$contents',
+                        'initialValue': [],
                         'in': {
                             '$concatArrays': [
                                 '$$value', '$$this'
@@ -180,30 +181,34 @@ def handle(event, context):
 
     try:
         # top hashtags
-        ## aggregate then keep results as array of contentIds
-        topHashtagContents = list(hashtagStats.aggregate(hashtagCursor))[0]['contentIds']
+        # aggregate then keep results as array of contentIds
+        topHashtagContents = list(hashtagStats.aggregate(hashtagCursor))[
+            0]['contentIds']
 
-        ## print message on complete aggregation
-        print('hashtagStats aggregator has returned', len(topHashtagContents), 'contents')
+        # print message on complete aggregation
+        print('hashtagStats aggregator has returned',
+              len(topHashtagContents), 'contents')
         print('hashtagStats aggregation has completed at', datetime.now())
 
         # top creators
-        ## aggregate then keep results as array of contentIds
-        topCreatorContents = list(creatorStats.aggregate(creatorCursor))[0]['contentIds']
+        # aggregate then keep results as array of contentIds
+        topCreatorContents = list(creatorStats.aggregate(creatorCursor))[
+            0]['contentIds']
 
-        ## print message on complete aggregation
-        print('creatorStats aggregator has returned', len(topCreatorContents), 'contents')
+        # print message on complete aggregation
+        print('creatorStats aggregator has returned',
+              len(topCreatorContents), 'contents')
         print('creatorStats aggregation has completed at', datetime.now())
 
-
         # aggregatedPool
-        ## unique combine aggregated content IDs
-        aggregatedPool = topHashtagContents + list(set(topCreatorContents) - set(topHashtagContents))
+        # unique combine aggregated content IDs
+        aggregatedPool = topHashtagContents + \
+            list(set(topCreatorContents) - set(topHashtagContents))
 
-        ## print message on complete combining
+        # print message on complete combining
         print('aggregatedPool has total', len(topCreatorContents), 'contents')
 
-        ## print message on complete implemtation
+        # print message on complete implemtation
         print('this aggregation has completed at', datetime.now())
 
     except Exception as error:
