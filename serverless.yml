@@ -66,6 +66,18 @@ custom:
     dev: 61541005cf5aeb8af6e7e70f
     staging: 61541005cf5aeb8af6e7e70f
     prod: 61541005cf5aeb8af6e7e70f
+  userInsertEventBus:
+    dev: 616af85670473219e6dc15e8
+    staging: 616af85670473219e6dc15e8
+    prod: 616af85670473219e6dc15e8
+  contentStatsEventBus:
+    dev: 616af95670473219e6dcabd0
+    staging: 616af95670473219e6dcabd0
+    prod: 616af95670473219e6dcabd0
+  aggregatorTestEventBus:
+    dev: 616af9c13ef907d00d135e33
+    staging: 616af9c13ef907d00d135e33
+    prod: 616af9c13ef907d00d135e33
 
 provider:
   name: aws
@@ -147,6 +159,42 @@ functions:
     events:
       - eventBridge:
           eventBus: arn:aws:events:us-east-1:044086777883:event-bus/aws.partner/mongodb.com/stitch.trigger/${self:custom.hashtagStatsUpdateEventBus.${self:provider.stage}}
+          pattern:
+            account:
+              - "044086777883"
+  userInsert:
+    name: ${self:provider.stage}-mongodb-trigger-user-insert
+    image:
+      name: app_image
+      command:
+        - user_insert.handle
+    events:
+      - eventBridge:
+          eventBus: arn:aws:events:us-east-1:044086777883:event-bus/aws.partner/mongodb.com/stitch.trigger/${self:custom.userInsertEventBus.${self:provider.stage}}
+          pattern:
+            account:
+              - "044086777883"
+  contentStats:
+    name: ${self:provider.stage}-mongodb-trigger-content-stats
+    image:
+      name: app_image
+      command:
+        - content_stats.handle
+    events:
+      - eventBridge:
+          eventBus: arn:aws:events:us-east-1:044086777883:event-bus/aws.partner/mongodb.com/stitch.trigger/${self:custom.contentStatsEventBus.${self:provider.stage}}
+          pattern:
+            account:
+              - "044086777883"
+  aggregatorTest:
+    name: ${self:provider.stage}-mongodb-trigger-aggregator-test
+    image:
+      name: app_image
+      command:
+        - aggregator_test.handle
+    events:
+      - eventBridge:
+          eventBus: arn:aws:events:us-east-1:044086777883:event-bus/aws.partner/mongodb.com/stitch.trigger/${self:custom.aggregatorTestEventBus.${self:provider.stage}}
           pattern:
             account:
               - "044086777883"
