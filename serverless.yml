@@ -78,6 +78,10 @@ custom:
     dev: 616af9c13ef907d00d135e33
     staging: 616af9c13ef907d00d135e33
     prod: 616af9c13ef907d00d135e33
+  userStatsEventBus:
+    dev: 616c720770473219e696b055
+    staging: 616c720770473219e696b055
+    prod: 616c720770473219e696b055
 
 provider:
   name: aws
@@ -195,6 +199,18 @@ functions:
     events:
       - eventBridge:
           eventBus: arn:aws:events:us-east-1:044086777883:event-bus/aws.partner/mongodb.com/stitch.trigger/${self:custom.aggregatorTestEventBus.${self:provider.stage}}
+          pattern:
+            account:
+              - "044086777883"
+  userStats:
+    name: ${self:provider.stage}-mongodb-trigger-user-stats
+    image:
+      name: app_image
+      command:
+        - user_stats.handle
+    events:
+      - eventBridge:
+          eventBus: arn:aws:events:us-east-1:044086777883:event-bus/aws.partner/mongodb.com/stitch.trigger/${self:custom.userStatsEventBus.${self:provider.stage}}
           pattern:
             account:
               - "044086777883"
