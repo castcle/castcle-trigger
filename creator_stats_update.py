@@ -8,10 +8,7 @@ import math
 
 # setup databases & collections
 appDb = mongo_client['app-db']
-analyticsDb = mongo_client['analytics-db']
 contents = appDb['contents']
-userStats = analyticsDb['creatorStats']
-
 
 def handle(event, context):
     print(json.dumps(event, indent=4))
