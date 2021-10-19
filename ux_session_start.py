@@ -20,11 +20,17 @@ def handle(event, context):
     # have to specify 'event'
 
     try:
+        print('event is')
         print(event)
+        print('\n')
 
-        print(event.detail)
+        print('detail is')
+        print(event['detail'])
+        print('\n')
 
+        print('document is')
         print(event.detail.fullDocument)
+        print('\n')
 
         if event.detail == "insert":
             print("hooray")
