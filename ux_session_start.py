@@ -1,3 +1,7 @@
+# this file aims to implement aggregations whenevery ux_session is started
+# type: database trigger
+
+import json
 import sys
 from mongo_client import mongo_client
 from bson.objectid import ObjectId
