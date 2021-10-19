@@ -31,172 +31,171 @@ def handle(event, context):
     # define content parameters
     topContentslimit = 100
 
-    #################################################################
-    #################################################################
-    # define cursor to get top creator user Ids
-    topCreators = [
-        {
-            # sort creator users by score
-            '$sort': {
-                'score': -1
-            }
-        }, {
-            # slice for only top creator users
-            '$limit': topCreatorsLimit
-        }, {
-            # summarize creator user IDs together
-            '$group': {
-                '_id': None, 
-                'creatorList': {
-                    '$push': '$_id'
-                }
-            }
-        }
-    ]
+    try:
 
-    # define cursor to get contents from top creator users
-    topCreatorContents = [
-        {
-            # filter for only contents created by top creators
-            '$match': {
-                'author.id': {
-                    '$in': topCreatorList
+        #################################################################
+        #################################################################
+        # define cursor to get top creator user Ids
+        topCreators = [
+            {
+                # sort creator users by score
+                '$sort': {
+                    'score': -1
                 }
-            }
-        }, {
-            # summarize content IDs together
-            '$group': {
-                '_id': None,
-                'contents': {
-            '$push': '$_id'
-            }
-            }
-        }, {
-            # map format to return content IDs
-            '$project': {
-                '_id':'global',
-                'reasonTopCreator': '$contents'
-            }    
-        }, {
-            # upsert to 'aggregatedPool' collection
-            '$merge': {
-                'into': {
-                    'db': 'analytics-db', 
-                    'coll': 'aggregatedPool'
-                }, 
-                'on': '_id', 
-                'whenMatched': "merge",  
-                'whenNotMatched': 'insert'
-            }
-        }
-    ]
-
-    # define cursor to get top hashtags content Ids (workaroung while waiting field: 'hashtags' in collection: 'contents')
-    topHashtagCursor = [
-        {
-            # order by score
-            '$sort': {
-                'score': -1
-            }
-        }, {
-            # slice for top numbers
-            '$limit': topHashtaglimit
-        }, {
-            # deconstruct array to object for grouping
-            '$unwind': {
-                'path': '$aggregator.contributions', 
-                'preserveNullAndEmptyArrays': True
-            }
-        }, {
-            # summarize all documents into a single array
-            '$group': {
-                '_id': None, 
-                'contents': {
-                    '$push': '$aggregator.contributions.contents'
-                }
-            }
-        }, {
-            # project deconstruct all contentId into a sigle document with label reason as topHashtags
-            '$project': {
-                '_id': 'global',
-                'reasonTopHashtags': {
-                    '$reduce': {
-                        'input': '$contents', 
-                        'initialValue': [], 
-                        'in': {
-                            '$concatArrays': [
-                            '$$value', '$$this'
-                            ]
-                        }
+            }, {
+                # slice for only top creator users
+                '$limit': topCreatorsLimit
+            }, {
+                # summarize creator user IDs together
+                '$group': {
+                    '_id': None, 
+                    'creatorList': {
+                        '$push': '$_id'
                     }
                 }
             }
-        }, {
-            # upsert to 'aggregatedPool' collectionb
-            '$merge': {
-                'into': {
-                    'db': 'analytics-db', 
-                    'coll': 'aggregatedPool'
-                }, 
-                'on': '_id', 
-                'whenMatched': 'merge', 
-                'whenNotMatched': 'insert'
-            }
-        }
-    ]
+        ]
 
-    # define cursor to get top contents Ids
-    topContentsCursor = [
-        {
-            # order by score
-            '$sort': {
-                'score': -1
-            }
-        }, {
-            # slice for top numbers
-            '$limit': topContentslimit
-        }, {
-            # summarize all documents into a single array
-            '$group': {
-                '_id': None, 
-                'contents': {
-                    '$push': '$_id'
-                }
-            }
-        }, {
-            # project deconstruct all contentId into a sigle document with label reason as topHashtags
-            '$project': {
-                '_id': 'global', 
-                'reasonTopContents': '$contents'
-            }
-        }, {
-            # upsert to 'aggregatedPool' collectionb
-            '$merge': {
-                'into': {
-                    'db': 'analytics-db', 
-                    'coll': 'aggregatedPool'
-                }, 
-                'on': '_id', 
-                'whenMatched': 'merge', 
-                'whenNotMatched': 'insert'
-            }
-        }
-    ]
-
-    #################################################################
-    #################################################################
-    try:
         # perform aggregate top creator users then keep them in variable
         topCreatorList = list(creatorStats.aggregate(topCreators))[0]['creatorList']
+
+        # define cursor to get contents from top creator users
+        topCreatorContents = [
+            {
+                # filter for only contents created by top creators
+                '$match': {
+                    'author.id': {
+                        '$in': topCreatorList
+                    }
+                }
+            }, {
+                # summarize content IDs together
+                '$group': {
+                    '_id': None,
+                    'contents': {
+                '$push': '$_id'
+                }
+                }
+            }, {
+                # map format to return content IDs
+                '$project': {
+                    '_id':'global',
+                    'reasonTopCreator': '$contents'
+                }    
+            }, {
+                # upsert to 'aggregatedPool' collection
+                '$merge': {
+                    'into': {
+                        'db': 'analytics-db', 
+                        'coll': 'aggregatedPool'
+                    }, 
+                    'on': '_id', 
+                    'whenMatched': "merge",  
+                    'whenNotMatched': 'insert'
+                }
+            }
+        ]
 
         # perform aggregate contents which are created by top creator users
         # upsert them in collection: 'aggregatedPool', document: 'global'
         contents.aggregate(topCreatorContents)
 
+        # define cursor to get top hashtags content Ids (workaroung while waiting field: 'hashtags' in collection: 'contents')
+        topHashtagCursor = [
+            {
+                # order by score
+                '$sort': {
+                    'score': -1
+                }
+            }, {
+                # slice for top numbers
+                '$limit': topHashtaglimit
+            }, {
+                # deconstruct array to object for grouping
+                '$unwind': {
+                    'path': '$aggregator.contributions', 
+                    'preserveNullAndEmptyArrays': True
+                }
+            }, {
+                # summarize all documents into a single array
+                '$group': {
+                    '_id': None, 
+                    'contents': {
+                        '$push': '$aggregator.contributions.contents'
+                    }
+                }
+            }, {
+                # project deconstruct all contentId into a sigle document with label reason as topHashtags
+                '$project': {
+                    '_id': 'global',
+                    'reasonTopHashtags': {
+                        '$reduce': {
+                            'input': '$contents', 
+                            'initialValue': [], 
+                            'in': {
+                                '$concatArrays': [
+                                '$$value', '$$this'
+                                ]
+                            }
+                        }
+                    }
+                }
+            }, {
+                # upsert to 'aggregatedPool' collectionb
+                '$merge': {
+                    'into': {
+                        'db': 'analytics-db', 
+                        'coll': 'aggregatedPool'
+                    }, 
+                    'on': '_id', 
+                    'whenMatched': 'merge', 
+                    'whenNotMatched': 'insert'
+                }
+            }
+        ]
+
         # ! (workaround)
         # perform aggregate contents which are members of top hashtags
         # upsert them in collection: 'aggregatedPool', document: 'global'
         hashtagStats.aggregate(topHashtagCursor)
+
+        # define cursor to get top contents Ids
+        topContentsCursor = [
+            {
+                # order by score
+                '$sort': {
+                    'score': -1
+                }
+            }, {
+                # slice for top numbers
+                '$limit': topContentslimit
+            }, {
+                # summarize all documents into a single array
+                '$group': {
+                    '_id': None, 
+                    'contents': {
+                        '$push': '$_id'
+                    }
+                }
+            }, {
+                # project deconstruct all contentId into a sigle document with label reason as topHashtags
+                '$project': {
+                    '_id': 'global', 
+                    'reasonTopContents': '$contents'
+                }
+            }, {
+                # upsert to 'aggregatedPool' collectionb
+                '$merge': {
+                    'into': {
+                        'db': 'analytics-db', 
+                        'coll': 'aggregatedPool'
+                    }, 
+                    'on': '_id', 
+                    'whenMatched': 'merge', 
+                    'whenNotMatched': 'insert'
+                }
+            }
+        ]
 
         # ! (for testing)
         # perform aggregate contents which are top contents
