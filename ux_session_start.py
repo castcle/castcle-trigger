@@ -29,10 +29,10 @@ def handle(event, context):
         print('\n')
 
         print('document is')
-        print(event.detail.fullDocument)
+        print(event['detail']['fullDocument'])
         print('\n')
 
-        if event.detail == "insert":
+        if event['detail'] == "insert":
             print("hooray")
 
     except Exception as error:
