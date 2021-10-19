@@ -32,7 +32,7 @@ def handle(event, context):
         print(event['detail']['fullDocument'])
         print('\n')
 
-        if event['detail'] == "insert":
+        if event['detail']['operationType'] == "insert":
             print("hooray")
 
     except Exception as error:
