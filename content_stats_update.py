@@ -6,7 +6,6 @@ from mongo_client import mongo_client
 from bson.objectid import ObjectId
 from bson import regex
 from datetime import datetime, timedelta
-import re
 import math
 
 # setup databases & collections
@@ -123,3 +122,4 @@ def handle(event, context):
 
     except Exception as error:
         print("ERROR", error)
+        
