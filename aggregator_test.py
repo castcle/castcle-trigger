@@ -1,4 +1,8 @@
-import json
+# This file updates collection 'aggregatedPool' from various criteria
+## some of cursors are workaround & for testing which require to be improved,
+## (workaround) topHashtags
+## (testing) topContents
+
 import sys
 from mongo_client import mongo_client
 from bson.objectid import ObjectId
