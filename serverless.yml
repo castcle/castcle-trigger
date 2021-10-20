@@ -11,7 +11,7 @@ custom:
     - staging
     - prod
   mongoHost:
-    dev: dev-cluster-pl-0.fg2e5.mongodb.net
+    dev: dev-cluster.fg2e5.mongodb.net
     staging: dev-cluster-pl-0.fg2e5.mongodb.net
     prod: dev-cluster-pl-0.fg2e5.mongodb.net
   mongoPassword:
