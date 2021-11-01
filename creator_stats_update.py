@@ -350,7 +350,7 @@ def handle(event, context):
 
     try:
         # perform aggregation w/ resulting in upsert 'creatorStats' collection
-        contents.aggregate(cursor)
+        contents.aggregate(creatorStatsCursor)
 
         # print message on complete aggregation
         print('this aggregation has completed at', datetime.utcnow())
