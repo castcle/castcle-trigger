@@ -13,6 +13,7 @@ analyticsDb = mongo_client['analytics-db']
 ## assign collections
 ### source collections
 contents = appDb['contents']
+engagements = appDb['engagements']
 
 ### destination collections
 creatorStats = analyticsDb['creatorStats']
@@ -123,6 +124,9 @@ cursor = [
         # print message on complete aggregation
         print('global aggregated pool has been updated')
         print('this aggregation has completed at', datetime.utcnow())
+        
+        # print output
+        print(list(engagements.aggregate(cursor)))
 
     except Exception as error:
         print("ERROR", error)
