@@ -20,8 +20,10 @@ def handle(event, context):
     halfLifeHours = 24
     topContentslimit = 100
 
+    try:
+
     # define cursor
-    cursor = [
+    contentStatsCursor = [
         {
             # filter for only visible contents
             '$match': {
@@ -78,14 +80,29 @@ def handle(event, context):
                     ]
                 }, 
                 # project for investigation
+                # add photo count & message character length
                 'updatedAt': 1, 
                 'like': '$engagements.like.count', 
                 'comment': '$engagements.comment.count', 
                 'recast': '$engagements.recast.count', 
-                'quote': '$engagements.quote.count'
+                'quote': '$engagements.quote.count',
+                'photoCount': {
+                    '$size': {
+                        '$ifNull': [
+                            '$payload.photo.contents', []
+                        ]
+                    }
+                },
+                'characterLength': {
+                    '$strLenCP': {
+                        '$ifNull': [
+                        '$payload.message', '-' 
+                        ]
+                    }
+                }
             }
         }, {
-            # 
+            # scoring
             '$addFields': {
                 'score': {
                     '$multiply': [
@@ -113,9 +130,8 @@ def handle(event, context):
         }
     ]
 
-    try:
         # perform aggregation w/ resulting in upsert 'hashtagStats' collection
-        contents.aggregate(cursor)
+        contents.aggregate(contentStatsCursor)
 
         # print message on complete aggregation
         print('this aggregation has completed at', datetime.utcnow())
