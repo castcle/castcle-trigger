@@ -23,7 +23,7 @@ def handle(event, context):
     halfLifeHours = 24
 
     # define cursor
-    cursor = [
+    creatorStatsCursor = [
         {
             # filter age of contents for only newer than specific days
             # filter only visible contents
