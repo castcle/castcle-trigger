@@ -86,6 +86,7 @@ def handle(event, context):
                     'commentCount': '$engagements.comment.count', 
                     'recastCount': '$engagements.recast.count', 
                     'quoteCount': '$engagements.quote.count',
+                    'authorId': '$author.id',
                     'photoCount': {
                         '$size': {
                             '$ifNull': [
