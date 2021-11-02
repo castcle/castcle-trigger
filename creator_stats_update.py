@@ -356,17 +356,17 @@ def handle(event, context):
                     'creatorRecastedCount': '$creatorRecastedCount',
                     'creatorQuotedCount': '$creatorQuotedCount'
                 }
-        #     }, {
-        #         # upsert to 'userStats' collection
-        #         '$merge': {
-        #             'into': {
-        #                 'db': 'analytics-db', 
-        #                 'coll': 'creatorStats'
-        #             }, 
-        #             'on': '_id', 
-        #             'whenMatched': 'replace', 
-        #             'whenNotMatched': 'insert'
-        #         }
+            }, {
+                # upsert to 'userStats' collection
+                '$merge': {
+                    'into': {
+                        'db': 'analytics-db', 
+                        'coll': 'creatorStats'
+                    }, 
+                    'on': '_id', 
+                    'whenMatched': 'replace', 
+                    'whenNotMatched': 'insert'
+                }
             }
         ]
 
