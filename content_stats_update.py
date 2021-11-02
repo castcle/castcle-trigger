@@ -82,10 +82,10 @@ def handle(event, context):
                     # project for investigation
                     # add photo count & message character length
                     'updatedAt': 1, 
-                    'like': '$engagements.like.count', 
-                    'comment': '$engagements.comment.count', 
-                    'recast': '$engagements.recast.count', 
-                    'quote': '$engagements.quote.count',
+                    'likeCount': '$engagements.like.count', 
+                    'commentCount': '$engagements.comment.count', 
+                    'recastCount': '$engagements.recast.count', 
+                    'quoteCount': '$engagements.quote.count',
                     'photoCount': {
                         '$size': {
                             '$ifNull': [
