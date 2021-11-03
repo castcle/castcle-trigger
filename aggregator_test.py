@@ -188,6 +188,9 @@ def handle(event, context):
         ## fill NaN just for testing
         transaction_engagements.fillna(0,inplace=True)
 
+        ## simply explore dataframe
+        transaction_engagements.head(2)
+
         #################################################################
         select_user = transaction_engagements.groupby('userId')['contentId'].agg('count').reset_index()
 
@@ -221,6 +224,9 @@ def handle(event, context):
             pprint(n)
             ml_artifacts.append(xg_reg) # collect list of artifacts
             
+            ## simply print to diagnosis
+            print(ml_artifacts)
+
             # upsert 
             save_model_to_mongodb(collection=mlArtifacts,
                                 account=n,
