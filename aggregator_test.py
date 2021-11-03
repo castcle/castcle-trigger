@@ -25,6 +25,9 @@ creatorStats = analyticsDb['creatorStats']
 contentStats = analyticsDb['contentStats']
 mlArtifacts = analyticsDb['mlArtifacts']
 
+## mocked collection
+mlArtifacts_mocked = analyticsDb['mlArtifacts_mocked']
+
 # define upsert function
 def save_model_to_mongodb(collection, model_name, account, model):
     
@@ -44,6 +47,7 @@ def save_model_to_mongodb(collection, model_name, account, model):
         }, upsert= True)
 
 def handle(event, context):
+    
     print(json.dumps(event, indent=4))
 
     # define content parameters
@@ -51,151 +55,183 @@ def handle(event, context):
 
     try:
 
+        # #################################################################
+        # #################################################################
+        # # define cursor of content features
+        # contentFeaturesCursor = [
+        #     {
+        #         # filter age of contents for only newer than specific days
+        #         # filter only visible contents
+        #         '$match': {
+        #             'updatedAt': {
+        #                 '$gte': (datetime.utcnow() - timedelta(days=updatedAtThreshold)) 
+        #             }
+        #         }
+        #     }, {
+        #         # join with creator stats
+        #         '$lookup': {
+        #             'from': 'creatorStats', 
+        #             'localField': 'authorId', 
+        #             'foreignField': '_id', 
+        #             'as': 'userStats'
+        #         }
+        #     }, {
+        #         # deconstruct array
+        #         '$unwind': {
+        #             'path': '$userStats', 
+        #             'preserveNullAndEmptyArrays': True
+        #         }
+        #     }, {
+        #         # map output format
+        #         '$project': {
+        #             '_id': 1,
+        #             'likeCount': 1,
+        #             'commentCount': 1,
+        #             'recastCount': 1,
+        #             'quoteCount': 1,
+        #             'photoCount': 1,
+        #             'characterLength': 1,
+        #             'creatorContentCount' :'$userStats.contentCount',
+        #             'creatorLikedCount': '$userStats.creatorLikedCount',
+        #             'creatorCommentedCount': '$userStats.creatorCommentedCount',
+        #             'creatorRecastedCount': '$userStats.creatorRecastedCount',
+        #             'creatorQuotedCount': '$userStats.creatorQuotedCount',
+        #             'ageScore': '$aggregator.ageScore'
+        #         }
+        #     }
+        # ]
+
+        # # assign result to dataframe
+        # content_features = pd.DataFrame(list(contentStats.aggregate(contentFeaturesCursor))).rename({'_id':'contentId'},axis = 1)
+
+        # # define cursor of engagement transaction
+        # transactionEngagementsCursor = [
+        #     {
+        #         # summarize by pairing of user ID & content ID 
+        #         '$group': {
+        #             '_id': {
+        #                 'userId': '$user', 
+        #                 'contentId': '$itemId'
+        #             }, 
+        #             'engangements': {
+        #                 '$push': '$type'
+        #             }
+        #         }
+        #     }, {
+        #         # deconstruct for ease of adding fields
+        #         '$unwind': {
+        #             'path': '$engangements'
+        #         }
+        #     }, {
+        #         # add fields by matching engagement types 
+        #         '$addFields': {
+        #             'like': {
+        #                 '$toInt': {
+        #                     '$eq': [
+        #                         '$engangements', 'like'
+        #                     ]
+        #                 }
+        #             }, 
+        #             'comment': {
+        #                 '$toInt': {
+        #                     '$eq': [
+        #                         '$engangements', 'comment'
+        #                     ]
+        #                 }
+        #             }, 
+        #             'recast': {
+        #                 '$toInt': {
+        #                     '$eq': [
+        #                         '$engangements', 'recast'
+        #                     ]
+        #                 }
+        #             }, 
+        #             'quote': {
+        #                 '$toInt': {
+        #                     '$eq': [
+        #                         '$engangements', 'quote'
+        #                     ]
+        #                 }
+        #             }
+        #         }
+        #     }, {
+        #         # summarize to merge all added engagement types
+        #         '$group': {
+        #             '_id': '$_id', 
+        #             'like': {
+        #                 '$first': '$like'
+        #             }, 
+        #             'comment': {
+        #                 '$first': '$comment'
+        #             }, 
+        #             'recast': {
+        #                 '$first': '$recast'
+        #             }, 
+        #             'quote': {
+        #                 '$first': '$quote'
+        #             }
+        #         }
+        #     }, {
+        #         # map output format as followed requirement
+        #         '$project': {
+        #             '_id': 0, 
+        #             'userId': '$_id.userId', 
+        #             'contentId': '$_id.contentId', 
+        #             'like': '$like', 
+        #             'comment': '$comment', 
+        #             'recast': '$recast', 
+        #             'quote': '$quote'
+        #         }
+        #     }
+        # ]
+
+        # # assign result to dataframe
+        # transaction_engagements = pd.DataFrame(list(engagements.aggregate(transactionEngagementsCursor)))
+
+        # #################################################################
+        # ## fill NaN just for testing
+        # transaction_engagements.fillna(0,inplace=True)
+
+        # ## simply explore dataframe
+        # print(transaction_engagements.head(2))
+        # print('\n')
+
+
+
+        # #################################################################
+        # select_user = transaction_engagements.groupby('userId')['contentId'].agg('count').reset_index()
+
+        # select_user = select_user[select_user['contentId'] > 2]
+
         #################################################################
         #################################################################
-        # define cursor of content features
-        contentFeaturesCursor = [
-            {
-                # filter age of contents for only newer than specific days
-                # filter only visible contents
-                '$match': {
-                    'updatedAt': {
-                        '$gte': (datetime.utcnow() - timedelta(days=updatedAtThreshold)) 
-                    }
-                }
-            }, {
-                # join with creator stats
-                '$lookup': {
-                    'from': 'creatorStats', 
-                    'localField': 'authorId', 
-                    'foreignField': '_id', 
-                    'as': 'userStats'
-                }
-            }, {
-                # deconstruct array
-                '$unwind': {
-                    'path': '$userStats', 
-                    'preserveNullAndEmptyArrays': True
-                }
-            }, {
-                # map output format
-                '$project': {
-                    '_id': 1,
-                    'likeCount': 1,
-                    'commentCount': 1,
-                    'recastCount': 1,
-                    'quoteCount': 1,
-                    'photoCount': 1,
-                    'characterLength': 1,
-                    'creatorContentCount' :'$userStats.contentCount',
-                    'creatorLikedCount': '$userStats.creatorLikedCount',
-                    'creatorCommentedCount': '$userStats.creatorCommentedCount',
-                    'creatorRecastedCount': '$userStats.creatorRecastedCount',
-                    'creatorQuotedCount': '$userStats.creatorQuotedCount',
-                    'ageScore': '$aggregator.ageScore'
-                }
-            }
-        ]
-
-        # assign result to dataframe
-        content_features = pd.DataFrame(list(contentStats.aggregate(contentFeaturesCursor))).rename({'_id':'contentId'},axis = 1)
-
-        # define cursor of engagement transaction
-        transactionEngagementsCursor = [
-            {
-                # summarize by pairing of user ID & content ID 
-                '$group': {
-                    '_id': {
-                        'userId': '$user', 
-                        'contentId': '$itemId'
-                    }, 
-                    'engangements': {
-                        '$push': '$type'
-                    }
-                }
-            }, {
-                # deconstruct for ease of adding fields
-                '$unwind': {
-                    'path': '$engangements'
-                }
-            }, {
-                # add fields by matching engagement types 
-                '$addFields': {
-                    'like': {
-                        '$toInt': {
-                            '$eq': [
-                                '$engangements', 'like'
-                            ]
-                        }
-                    }, 
-                    'comment': {
-                        '$toInt': {
-                            '$eq': [
-                                '$engangements', 'comment'
-                            ]
-                        }
-                    }, 
-                    'recast': {
-                        '$toInt': {
-                            '$eq': [
-                                '$engangements', 'recast'
-                            ]
-                        }
-                    }, 
-                    'quote': {
-                        '$toInt': {
-                            '$eq': [
-                                '$engangements', 'quote'
-                            ]
-                        }
-                    }
-                }
-            }, {
-                # summarize to merge all added engagement types
-                '$group': {
-                    '_id': '$_id', 
-                    'like': {
-                        '$first': '$like'
-                    }, 
-                    'comment': {
-                        '$first': '$comment'
-                    }, 
-                    'recast': {
-                        '$first': '$recast'
-                    }, 
-                    'quote': {
-                        '$first': '$quote'
-                    }
-                }
-            }, {
-                # map output format as followed requirement
-                '$project': {
-                    '_id': 0, 
-                    'userId': '$_id.userId', 
-                    'contentId': '$_id.contentId', 
-                    'like': '$like', 
-                    'comment': '$comment', 
-                    'recast': '$recast', 
-                    'quote': '$quote'
-                }
-            }
-        ]
-
-        # assign result to dataframe
-        transaction_engagements = pd.DataFrame(list(engagements.aggregate(transactionEngagementsCursor)))
-
         #################################################################
+        ## test on mocked data
+
+        content_features = pd.DataFrame(list(analyticsDb['contentFeatures'].find()))
+        content_features = content_features.fillna(0).rename({'_id':'contentId'},axis = 1).drop('userId',axis = 1)
+
+        transaction_engagements = pd.DataFrame(list(analyticsDb['transactionEngagements'].find()))
+
+        transaction_engagements = transaction_engagements.merge(content_features, 
+                                                        on = 'contentId',
+                                                        how ='left')
+
+        transaction_engagements['label'] = transaction_engagements['like'] + transaction_engagements['comment'] + transaction_engagements['recast'] + transaction_engagements['quote']
+
+        transaction_engagements.drop(['_id'],axis = 1, inplace=True)
+
         ## fill NaN just for testing
         transaction_engagements.fillna(0,inplace=True)
 
-        ## simply explore dataframe
-        print(transaction_engagements.head(2))
-        print('\n')
-
-        #################################################################
         select_user = transaction_engagements.groupby('userId')['contentId'].agg('count').reset_index()
 
         select_user = select_user[select_user['contentId'] > 2]
+
+
+        #################################################################
+        #################################################################
+        #################################################################
 
         ml_artifacts = [] # pre-define model artifacts
 
@@ -224,7 +260,6 @@ def handle(event, context):
             ylr = focus_transaction.label
 
             xg_reg = xgb.XGBRegressor()
-            print('\n')
 
             ## simply print model on successful construction
             print(xg_reg)
@@ -243,7 +278,8 @@ def handle(event, context):
             print('\n')
 
             # upsert 
-            save_model_to_mongodb(collection=mlArtifacts,
+            ###!!! change collection back to  mlArtifacts when deploy
+            save_model_to_mongodb(collection=mlArtifacts_mocked,
                                 account=n,
                                 model_name='xgboost',
                                 model=xg_reg)
