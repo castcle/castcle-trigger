@@ -189,7 +189,7 @@ def handle(event, context):
         transaction_engagements.fillna(0,inplace=True)
 
         ## simply explore dataframe
-        transaction_engagements.head(2)
+        print(transaction_engagements.head(2))
         print('\n')
 
         #################################################################
@@ -217,7 +217,7 @@ def handle(event, context):
             focus_transaction['label'] = focus_transaction['like'] + focus_transaction['comment'] + focus_transaction['recast'] + focus_transaction['quote']  
 
             ## simply print dataset
-            print(focus_transaction)
+            print(focus_transaction.head(2))
             print('\n')
 
             Xlr = focus_transaction.drop(['label','userId','contentId','like','comment','recast','quote'],axis = 1)
