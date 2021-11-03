@@ -190,6 +190,7 @@ def handle(event, context):
 
         ## simply explore dataframe
         transaction_engagements.head(2)
+        print('\n')
 
         #################################################################
         select_user = transaction_engagements.groupby('userId')['contentId'].agg('count').reset_index()
@@ -215,17 +216,31 @@ def handle(event, context):
             focus_transaction.loc[:,'quote'] = focus_transaction.loc[:,'quote'] * portion.loc[0,'quote_count']
             focus_transaction['label'] = focus_transaction['like'] + focus_transaction['comment'] + focus_transaction['recast'] + focus_transaction['quote']  
 
+            ## simply print dataset
+            print(focus_transaction)
+            print('\n')
+
             Xlr = focus_transaction.drop(['label','userId','contentId','like','comment','recast','quote'],axis = 1)
             ylr = focus_transaction.label
 
             xg_reg = xgb.XGBRegressor()
+            print('\n')
+
+            ## simply print model on successful construction
+            print(xg_reg)
+            print('\n')
+
             xg_reg.fit(Xlr, ylr)
             
-            pprint(n)
+            ## simply print considering user
+            print(n)
+            print('\n')
+
             ml_artifacts.append(xg_reg) # collect list of artifacts
             
             ## simply print to diagnosis
             print(ml_artifacts)
+            print('\n')
 
             # upsert 
             save_model_to_mongodb(collection=mlArtifacts,
