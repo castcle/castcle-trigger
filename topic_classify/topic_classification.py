@@ -27,7 +27,7 @@
 # [START language_classify_text]
 from google.cloud import language_v1
 
-def sample_classify_text(text_content: str, _id: str) -> dict:
+def classify_text(text_content: str, _id: str) -> dict:
     """
     Classifying Content in a String
     Args:
