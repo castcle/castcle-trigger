@@ -19,5 +19,7 @@ def handle(event, context):
     print(coldstart_main_result)
     
     return {
-        "status": 200
+        "status": 200,
+        "country": countryId,
+        "contents": coldstart_main_result
     }
