@@ -153,7 +153,7 @@ def cold_start_by_counytry_scroing( saved_model = 'mlArtifacts_country',
 
 def coldstart_ret(country_scoring_result):
     
-    contents_res = country_scoring_result.to_json(orient="index")
+    contents_res = country_scoring_result.head(100).to_json(orient="index")
     
     return contents_res
 
