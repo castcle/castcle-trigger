@@ -34,6 +34,7 @@ def personalized_content(db,
     import json
     import xgboost as xgb
     import bson.objectid
+    from bson import ObjectId
     from datetime import datetime
     from pprint import pprint
     import numpy as np
@@ -52,7 +53,7 @@ def personalized_content(db,
     content_feature = db[content_features]
     print('content_feature:',content_feature, type(content_feature))
     # convert objectid
-    user_id = bson.objectid(user_id)
+    user_id = ObjectId(user_id)
     # perform loading model
     xg_reg_load = load_model_from_mongodb(collection=collection,
                                  account=user_id,

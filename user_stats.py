@@ -12,7 +12,7 @@ def handle(event, context):
     from modules.personalized_content.personalize_content \
         import personalized_content
     print(json.dumps(event, indent=4))
-    
+    print(event)
     #! accountid = account
     user_id = event['accountid']
     
