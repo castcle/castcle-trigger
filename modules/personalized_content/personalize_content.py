@@ -68,7 +68,7 @@ def personalized_content(db,
                                  model_name='xgboost')
 #	model_df = pd.DataFrame(list(.find({ "account" : user_id })))
     # perform loading features
-    # 
+    print('user_id:', user_id, type(user_id)) 
     features = pd.DataFrame(list(content_feature.find({ "account" : user_id })))
 
     #!
