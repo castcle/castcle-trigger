@@ -151,6 +151,12 @@ def cold_start_by_counytry_scroing( saved_model = 'mlArtifacts_country',
     logging.info('Country Scoring Done')
     return result
 
+def coldstart_ret(country_scoring_result):
+    
+    contents_res = country_scoring_result.to_json(orient="index")
+    
+    return contents_res
+
 def coldstart_main(model_save_cllctn='mlArtifacts_country', countryId='SP', 
                    model_name='xgboost', content_features='contentFeatures',
                    input_engagement='transactionEngagements_country2'):
@@ -169,6 +175,9 @@ def coldstart_main(model_save_cllctn='mlArtifacts_country', countryId='SP',
                                 countryId = countryId,
                                 model_name = model_name)
     
+    # 3 return result in json format
+    country_scoring_res_json = coldstart_ret(country_scoring_result)
+    
     logging.info('Country scoring done')
     
-    return country_scoring_result
+    return country_scoring_res_json
