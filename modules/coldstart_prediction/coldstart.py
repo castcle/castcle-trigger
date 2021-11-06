@@ -152,6 +152,14 @@ def cold_start_by_counytry_scroing( saved_model = 'mlArtifacts_country',
     return result
 
 def coldstart_ret(country_scoring_result, head):
+    from bson import ObjectId
+    import json
+    class JSONEncoder(json.JSONEncoder):
+        def default(self, o):
+            if isinstance(o, ObjectId):
+                return str(o)
+            return json.JSONEncoder.default(self, o)
+    
     country_scoring_result = country_scoring_result.head(head)
     
     contents_res = {}
@@ -168,6 +176,8 @@ def coldstart_ret(country_scoring_result, head):
         }
         
         row_num+=1
+        
+    contents_res = JSONEncoder().encode(contents_res)
     
     return contents_res
 
