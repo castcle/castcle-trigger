@@ -266,7 +266,8 @@ def handle(event, context):
             print('\n')
 
             xg_reg.fit(Xlr, ylr)
-            
+            #! debug
+            print(Xlr)
             ## simply print considering user
             print(n)
             print('\n')
