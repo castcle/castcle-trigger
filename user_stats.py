@@ -13,6 +13,7 @@ def handle(event, context):
         import personalized_content
     print(json.dumps(event, indent=4))
     
+    #! accountid = account
     user_id = event['accountid']
     
     personalized_content_result = personalized_content(db=analyticsDb, 
