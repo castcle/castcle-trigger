@@ -15,10 +15,10 @@ def handle(event, context):
     
     user_id = event['accountid']
     
-    personalized_content_result = personalized_content(analyticsDb, 
-                                                       ml_artifact,
-                                                       content_feature,
-                                                       user_id
+    personalized_content_result = personalized_content(db=analyticsDb, 
+                                                       collection_name=ml_artifact,
+                                                       content_features=content_feature,
+                                                       user_id=user_id
 	)
     
     

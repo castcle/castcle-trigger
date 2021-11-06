@@ -4,6 +4,10 @@ def load_model_from_mongodb(collection, model_name, account):
     import pickle
     json_data = {}
         
+    #!
+    print('collection', collection, type(collection))
+    print('model_name', model_name, type(model_name))
+    print('account', account, type(account))
     # find user's model artifact
     data = collection.find({
         'account': account,
@@ -33,9 +37,19 @@ def personalized_content(db,
     from pprint import pprint
     import numpy as np
     
-     #
+    print('db',db)
+    print(type(db))
+    print('collection_name',collection_name)
+    print(type(collection_name))
+    print('content_features',content_features)
+    print(type(content_features))
+    print('user_id',user_id)
+    print(type(user_id))
+    #
     collection = db[collection_name]
+    print(collection)
     content_feature = db[content_features]
+    print(content_feature)
 
     # perform loading model
     xg_reg_load = load_model_from_mongodb(collection=collection,
