@@ -18,7 +18,10 @@ def handle(event, context):
 
     # event.fullDocument._id
     # have to specify 'event'
-
+    '''
+    print(event) ->
+    {'accountid': "ObjectId('61700a6151db852fd36d2142')"}
+    '''
     try:
         print('event is')
         print(event)

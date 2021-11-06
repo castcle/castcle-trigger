@@ -3,24 +3,25 @@ import pandas as pd
 def load_model_from_mongodb(collection, model_name, account):
     import pickle
     json_data = {}
-        
+    '''
     #!
     print('collection', collection, type(collection))
     print('model_name', model_name, type(model_name))
     print('account', account, type(account))
+    '''
     # find user's model artifact
     data = collection.find({
         'account': account,
         'model': model_name
     })
     #!
-    print('data:', data, type(data))
+#    print('data:', data, type(data))
     for i in data:
         json_data = i
     #!
-    print(json_data)
+#    print(json_data)
     pickled_model = json_data['artifact']
-    print('pickled:', pickled_model, type(pickled_model))
+#    print('pickled:', pickled_model, type(pickled_model))
     return pickle.loads(pickled_model)
 
 def personalized_content(db,
@@ -38,22 +39,29 @@ def personalized_content(db,
     from datetime import datetime
     from pprint import pprint
     import numpy as np
-    
+    '''
     print('db',db)
     print(type(db))
     print('collection_name',collection_name)
     print(type(collection_name))
     print('content_features',content_features)
     print(type(content_features))
-    print('user_id',user_id)
-    print(type(user_id))
+    '''
     #
     collection = db[collection_name]
-    print('collection:', collection, type(collection))
+#    print('collection:', collection, type(collection))
     content_feature = db[content_features]
-    print('content_feature:',content_feature, type(content_feature))
+#    print('content_feature:',content_feature, type(content_feature))
+
     # convert objectid
-    user_id = ObjectId(user_id)
+    if not isinstance(user_id, ObjectId):
+        user_id = ObjectId(user_id)
+    elif isinstance(user_id, ObjectId):
+        user_id = user_id
+    else:
+        raise TypeError
+#    print('user_id',user_id)
+#    print(type(user_id))
     # perform loading model
     xg_reg_load = load_model_from_mongodb(collection=collection,
                                  account=user_id,
@@ -63,7 +71,8 @@ def personalized_content(db,
     # 
     features = pd.DataFrame(list(content_feature.find({ "account" : user_id })))
 
-    
+    #!
+    print('features:', features, type(features))
 
     features = features.rename({'_id':'contentId'},axis = 1)\
         .drop(['contentId','userId'], axis = 1)
