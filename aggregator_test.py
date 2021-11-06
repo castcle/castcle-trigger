@@ -268,6 +268,7 @@ def handle(event, context):
             xg_reg.fit(Xlr, ylr)
             #! debug
             print(Xlr)
+            print(list(Xlr.columns))
             ## simply print considering user
             print(n)
             print('\n')
