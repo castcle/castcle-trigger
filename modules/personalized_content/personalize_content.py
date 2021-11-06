@@ -12,7 +12,8 @@ def load_model_from_mongodb(collection, model_name, account):
     
     for i in data:
         json_data = i
-    
+    #!
+    print(json_data)
     pickled_model = json_data['artifact']
     
     return pickle.loads(pickled_model)
