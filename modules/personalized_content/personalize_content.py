@@ -2,7 +2,6 @@ import pandas as pd
 
 def load_model_from_mongodb(collection, model_name, account):
     import pickle
-    import pymongo
     json_data = {}
         
     #!
@@ -14,7 +13,8 @@ def load_model_from_mongodb(collection, model_name, account):
         'account': account,
         'model': model_name
     })
-    
+    #!
+    print('data:', data, type(data))
     for i in data:
         json_data = i
     #!
@@ -51,7 +51,8 @@ def personalized_content(db,
     print('collection:', collection, type(collection))
     content_feature = db[content_features]
     print('content_feature:',content_feature, type(content_feature))
-
+    # convert objectid
+    user_id = bson.objectid(user_id)
     # perform loading model
     xg_reg_load = load_model_from_mongodb(collection=collection,
                                  account=user_id,
