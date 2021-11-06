@@ -2,6 +2,7 @@ import pandas as pd
 
 def load_model_from_mongodb(collection, model_name, account):
     import pickle
+    import pymongo
     json_data = {}
         
     #!
@@ -19,7 +20,7 @@ def load_model_from_mongodb(collection, model_name, account):
     #!
     print(json_data)
     pickled_model = json_data['artifact']
-    
+    print('pickled:', pickled_model, type(pickled_model))
     return pickle.loads(pickled_model)
 
 def personalized_content(db,
@@ -47,9 +48,9 @@ def personalized_content(db,
     print(type(user_id))
     #
     collection = db[collection_name]
-    print(collection)
+    print('collection:', collection, type(collection))
     content_feature = db[content_features]
-    print(content_feature)
+    print('content_feature:',content_feature, type(content_feature))
 
     # perform loading model
     xg_reg_load = load_model_from_mongodb(collection=collection,
