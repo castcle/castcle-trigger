@@ -12,14 +12,13 @@ def handle(event, context):
     from modules.personalized_content.personalize_content \
         import personalized_content
     print(json.dumps(event, indent=4))
-    print(event)
-    #! accountid = account
-    user_id = event['accountid']
     
-    personalized_content_result = personalized_content(db=analyticsDb, 
-                                                       collection_name=ml_artifact,
-                                                       content_features=content_feature,
-                                                       user_id=user_id
+    user_id = event['detail']['fullDocument']['account']
+    
+    personalized_content_result = personalized_content(analyticsDb, 
+                                                       ml_artifact,
+                                                       content_feature,
+                                                       user_id
 	)
     
     
