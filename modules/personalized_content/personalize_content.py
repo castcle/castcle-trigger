@@ -1,3 +1,4 @@
+from logging import log
 import pandas as pd
 
 def load_model_from_mongodb(collection, model_name, account):
@@ -39,6 +40,7 @@ def personalized_content(db,
     from datetime import datetime
     from pprint import pprint
     import numpy as np
+    import logging
     '''
     print('db',db)
     print(type(db))
@@ -77,6 +79,8 @@ def personalized_content(db,
 
     features = features.rename({'_id':'contentId'},axis = 1)\
         .drop(['contentId','userId'], axis = 1)
+    logging.info('Predicting')
+    print(list(features.columns))
     result_df = pd.DataFrame(xg_reg_load.predict(features), columns = ['predict'])
     features_rnm_slced = features[['_id']]\
          .rename({'_id':'contentId'},axis = 1)\
