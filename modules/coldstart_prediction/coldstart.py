@@ -151,9 +151,23 @@ def cold_start_by_counytry_scroing( saved_model = 'mlArtifacts_country',
     logging.info('Country Scoring Done')
     return result
 
-def coldstart_ret(country_scoring_result):
+def coldstart_ret(country_scoring_result, head):
+    country_scoring_result = country_scoring_result.head(head)
     
-    contents_res = country_scoring_result.head(100).to_json(orient="index")
+    contents_res = {}
+    row_num = 0
+    for index, row in country_scoring_result.iterrows():
+        _id_str = row[0]
+        _predict = str(row[1])
+        _countryId = str(row[2])
+        
+        contents_res[row_num] = {
+            '_id': _id_str,
+            'predict_score': _predict,
+            'countryId': _countryId
+        }
+        
+        row_num+=1
     
     return contents_res
 
@@ -176,7 +190,7 @@ def coldstart_main(model_save_cllctn='mlArtifacts_country', countryId='SP',
                                 model_name = model_name)
     
     # 3 return result in json format
-    country_scoring_res_json = coldstart_ret(country_scoring_result)
+    country_scoring_res_json = coldstart_ret(country_scoring_result, head=100)
     
     logging.info('Country scoring done')
     
