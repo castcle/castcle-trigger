@@ -12,9 +12,9 @@ def handle(event, context):
     from modules.personalized_content.personalize_content \
         import personalized_content
     print(json.dumps(event, indent=4))
-    print("here")
+    
     user_id = event['accountid']
-    print("here2")
+    
     personalized_content_result = personalized_content(analyticsDb, 
                                                        ml_artifact,
                                                        content_feature,
