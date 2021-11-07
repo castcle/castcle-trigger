@@ -25,7 +25,7 @@ def load_model_from_mongodb(collection, model_name, account):
 #    print('pickled:', pickled_model, type(pickled_model))
     return pickle.loads(pickled_model)
 
-def personalized_content(db,
+def personalized_content_main(db,
                          collection_name: str, 
                          content_features: str,
                          user_id):
