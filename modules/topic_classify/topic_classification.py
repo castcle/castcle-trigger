@@ -3,8 +3,15 @@ import re
 import itertools
 import pandas as pd
 # from mongo_client import mongo_client # uncomment this line when using 'lambda function'
-from lang_detector import lang_detect
+#from lang_detector import lang_detect
 from google.cloud import language_v1
+
+def lang_detect(text: str):
+    from langdetect import detect
+    
+    result_lang = detect(text)
+    
+    return result_lang
 
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"]="./modules/topic_classify/gcp_data-science_service-account_key.json"
 
