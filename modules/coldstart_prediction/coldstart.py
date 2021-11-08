@@ -186,11 +186,11 @@ def coldstart_main(model_save_cllctn='mlArtifacts_country', countryId='SP',
                    input_engagement='transactionEngagements_country2'):
     
     # 1 train
-    cold_start_by_counytry_modeling(
-        input_engagement = input_engagement,
-        saved_model = model_save_cllctn,
-        content_features = content_features,
-        model_name = model_name)
+#    cold_start_by_counytry_modeling(
+#        input_engagement = input_engagement,
+#        saved_model = model_save_cllctn,
+#        content_features = content_features,
+#        model_name = model_name)
     
     # 2 predict
     country_scoring_result = cold_start_by_counytry_scroing(
