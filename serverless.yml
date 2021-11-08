@@ -88,7 +88,7 @@ provider:
   lambdaHashingVersion: 20201221
   stage: ${opt:stage, 'dev'}
   region: ${opt:region, 'us-east-1'}
-  memorySize: 128
+  memorySize: 256
   timeout: 900
   stackName: ${self:provider.stage}-mongodb-triggers
   logRetentionInDays: 14
