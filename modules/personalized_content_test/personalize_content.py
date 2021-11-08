@@ -147,10 +147,10 @@ def personalized_content_scroing( saved_model = 'mlArtifacts',
 
 def personalized_content_main():
     
-    personalized_content_modeling(input_engagement = 'transactionEngagements',
-                                    saved_model = 'mlArtifacts',
-                                    content_features = 'contentFeatures',
-                                    model_name = 'xgboost')
+#    personalized_content_modeling(input_engagement = 'transactionEngagements',
+#                                    saved_model = 'mlArtifacts',
+#                                    content_features = 'contentFeatures',
+#                                    model_name = 'xgboost')
     
     personalized_content_scroing( saved_model = 'mlArtifacts',
                                     content_features = 'contentFeatures',
