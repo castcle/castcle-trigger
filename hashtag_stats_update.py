@@ -14,6 +14,10 @@ contents = appDb['contents']
 
 
 def handle(event, context):
+    if event.get("source") == "serverless-plugin-warmup":
+        print("WarmUp - Lambda is warm!")
+        return
+
     print(json.dumps(event, indent=4))
 
     # define RegEx
@@ -34,15 +38,15 @@ def handle(event, context):
             # filter contents for newer than specific age
             '$match': {
                 'createdAt': {
-                    '$gte': (datetime.utcnow() - timedelta(days=contentDateThreshold)) 
-                    }
+                    '$gte': (datetime.utcnow() - timedelta(days=contentDateThreshold))
+                }
             }
         }, {
             # extract hashtag => array
             '$addFields': {
                 'hashtags': {
                     '$regexFindAll': {
-                        'input': '$payload.message', 
+                        'input': '$payload.message',
                         'regex': pattern
                     }
                 }
@@ -50,14 +54,14 @@ def handle(event, context):
         }, {
             # deconstruct hashtags array => hashtag object
             '$unwind': {
-                'path': '$hashtags', 
+                'path': '$hashtags',
                 'preserveNullAndEmptyArrays': True
             }
         }, {
             # extract hashtag object => field
             '$addFields': {
-            'name': {
-                '$toLower': '$hashtags.match'
+                'name': {
+                    '$toLower': '$hashtags.match'
                 }
             }
         }, {
@@ -65,8 +69,8 @@ def handle(event, context):
             '$match': {
                 'name': {
                     '$ne': ''
-                    }
                 }
+            }
         }, {
             # summarize by user (not account)
             # collect contentId as array
@@ -74,13 +78,13 @@ def handle(event, context):
                 '_id': {
                     'name': '$name',
                     'authorId': '$author.id'
-                }, 
+                },
                 'contributionCount': {
                     '$count': {}
-                }, 
+                },
                 'createdAt': {
                     '$min': '$createdAt'
-                }, 
+                },
                 'updatedAt': {
                     '$max': '$updatedAt'
                 },
@@ -107,14 +111,14 @@ def handle(event, context):
         }, {
             # summarize by hashtag
             '$group': {
-                '_id': '$_id.name', 
+                '_id': '$_id.name',
                 'hashtagCount': {
                     '$sum': '$contributionCount'
-                }, 
+                },
                 'contributorCount': {'$count': {}},
                 'createdAt': {
                     '$min': '$createdAt'
-                }, 
+                },
                 'updatedAt': {
                     '$max': '$updatedAt'
                 },
@@ -124,8 +128,8 @@ def handle(event, context):
                 },
                 'contributions': {
                     '$push': {
-                        '_id': '$_id.authorId', 
-                        'contributionCount': '$contributionCount', 
+                        '_id': '$_id.authorId',
+                        'contributionCount': '$contributionCount',
                         'contents': "$contents",
                     }
                 },
@@ -141,25 +145,25 @@ def handle(event, context):
                 'quotedCount': {
                     '$sum': '$quotedCount'
                 }
-            }    
+            }
         }, {
             # setting output format
             '$project': {
-                '_id': 0,  
+                '_id': 0,
                 'name': '$_id',
                 '__v': '$__v',
-                'createdAt': 1, 
-                'updatedAt': 1, 
+                'createdAt': 1,
+                'updatedAt': 1,
                 'aggregator.contributions': '$contributions',
                 # calculate fraction of hashtag diversity
-                ## equation: hastagDiversityScore = n_{user|hashtag}/n_{content|hashtag}
+                # equation: hastagDiversityScore = n_{user|hashtag}/n_{content|hashtag}
                 'aggregator.hastagDiversityScore': {
                     '$divide': [
                         '$contributorCount', '$hashtagCount'
                     ]
                 },
-                # calculate linear combination of engagements 
-                ## equation: engagementScore = {\sigma}_{k}({\beta}_{k}*x_{k})
+                # calculate linear combination of engagements
+                # equation: engagementScore = {\sigma}_{k}({\beta}_{k}*x_{k})
                 'aggregator.engagementScore': {
                     '$sum': [
                         {
@@ -182,7 +186,7 @@ def handle(event, context):
                     ]
                 },
                 # calculate decay from last update time
-                ## equation: ageScore = e^(-{\lambda}*t)
+                # equation: ageScore = e^(-{\lambda}*t)
                 'aggregator.ageScore': {
                     '$exp': {
                         '$multiply': [
@@ -203,7 +207,7 @@ def handle(event, context):
                             }, -1
                         ]
                     }
-                }            
+                }
             }
         }, {
             # summarize all scores
@@ -216,17 +220,17 @@ def handle(event, context):
                         '$aggregator.ageScore'
                     ]
                 }
-            }   
+            }
         }, {
             # upsert to 'hashtagStats' collection
             ## equation: score = ageScore*(engagementScore + 1)*(hastagDiversityScore)
             '$merge': {
                 'into': {
-                    'db': 'analytics-db', 
+                    'db': 'analytics-db',
                     'coll': 'hashtagStats'
-                }, 
-                'on': '_id', 
-                'whenMatched': 'replace', 
+                },
+                'on': '_id',
+                'whenMatched': 'replace',
                 'whenNotMatched': 'insert'
             }
         }

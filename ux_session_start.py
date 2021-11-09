@@ -9,11 +9,15 @@ from bson import regex
 from datetime import datetime, timedelta
 import math
 
-## assign databases
+# assign databases
 appDb = mongo_client['app-db']
 
 
 def handle(event, context):
+    if event.get("source") == "serverless-plugin-warmup":
+        print("WarmUp - Lambda is warm!")
+        return
+
     print(json.dumps(event, indent=4))
 
     # event.fullDocument._id

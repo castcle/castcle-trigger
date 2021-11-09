@@ -4,16 +4,28 @@ variablesResolutionMode: 20210326
 
 plugins:
   - serverless-stage-manager
+  - serverless-plugin-warmup
 
 custom:
   stages:
     - dev
     - staging
     - prod
+  warmup:
+    default:
+      enabled: true
+      prewarm: true
+      timeout: 30
+      name: ${self:provider.stage}-mongodb-triggers-warmer
+      concurrency: ${self:custom.warmupConcurrency.${self:provider.stage}}
+  warmupConcurrency:
+    dev: 1
+    staging: 1
+    prod: 10
   mongoHost:
     dev: dev-cluster.fg2e5.mongodb.net
-    staging: dev-cluster-pl-0.fg2e5.mongodb.net
-    prod: dev-cluster-pl-0.fg2e5.mongodb.net
+    staging: stg-cluster-pl-0.7ljem.mongodb.net
+    prod: prd-cluster-pl-0.5rvfa.mongodb.net
   mongoPassword:
     dev: ${ssm:dev-data-analytics-mongodb-password}
     staging: ${ssm:staging-data-analytics-mongodb-password}
@@ -120,6 +132,9 @@ provider:
 functions:
   uxSessionStart:
     name: ${self:provider.stage}-mongodb-trigger-ux-session-start
+    warmup:
+      default:
+        enabled: true
     image:
       name: app_image
       command:
@@ -132,6 +147,9 @@ functions:
               - "044086777883"
   contentStatsUpdate:
     name: ${self:provider.stage}-mongodb-trigger-content-stats-update
+    warmup:
+      default:
+        enabled: true
     image:
       name: app_image
       command:
@@ -144,6 +162,9 @@ functions:
               - "044086777883"
   creatorStatsUpdate:
     name: ${self:provider.stage}-mongodb-trigger-creator-stats-update
+    warmup:
+      default:
+        enabled: true
     image:
       name: app_image
       command:
@@ -156,6 +177,9 @@ functions:
               - "044086777883"
   hashtagStatsUpdate:
     name: ${self:provider.stage}-mongodb-trigger-hashtag-stats-update
+    warmup:
+      default:
+        enabled: true
     image:
       name: app_image
       command:
@@ -169,6 +193,9 @@ functions:
   userInsert:
     name: ${self:provider.stage}-mongodb-trigger-user-insert
     memorySize: 2048
+    warmup:
+      default:
+        enabled: true
     image:
       name: app_image
       command:
@@ -181,6 +208,9 @@ functions:
               - "044086777883"
   contentStats:
     name: ${self:provider.stage}-mongodb-trigger-content-stats
+    warmup:
+      default:
+        enabled: true
     image:
       name: app_image
       command:
@@ -193,6 +223,9 @@ functions:
               - "044086777883"
   aggregatorTest:
     name: ${self:provider.stage}-mongodb-trigger-aggregator-test
+    warmup:
+      default:
+        enabled: true
     image:
       name: app_image
       command:
@@ -206,6 +239,9 @@ functions:
   userStats:
     name: ${self:provider.stage}-mongodb-trigger-user-stats
     memorySize: 2048
+    warmup:
+      default:
+        enabled: true
     image:
       name: app_image
       command:
