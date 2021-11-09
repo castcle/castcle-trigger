@@ -18,6 +18,7 @@ custom:
       timeout: 30
       name: ${self:provider.stage}-mongodb-triggers-warmer
       concurrency: ${self:custom.warmupConcurrency.${self:provider.stage}}
+      role: ${opt:role, 'arn:aws:iam::044086777883:role/dataAnalyticsLambdaRole'}
   warmupConcurrency:
     dev: 1
     staging: 1
