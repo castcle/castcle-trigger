@@ -1,7 +1,7 @@
 # * personalized_content_test
 import json
 from typing import Collection
-from mongo_client import mongo_client
+from mongo_client import mongo_client, ping_mongodb
 
 # setup databases & collections
 analyticsDb = mongo_client['analytics-db']
@@ -12,6 +12,7 @@ content_feature = 'contentFeatures'
 
 def handle(event, context):
     if event.get("source") == "serverless-plugin-warmup":
+        ping_mongodb()
         print("WarmUp - Lambda is warm!")
         return
 

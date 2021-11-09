@@ -3,7 +3,7 @@
 
 import json
 import sys
-from mongo_client import mongo_client
+from mongo_client import mongo_client, ping_mongodb
 from bson.objectid import ObjectId
 from bson import regex
 from datetime import datetime, timedelta
@@ -15,6 +15,7 @@ appDb = mongo_client['app-db']
 
 def handle(event, context):
     if event.get("source") == "serverless-plugin-warmup":
+        ping_mongodb()
         print("WarmUp - Lambda is warm!")
         return
 
