@@ -204,6 +204,7 @@ functions:
               - "044086777883"
   userStats:
     name: ${self:provider.stage}-mongodb-trigger-user-stats
+    memorySize: 1024
     image:
       name: app_image
       command:
