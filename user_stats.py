@@ -16,7 +16,7 @@ def handle(event, context):
         print("WarmUp - Lambda is warm!")
         return
 
-    from modules.personalized_content_test.personalize_content \
+    from modules.personalized_content.personalize_content \
         import personalized_content_main
     print(json.dumps(event, indent=4))
     print(event)
@@ -27,8 +27,8 @@ def handle(event, context):
     personalized_content_result = personalized_content_main()
 
     #! debug
-    print(personalized_content_result)
-
+    #print(personalized_content_result)
+    
     return {
         "status": 200
     }
