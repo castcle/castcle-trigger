@@ -168,6 +168,7 @@ functions:
               - "044086777883"
   userInsert:
     name: ${self:provider.stage}-mongodb-trigger-user-insert
+    memorySize: 2048
     image:
       name: app_image
       command:
@@ -204,7 +205,7 @@ functions:
               - "044086777883"
   userStats:
     name: ${self:provider.stage}-mongodb-trigger-user-stats
-    memorySize: 1024
+    memorySize: 2048
     image:
       name: app_image
       command:
