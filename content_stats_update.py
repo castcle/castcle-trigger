@@ -1,5 +1,5 @@
 # This file updates collection 'contentStats' from 'contents'
-## just for testing -> in production is running in runtime only (see aggregator_part_topContents)
+# just for testing -> in production is running in runtime only (see aggregator_part_topContents)
 import json
 import sys
 from mongo_client import mongo_client
@@ -12,7 +12,12 @@ import math
 appDb = mongo_client['app-db']
 contents = appDb['contents']
 
+
 def handle(event, context):
+    if event.get("source") == "serverless-plugin-warmup":
+        print("WarmUp - Lambda is warm!")
+        return
+
     print(json.dumps(event, indent=4))
 
     # define content parameters
@@ -28,14 +33,14 @@ def handle(event, context):
                 # filter for only visible contents
                 '$match': {
                     'createdAt': {
-                        '$gte': (datetime.utcnow() - timedelta(days=contentDateThreshold)) 
+                        '$gte': (datetime.utcnow() - timedelta(days=contentDateThreshold))
                     },
                     'visibility': 'publish'
                 }
             }, {
                 # map to calculate content low-level score
                 '$project': {
-                    ## equation: ageScore = e^(-{\lambda}*t)
+                    # equation: ageScore = e^(-{\lambda}*t)
                     'aggregator.ageScore': {
                         '$exp': {
                             '$multiply': [
@@ -56,8 +61,8 @@ def handle(event, context):
                                 }, -1
                             ]
                         }
-                    }, 
-                    ## equation: engagementScore = {\sigma}_{k}({\beta}_{k}*x_{k})
+                    },
+                    # equation: engagementScore = {\sigma}_{k}({\beta}_{k}*x_{k})
                     'aggregator.engagementScore': {
                         '$sum': [
                             {
@@ -78,13 +83,13 @@ def handle(event, context):
                                 ]
                             }
                         ]
-                    }, 
+                    },
                     # project for investigation
                     # add photo count & message character length
-                    'updatedAt': 1, 
-                    'likeCount': '$engagements.like.count', 
-                    'commentCount': '$engagements.comment.count', 
-                    'recastCount': '$engagements.recast.count', 
+                    'updatedAt': 1,
+                    'likeCount': '$engagements.like.count',
+                    'commentCount': '$engagements.comment.count',
+                    'recastCount': '$engagements.recast.count',
                     'quoteCount': '$engagements.quote.count',
                     'authorId': '$author.id',
                     'photoCount': {
@@ -97,7 +102,7 @@ def handle(event, context):
                     'characterLength': {
                         '$strLenCP': {
                             '$ifNull': [
-                            '$payload.message', '-' 
+                                '$payload.message', '-'
                             ]
                         }
                     }
@@ -121,11 +126,11 @@ def handle(event, context):
                 ## equation: score = ageScore*(engagementScore + 1)*(hastagDiversityScore)
                 '$merge': {
                     'into': {
-                        'db': 'analytics-db', 
+                        'db': 'analytics-db',
                         'coll': 'contentStats'
-                    }, 
-                    'on': '_id', 
-                    'whenMatched': 'replace', 
+                    },
+                    'on': '_id',
+                    'whenMatched': 'replace',
                     'whenNotMatched': 'insert'
                 }
             }
@@ -139,4 +144,3 @@ def handle(event, context):
 
     except Exception as error:
         print("ERROR", error)
-        
