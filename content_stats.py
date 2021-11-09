@@ -8,6 +8,7 @@ db = mongo_client['analytics-db']
 def handle(event, context):
 
     from pprint import pprint
+    print('this is event')
     pprint(event)
 
     
