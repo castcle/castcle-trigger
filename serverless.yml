@@ -135,7 +135,7 @@ functions:
     name: ${self:provider.stage}-mongodb-trigger-ux-session-start
     warmup:
       default:
-        enabled: true
+        enabled: false
     image:
       name: app_image
       command:
@@ -150,7 +150,7 @@ functions:
     name: ${self:provider.stage}-mongodb-trigger-content-stats-update
     warmup:
       default:
-        enabled: true
+        enabled: false
     image:
       name: app_image
       command:
@@ -165,7 +165,7 @@ functions:
     name: ${self:provider.stage}-mongodb-trigger-creator-stats-update
     warmup:
       default:
-        enabled: true
+        enabled: false
     image:
       name: app_image
       command:
@@ -180,7 +180,7 @@ functions:
     name: ${self:provider.stage}-mongodb-trigger-hashtag-stats-update
     warmup:
       default:
-        enabled: true
+        enabled: false
     image:
       name: app_image
       command:
@@ -211,7 +211,7 @@ functions:
     name: ${self:provider.stage}-mongodb-trigger-content-stats
     warmup:
       default:
-        enabled: true
+        enabled: false
     image:
       name: app_image
       command:
@@ -226,7 +226,7 @@ functions:
     name: ${self:provider.stage}-mongodb-trigger-aggregator-test
     warmup:
       default:
-        enabled: true
+        enabled: false
     image:
       name: app_image
       command:
