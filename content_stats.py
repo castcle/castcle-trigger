@@ -1,13 +1,18 @@
 # * Topic classification temp
 import json
-from mongo_client import mongo_client, ping_mongodb
+from mongo_client import mongo_client
 
 db = mongo_client['analytics-db']
 
 
 def handle(event, context):
+
+    from pprint import pprint
+    pprint(event)
+
+    
+
     if event.get("source") == "serverless-plugin-warmup":
-        ping_mongodb()
         print("WarmUp - Lambda is warm!")
         return
 
