@@ -18,16 +18,17 @@ def handle(event, context):
 
     from modules.personalized_content.personalize_content \
         import personalized_content_main
+    from modules.utils.convert_objectid import convert_objectid
     print(json.dumps(event, indent=4))
     print(event)
     #! accountid = account
     user_id = event.get('accountid', None)
+    
+    user_id = convert_objectid(user_id)
 
     # db=analyticsDb,collection_name=ml_artifact,content_features=content_feature,user_id=user_id
-    personalized_content_result = personalized_content_main()
+    personalized_content_result = personalized_content_main(userId=user_id)
 
-    #! debug
-    #print(personalized_content_result)
     
     return {
         "status": 200
