@@ -27,7 +27,7 @@ def handle(event, context):
     user_id = convert_objectid(user_id)
 
     # db=analyticsDb,collection_name=ml_artifact,content_features=content_feature,user_id=user_id
-    personalized_content_result = personalized_content_main(userId=user_id)
+    personalized_content_result = personalized_content_main()
 
     
     return {
