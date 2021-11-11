@@ -173,7 +173,7 @@ def personalized_content_main(user_id: ObjectId):
         print("What?")
     personalized_content_scroing( saved_model = 'mlArtifacts',
                                     content_features = 'contentFeatures',
-                                    userId = ObjectId('614addffec903a9d987eb580'),
+                                    userId = user_id,
                                     model_name = 'xgboost')
     
     return personalized_content_scroing
