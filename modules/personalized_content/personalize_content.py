@@ -87,7 +87,7 @@ def personalized_content_modeling(input_engagement = 'transactionEngagements',
                           account=n,
                           model_name= model_name,
                           model=xg_reg) 
-	return None
+    return None
 
 def personalized_content_scroing( saved_model = 'mlArtifacts',
                                     saved_data = 'saved_prediction',
