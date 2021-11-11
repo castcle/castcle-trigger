@@ -452,6 +452,25 @@ def upsert_to_hashtags_and_update_contents(hashtags_list,
         
     return None
 
+# #! just in testing stage -> create parallele document in 'contents_test'
+# def parallele_insert(event,
+#                      dst_database_name='analytics-db',
+#                      dst_collection_name='contents_test'):
+    
+#     # reformat from event => document
+#     parallele_document = {
+    
+#     '_id': event['documentKey']['_id'],
+#     'payload': {
+#         'message': event['fullDocument']['payload']['message']
+#     },
+#     'updatedAt': event['fullDocument']['updatedAt']
+#                      }
+    
+#     mongo_client[dst_database_name][dst_collection_name].insert_one(parallele_document)
+
+#     return None
+
 # define main function
 def topic_classify_main(event,   
                         topic_database_name='analytics-db', 
@@ -466,8 +485,8 @@ def topic_classify_main(event,
     import logging
     logging.info("Start topic classification")
     
-    #! 0. just for testing stage -> remove this when stable
-    parallele_insert(event)
+    # #! 0. just for testing stage -> remove this when stable
+    # parallele_insert(event)
     
     # 1. loading data
     logging.debug('debug 1')
