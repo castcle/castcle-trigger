@@ -17,7 +17,7 @@ def data_ingest(event):
     
     # reformat by deconstruct nest json
     temp = {
-        '_id': event['documentKey']['_id'],
+        '_id': event['fullDocument']['_id'],
         'message': event['fullDocument']['payload']['message'],
         'updatedAt': event['fullDocument']['updatedAt']
     }
