@@ -1,25 +1,37 @@
 import os
 import re
 import itertools
+import json
+import bson.objectid
+from bson import ObjectId
 import pandas as pd
-# from mongo_client import mongo_client # uncomment this line when using 'lambda function'
-#from lang_detector import lang_detect
 from google.cloud import language_v1
+from mongo_client import mongo_client
 
-def lang_detect(text: str):
-    from langdetect import detect
-    
-    result_lang = detect(text)
-    
-    return result_lang
-
+# assign credential for google cloud platform
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"]="./modules/topic_classify/gcp_data-science_service-account_key.json"
 
+
+# integrate data loading and query_to_df
+def data_ingest(event):
+    
+    # reformat by deconstruct nest json
+    temp = {
+        '_id': event['documentKey']['_id'],
+        'message': event['fullDocument']['payload']['message'],
+        'updatedAt': event['fullDocument']['updatedAt']
+    }
+    
+    # convert event document to dataframe
+    df = pd.DataFrame.from_dict([temp])
+    
+    return df
+
 # define text cleaning using regex
-def clean_text(data):
+def clean_text(message: str):
     
     # symbolic removing
-    filter_cursor = re.compile("["
+    filter_pattern = re.compile("["
         u"\U0001F600-\U0001F64F"  # emoticons
         u"\U0001F300-\U0001F5FF"  # symbols & pictographs
         u"\U0001F680-\U0001F6FF"  # transport & map symbols
@@ -40,50 +52,40 @@ def clean_text(data):
         u"\u3030"
                       "]+|http\S+|[\u0E00-\u0E7F']", re.UNICODE)
     
-    pre_result = re.sub(filter_cursor, '', str(data))
+    pre_result = re.sub(filter_pattern, '', message)
     
     # whitespace removing
-    symbol_filter_cursor = re.compile(r"[\n\!\@\#\$\%\^\&\*\-\+\:\;]")
+    symbol_filter_pattern = re.compile(r"[\n\!\@\#\$\%\^\&\*\-\+\:\;]")
     
-    pre_result = symbol_filter_cursor.sub(" ", pre_result)
+    pre_result = symbol_filter_pattern.sub(" ", pre_result)
 
     # r/ removing
-    rslash_filter_cursor = re.compile(r"r/")
-    
-    pre_result = rslash_filter_cursor.sub(" ", pre_result)
+    rslash_filter_pattern = re.compile(r"r/")
+    pre_result = rslash_filter_pattern.sub(" ", pre_result)
     
     # space removing
-    space_filter_cursor = re.compile(r"\s+")
+    space_filter_pattern = re.compile(r"\s+")
     
-    result = space_filter_cursor.sub(" ", pre_result).strip()
+    clean_result = space_filter_pattern.sub(" ", pre_result).strip()
     
-    return result
+    return clean_result
 
-# integrate data loading and query_to_df
-def data_ingest(client, database_name='app-db', collection_name='contents'):
+# detect language
+def lang_detect(text: str):
+    from langdetect import detect
     
-    # connect to database
-    db = client[database_name]
+    result_lang = detect(text)
     
-    # loading data only for necessary fields i.e. '_id' & 'message'
-    """
-    in deploy environment, 'query statement' & 'projection statement' is required to 
-    config as follow 'database trigger' parameter
-    """
-    
-    # change parameter when using 'lambda function'
-    df = pd.DataFrame.from_dict(list(db[collection_name].find({},{'_id':1 ,'text': '$payload.message'})))
-    
-    return df
+    return result_lang
 
-def classify_text(text_content: str, _id: str) -> dict:
+# topic classify from text
+def classify_text(message: str, _id: str, updatedAt) -> dict:
     
     """
     Classifying Content in a String
     Args:
-      text_content The text content to analyze. Must include at least 20 words.
+      message/text_content The text content to analyze. Must include at least 20 words.
     """
-
     client = language_v1.LanguageServiceClient()
 
     # Available types: PLAIN_TEXT, HTML
@@ -93,8 +95,8 @@ def classify_text(text_content: str, _id: str) -> dict:
     # For list of supported languages:
     # https://cloud.google.com/natural-language/docs/languages
 #    language = "en"
-    language = lang_detect(text_content)
-    document = {"content": text_content, "type_": type_, "language": language}
+    language = lang_detect(message)
+    document = {"content": message, "type_": type_, "language": language}
 
     response = client.classify_text(request = {'document': document})
     
@@ -132,82 +134,61 @@ def classify_text(text_content: str, _id: str) -> dict:
                 # loop inside splitted categories
                 for category_name in categories:
                     
-                    # lower and replace '&' = 'and' & ' ' => '-'
+                    # slug construction; lower and replace '&' = 'and' & ' ' => '-'
                     categories_list.append(re.sub("\s+", "-", re.sub("&", "and", category_name)).lower())
                 
-        classify_result['categories'] = categories_list
-        classify_result['confidence'] = category.confidence
+            classify_result['categories'] = categories_list
+            classify_result['confidence'] = category.confidence
+            classify_result['updatedAt'] = updatedAt
         
     return classify_result
 
-def implement_category_labeling(df):
+# implement both languge & topic labeling
+def get_topic_document(df):
     
-    result = [] # empty list to collect results
+    # define threshold
+    message_length_threshold = 20
     
-    for index, rows in df.iterrows():
+    # perform clean text
+    _id = df['_id'][0]
+    updatedAt = df['updatedAt'][0]
+    message = clean_text(df['message'][0])
+    
+    # tokenize text by slice for 1st row (input has only single row)
+    splitted = message.split(' ')
         
-        # record data
-        text = rows['text']
-        _id = rows['_id']
+    # check threshold of word length
+    # case of insufficient text to classify topic
+    if len(splitted) < message_length_threshold:
         
-        # tokenize text
-        splitted = text.split(' ')
+        # return only content id
+        topics_list = {'_id': _id}
         
-        # check threshold of word length
-        # case of insufficient text to classify topic
+    # case of able to classify text
+    else:
         
-        if len(splitted) < 21:
-            
-            try:
-                # return only content id
-                classify_result = {
-                    '_id': _id
-                    }
-                
-                result.append(classify_result) # store result
-                
-            except UnicodeEncodeError:
-                
-                continue
+        try:
+            # perform classify text
+            topics_list = classify_text(message, _id, updatedAt)
 
-        # case of able to classify text
-        else:
-            try:
-                # perform classify text
-                classify_result = classify_text(text, _id)
-                
-                result.append(classify_result) # store result
-                
-            except UnicodeEncodeError: 
-                
-                continue
-                
-    return result
+        except UnicodeEncodeError: 
 
-# define extract categories function
-def extract_categories(labeled_df):
+            pass
     
-    # filter only categorizable documents
-    categories_list = [document['categories'] for document in labeled_df if 'categories' in document]
-    
-    # drop duplicated
-    categories_list = [categorized_df for categorized_df,_ in itertools.groupby(categories_list)]
-    
-    return categories_list
+    return topics_list
 
 # define mapping function then upsert to collection 'topics'
 # there are 2 minor consecutive functions i.e upsert raw slug & mapping object ids, respectively
-def upsert_to_topic(client,
-                    categories_list, 
-                    database_name='analytics-db', 
-                    collection_name='topics'): 
+def upsert_to_topics(topics_list, 
+                    topic_database_name: str, 
+                    topic_collection_name: str): 
     
-    # connect to database
-    db = client[database_name]
+    if 'categories' in topics_list:
     
-    # minor function 1: upsert raw slug
-    # looping trough categories_list
-    for topics in categories_list:
+        # minor function 1: upsert raw slug
+        # assign fields to variables
+        topics = topics_list['categories']
+        updatedAt = topics_list['updatedAt']
 
         # looping trough sub categories
         for index, topic in enumerate(topics):
@@ -220,25 +201,32 @@ def upsert_to_topic(client,
 
                     temp = {'slug': topics[index], 'children': [topics[index + 1]]}
 
-                    db[collection_name].update_one({'slug': temp['slug']}, [{
+                    mongo_client[topic_database_name][topic_collection_name].update_one({'slug': temp['slug']}, [{
                         '$project': {
                             'childrenSlug': {'$setUnion': [{'$ifNull': ['$childrenSlug', []]}, temp['children']]},
                             'parents': 1,
                             'children': 1,
-                            'slug': 1
+                            'slug': 1,
+                            'createdAt': {'$ifNull': ['$createdAt', updatedAt]},
+                            'updatedAt': updatedAt 
                         }}], upsert=True)
+
+
+
 
                 # sub-case: last children
                 elif index == len(topics) - 1:
 
                     temp = {'slug': topics[index], 'parents': [topics[index - 1]]}
 
-                    db[collection_name].update_one({'slug': temp['slug']}, [{
+                    mongo_client[topic_database_name][topic_collection_name].update_one({'slug': temp['slug']}, [{
                         '$project': {
                             'parentsSlug': {'$setUnion': [{'$ifNull':['$parentsSlug', []]}, temp['parents']]},
                             'parents': 1,
                             'children': 1,
-                            'slug': 1
+                            'slug': 1,
+                            'createdAt': {'$ifNull': ['$createdAt', updatedAt]},
+                            'updatedAt': updatedAt
                         }}], upsert=True)
 
                 # sub-case: intermediate children
@@ -246,13 +234,15 @@ def upsert_to_topic(client,
 
                     temp = {'slug': topics[index], 'parents': [topics[index - 1]], 'children': [topics[index + 1]]}
 
-                    db[collection_name].update_one({'slug': temp['slug']}, [{
+                    mongo_client[topic_database_name][topic_collection_name].update_one({'slug': temp['slug']}, [{
                         '$project': {
                             'childrenSlug': {'$setUnion': [{'$ifNull': ['$childrenSlug', []]}, temp['children']]},
                             'parentsSlug': {'$setUnion': [{'$ifNull':['$parentsSlug', []]}, temp['parents']]}, 
                             'parents': 1,
                             'children': 1,
-                            'slug': 1
+                            'slug': 1,
+                            'createdAt': {'$ifNull': ['$createdAt', updatedAt]},
+                            'updatedAt': updatedAt
                         }}], upsert=True)
 
             # case: non-hiearachy    
@@ -260,164 +250,265 @@ def upsert_to_topic(client,
 
                 temp = {'slug': topics[index]}
 
-                db[collection_name].update_one({'slug': temp['slug']}, [{'$project': {
+                mongo_client[topic_database_name][topic_collection_name].update_one({'slug': temp['slug']}, [{'$project': {
                     'slug': 1, 
                     'parents': 1,
-                    'children': 1,}}], upsert=True)
-            
-    # minor function 2: mapping object ids
-    # define ObjectId addition cursor
-    objectidMappingCursor = [
-        {
-            '$graphLookup': {
-                'from': 'topics', 
-                'startWith': '$parentsSlug', 
-                'connectFromField': 'parentsSlug', 
-                'connectToField': 'slug', 
-                'as': 'parentsTemp', 
-                'maxDepth': 0
-            }
-        }, {
-            '$graphLookup': {
-                'from': 'topics', 
-                'startWith': '$childrenSlug', 
-                'connectFromField': 'childrenSlug', 
-                'connectToField': 'slug', 
-                'as': 'childrenTemp', 
-                'maxDepth': 0
-            }
-        }, {
-            '$project': {
-                '_id': 1, 
-                'slug': 1,
-                'children': 1, 
-                'parents': 1, 
-                'parentsTemp._id': 1, 
-                'parentsTemp.slug': 1, 
-                'childrenTemp._id': 1, 
-                'childrenTemp.slug': 1
-            }
-        }, {
-            '$project': {
-                '_id': 1, 
-                'slug': 1, 
-                'children': {
-                    '$setUnion': [
-                        {
-                            '$ifNull': [
-                                '$children', []
-                            ]
-                        }, '$childrenTemp'
-                    ]
-                }, 
-                'parents': {
-                    '$setUnion': [
-                        {
-                            '$ifNull': [
-                                '$parents', []
-                            ]
-                        }, '$parentsTemp'
-                    ]
+                    'children': 1,
+                    'createdAt': {'$ifNull': ['$createdAt', updatedAt]},
+                    'updatedAt': updatedAt
+                }}], upsert=True)
+
+        # minor function 2: mapping object ids
+        # define ObjectId addition cursor
+        objectidMappingCursor = [
+            {
+                '$match': {
+                    'updatedAt': updatedAt
+                }
+            }, {
+                '$graphLookup': {
+                    'from': 'topics', 
+                    'startWith': '$parentsSlug', 
+                    'connectFromField': 'parentsSlug', 
+                    'connectToField': 'slug', 
+                    'as': 'parentsTemp', 
+                    'maxDepth': 0
+                }
+            }, {
+                '$graphLookup': {
+                    'from': 'topics', 
+                    'startWith': '$childrenSlug', 
+                    'connectFromField': 'childrenSlug', 
+                    'connectToField': 'slug', 
+                    'as': 'childrenTemp', 
+                    'maxDepth': 0
+                }
+            }, {
+                '$project': {
+                    '_id': 1, 
+                    'slug': 1,
+                    'children': 1, 
+                    'parents': 1, 
+                    'parentsTemp._id': 1, 
+                    'parentsTemp.slug': 1, 
+                    'childrenTemp._id': 1, 
+                    'childrenTemp.slug': 1,
+                    'createdAt': 1,
+                    'updatedAt': 1
+                }
+            }, {
+                '$project': {
+                    '_id': 1, 
+                    'slug': 1, 
+                    'createdAt': 1,
+                    'updatedAt': 1,
+                    'children': {
+                        '$setUnion': [
+                            {
+                                '$ifNull': [
+                                    '$children', []
+                                ]
+                            }, '$childrenTemp'
+                        ]
+                    }, 
+                    'parents': {
+                        '$setUnion': [
+                            {
+                                '$ifNull': [
+                                    '$parents', []
+                                ]
+                            }, '$parentsTemp'
+                        ]
+                    }
+                }
+            }, {
+                # upsert to 'topics' collection itself
+                '$merge': {
+                    'into': {
+                        'db': topic_database_name, 
+                        'coll': topic_collection_name
+                    }, 
+                    'on': '_id', 
+                    'whenMatched': 'replace', 
+                    'whenNotMatched': 'insert'
                 }
             }
-        }, {
-            # upsert to 'topics' collection itself
-            '$merge': {
-                'into': {
-                    'db': 'analytics-db', 
-                    'coll': 'topics'
-                }, 
-                'on': '_id', 
-                'whenMatched': 'replace', 
-                'whenNotMatched': 'insert'
-            }
-        }
-    ]
-    
-    # perform mapping object ids
-    db[collection_name].aggregate(objectidMappingCursor)
-    
+        ]
+
+        # perform mapping object ids
+        mongo_client[topic_database_name][topic_collection_name].aggregate(objectidMappingCursor)
+
     return None
 
 # define mapping content id with topic id then upsert to 'contentTopics'
-def upsert_to_content_topic(client,
-                            labeled_df,
-                            src_database_name='analytics-db', 
-                            dst_database_name='analytics-db',
-                            src_collection_name='topics',
-                            dst_collection_name='contentTopics'):
+def upsert_topics_to_contents(topics_list,
+                              topic_database_name: str, 
+                              topic_collection_name: str,
+                              contents_database_name: str,
+                              contents_collection_name: str):
+    
+    # assign fields to variables
+    _id = topics_list['_id']
+    
+    # check topic existence
+    if 'categories' in topics_list:
+        
+        language = topics_list['language']
+        categories = topics_list['categories']
 
+        # assign empty list to collect object ids
+        topic_ids = []
 
-    # connect to database
-    src_db = client[src_database_name]
-    dst_db = client[dst_database_name]
+        # case get categories
+        for category in categories:
+    
+            # collect object ids throgh the loop
+            topic_ids.append(mongo_client[topic_database_name][topic_collection_name].find_one({'slug': category}, {'_id':1})['_id'])
 
-    for document in labeled_df:
+        # update to original content
+        mongo_client[contents_database_name][contents_collection_name].update_one({'_id': _id}, [{
+                                            '$set': {
+                                                'language': language,
+                                                'topics': topic_ids
+                                            }}], upsert=False) # change to True when using contents
 
-        if 'categories' in document:
+    # case get language but not categories
+    elif 'language' in topics_list:
+        
+        language = topics_list['language']
 
-            topics = []
+        # update to original content
+        mongo_client[contents_database_name][contents_collection_name].update_one({'_id': _id}, [{
+                                            '$set': {
+                                                'language': language,
+                                            }}], upsert=False) # change to True when using contents
+    
+    return None
 
-            for category in document['categories']:
+# define hashtag extract from 'contents' => 'hashtags' & 'content.hastags' function
+def hashtag_extract(df):
+    
+    _id = df['_id'][0]
+    message = df['message'][0]
+    updatedAt = df['updatedAt'][0]
+    
+    hashtags_list = {} # assign empty variable
+    
+    # define regex pattern to extract hashtag(s) from event document 
+    hastag_pattern = re.compile(r"(?<=#)[a-zA-Z0-9]+")
+    
+    hashtags = re.findall(hastag_pattern, message)
+    
+    if len(hashtags) != 0:
+    
+        hashtags_list['_id'] = _id
+        hashtags_list['hashtags'] = hashtags
+        hashtags_list['updatedAt'] = updatedAt
+        
+    else:
+        
+        hashtags_list['_id'] = _id
+    
+    return hashtags_list
 
-                object_id = src_db[src_collection_name].find_one({'slug': category}, {'_id':1})
+def upsert_to_hashtags_and_update_contents(hashtags_list,
+                      contents_database_name: str, # original database which will be add hashtags field to content
+                      contents_collection_name: str, # original collection which will be add hashtags field to content 
+                      hashtags_database_name: str, # destination database which is consider as master collection
+                      hashtags_collection_name: str): # destination collection which is consider as master collection
+    
+    if 'hashtags' in hashtags_list:
+    
+        _id = hashtags_list['_id']
+        hashtags = hashtags_list['hashtags']
+        updatedAt = hashtags_list['updatedAt']
 
-                topics.append(object_id['_id'])
+        # condition for accept only event document that is able to extract hashtag(s)
+        if len(hashtags) != 0:
 
+            hashtag_ids = [] # assign empty list to collect object id(s) of hashtag(s) through for loop
 
-            dst_db[dst_collection_name].update_one({'content': document['_id']}, [{
-                                                '$project': {
-                                                    'content': document['_id'],
-                                                    'language': document['language'],
-                                                    # maybe bug, its does not work
-    #                                                 'confidence': document['confidence'],
-                                                    'topics': topics
-                                                }}], upsert=True)
+            # for loop through each element of hashtags
+            for hashtag_capital in hashtags:
 
-        elif 'language' in document:
+                hashtag = hashtag_capital.lower() # decapitalize to slug form
 
-            dst_db[dst_collection_name].update_one({'content': document['_id']}, [{
-                                                '$project': {
-                                                    'content': document['_id'],
-                                                    'language': document['language']
-                                                }}], upsert=True)
+                # update | insert to 'hashtags' master collection
+                mongo_client[hashtags_database_name][hashtags_collection_name].update_one({'slug': hashtag}, [{
+                    '$project': {
+                        'slug': hashtag,
+                        'createdAt': {'$ifNull': ['$createdAt', updatedAt]},
+                        'updatedAt': updatedAt
+                    }}], upsert=True)
+
+                # append the assigned list
+                hashtag_ids.append(mongo_client[hashtags_database_name][hashtags_collection_name].find_one({'slug': hashtag}, {'_id': 1})['_id'])
+
+            # update by adding 'hashtags' field to original collection of event document with the appended list
+            mongo_client[contents_database_name][contents_collection_name].update_one({'_id': _id}, [{
+                '$set': {
+                    'hastags': hashtag_ids
+                }}], upsert=False)
+        
     return None
 
 # define main function
-def topic_classify_main(mongo_client,
-                        app_database_name='app-db', 
-                        anlytc_database_name='analytics-db', 
-                        src_ctnt_collection_name='contents',
-                        src_tpc_collection_name='topics',
-                        dst_tpc_collection_name='contentTopics'):
+def topic_classify_main(event,   
+                        topic_database_name='analytics-db', 
+                        topic_collection_name='topics',
+                        hashtags_database_name = 'analytics-db',
+                        hashtags_collection_name = 'hashtags',
+                        contents_database_name = 'analytics-db', #! test, remove this then uncomment below
+                        contents_collection_name = 'contents_test'): #! test, remove this then uncomment below
+#                         contents_database_name = 'app-db',
+#                         contents_collection_name = 'contents'):
+        
     import logging
     logging.info("Start topic classification")
+    
+    #! 0. just for testing stage -> remove this when stable
+    parallele_insert(event)
+    
+    # 1. loading data
     logging.debug('debug 1')
-    # perform ingest data
-    df = data_ingest(client=mongo_client, database_name=app_database_name, 
-                     collection_name=src_ctnt_collection_name)
+    
+    ## perform ingest data
+    df = data_ingest(event)
+    
+    # 2. data processing
     logging.debug('debug 2')
-    # perform clean text
-    df['text'] = df['text'].map(clean_text)
+    
+    ## perform category labeling
+    topics_list = get_topic_document(df)
+    
+    ## perform hashtag extraction
+    hashtags_list = hashtag_extract(df)
+    
+    # 3. upload to databases
+    
     logging.debug('debug 3')
-    # perform category labeling
-    labeled_df = implement_category_labeling(df.head(10)) # remove .head() when using 'lambda function'
+    
+    ## perform upsert category to 'topics' master collection
+    upsert_to_topics(topics_list, 
+                    topic_database_name=topic_database_name, 
+                    topic_collection_name=topic_collection_name)
+    
     logging.debug('debug 4')
-    # extract categorise from labeled into list
-    categories_list = extract_categories(labeled_df=labeled_df)
+
+    ## update original content by adding 'topics' field 
+    upsert_topics_to_contents(topics_list,
+                              topic_database_name=topic_database_name,
+                              topic_collection_name=topic_collection_name,
+                              contents_database_name=contents_database_name,
+                              contents_collection_name=contents_collection_name)
+    
     logging.debug('debug 5')
-    # perform upsert category to 'topics' master collection
-    upsert_to_topic(client=mongo_client,
-                    categories_list=categories_list, 
-                    database_name=anlytc_database_name, 
-                    collection_name=src_tpc_collection_name)
-    logging.debug('debug 6')
-    # perform upsert category to 'topics' master collection
-    upsert_to_content_topic(client=mongo_client,
-                            labeled_df=labeled_df,
-                            src_database_name=anlytc_database_name, 
-                            dst_database_name=anlytc_database_name,
-                            src_collection_name=src_tpc_collection_name,
-                            dst_collection_name=dst_tpc_collection_name)
+    
+    ## perform upsert hashtags to 'hashtags' master collection then update original content by adding 'hashtags' field
+    upsert_to_hashtags_and_update_contents(hashtags_list,
+                      contents_database_name, # original database which will be add hashtags field to content
+                      contents_collection_name, # original collection which will be add hashtags field to content 
+                      hashtags_database_name, # destination database which is consider as master collection
+                      hashtags_collection_name)
     
     return None

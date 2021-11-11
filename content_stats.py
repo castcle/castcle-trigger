@@ -19,8 +19,10 @@ def handle(event, context):
         import topic_classify_main
     print(json.dumps(event, indent=4))
 
-    # 1 topic_classify_main
-    topic_classify_main(mongo_client=mongo_client)
+    # # 1 topic_classify_main
+    # topic_classify_main(mongo_client=mongo_client)
+    topic_classify_main(event)
+
 
     return {
         "status": 200
