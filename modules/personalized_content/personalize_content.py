@@ -162,7 +162,7 @@ def personalized_content_scroing( saved_model = 'mlArtifacts',
     
     return None
 
-def personalized_content_main(userId):
+def personalized_content_main():
     
 #	personalized_content_modeling(input_engagement = 'transactionEngagements',
 #										saved_model = 'mlArtifacts',
@@ -171,7 +171,7 @@ def personalized_content_main(userId):
     
     personalized_content_scroing( saved_model = 'mlArtifacts',
                                     content_features = 'contentFeatures',
-                                    userId = userId,
+                                    userId = ObjectId('614addffec903a9d987eb580'),
                                     model_name = 'xgboost')
     
     return personalized_content_scroing
