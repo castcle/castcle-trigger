@@ -14,7 +14,7 @@ def handle(event, context):
     from pprint import pprint
     print('this is event')
     pprint(event)
-    # pprint(event['documentKey']['_id']) # coupon test running
+    pprint(event['fullDocument']['_id']) # coupon test running
 
     from modules.topic_classify.topic_classification \
         import topic_classify_main
