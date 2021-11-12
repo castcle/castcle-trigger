@@ -212,9 +212,10 @@ functions:
               - "044086777883"
   contentStats:
     name: ${self:provider.stage}-mongodb-trigger-content-stats
+    memorySize: 2048
     warmup:
       default:
-        enabled: false
+        enabled: true
     image:
       name: app_image
       command:
