@@ -22,7 +22,11 @@ def handle(event, context):
 
     # # 1 topic_classify_main
     # topic_classify_main(mongo_client=mongo_client)
-    topic_classify_main(event) # coupon test running
+    topic_classify_main(event,   
+                        topic_database_name='analytics-db', 
+                        topic_collection_name='topics',
+                        contents_database_name = 'analytics-db',
+                        contents_collection_name = 'contents_test')
 
 
 
