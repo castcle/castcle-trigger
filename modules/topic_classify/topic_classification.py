@@ -374,6 +374,7 @@ def upsert_topics_to_contents(topics_list,
                                                 'topics': topic_ids
                                             }}], upsert=True) # change to True when using contents
 
+        print(list(mongo_client[contents_database_name][contents_collection_name].find_one({'_id': _id})))
         print('topic_ids:', topic_ids)
         
     # case get language but not categories
