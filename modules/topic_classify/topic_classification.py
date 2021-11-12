@@ -1,12 +1,14 @@
 import os
 import re
 import itertools
+import logging
 import json
 import bson.objectid
 from bson import ObjectId
 import pandas as pd
 from google.cloud import language_v1
 from mongo_client import mongo_client
+
 
 # assign credential for google cloud platform
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"]="./modules/topic_classify/gcp_data-science_service-account_key.json"
