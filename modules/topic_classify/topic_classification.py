@@ -374,10 +374,11 @@ def upsert_topics_to_contents(topics_list,
                                         'topics': topic_ids
                                     }}], upsert=True) # change to True when using contents
 
-        print('query from topics:')
-        print(topic_ids.append(mongo_client[topic_database_name][topic_collection_name].find_one({'slug': category}, {'_id':1})['_id']))
+        print('_id:')
+        print(_id)
         print('query contents_test:')
         print(mongo_client[contents_database_name][contents_collection_name].find_one({'_id': _id}))
+        print('topics list:')
         print('topic_ids:', topic_ids)
         
     # case get language but not categories
@@ -510,7 +511,8 @@ def topic_classify_main(event,
     ## perform ingest data
     df = data_ingest(event)
 
-    print(df) #!! checkpoint
+    print('df:', df) #!! checkpoint
+    
     
     # 2. data processing
     logging.debug('debug 2')
@@ -518,7 +520,7 @@ def topic_classify_main(event,
     ## perform category labeling
     topics_list = get_topic_document(df)
 
-    print(topics_list) #!! checkpoint
+    print('topics is:', topics_list) #!! checkpoint
     
     # comment this due to 'dev' will handle hashtags
     # ## perform hashtag extraction
