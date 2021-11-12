@@ -1,4 +1,5 @@
 # * Topic classification temp
+# % This trigger begin monitoring @ 20211112 14:08
 import json
 from mongo_client import mongo_client, ping_mongodb
 
@@ -25,8 +26,8 @@ def handle(event, context):
     topic_classify_main(event,   
                         topic_database_name='analytics-db', 
                         topic_collection_name='topics',
-                        contents_database_name = 'analytics-db',
-                        contents_collection_name = 'contents_test')
+                        contents_database_name = 'app-db',
+                        contents_collection_name = 'contents')
 
 
 

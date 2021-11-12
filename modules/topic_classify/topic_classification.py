@@ -493,10 +493,10 @@ def topic_classify_main(event,
                         topic_collection_name='topics',
                         # hashtags_database_name = 'analytics-db', # comment this due to 'dev' will handle hashtags
                         # hashtags_collection_name = 'hashtags', # comment this due to 'dev' will handle hashtags
-                        contents_database_name = 'analytics-db', #! test, remove this then uncomment below
-                        contents_collection_name = 'contents_test'): #! test, remove this then uncomment below
-#                         contents_database_name = 'app-db',
-#                         contents_collection_name = 'contents'):
+                        # contents_database_name = 'analytics-db', #! test, remove this then uncomment below
+                        # contents_collection_name = 'contents_test'): #! test, remove this then uncomment below
+                        contents_database_name = 'app-db',
+                        contents_collection_name = 'contents'):
         
     logging.info("Start topic classification")
 
