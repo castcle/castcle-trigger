@@ -500,7 +500,8 @@ def topic_classify_main(event,
         
     logging.info("Start topic classification")
 
-    print('Start topic classification') #!! checkpoint
+    # print('Start topic classification') #!! checkpoint
+    
     
     # #! 0. just for testing stage -> remove this when stable
     # parallele_insert(event)
@@ -512,7 +513,6 @@ def topic_classify_main(event,
     df = data_ingest(event)
 
     # print('df:', df) #!! checkpoint
-    
     
     # 2. data processing
     logging.debug('debug 2')
@@ -535,7 +535,7 @@ def topic_classify_main(event,
                     topic_database_name=topic_database_name, 
                     topic_collection_name=topic_collection_name)
 
-    print('upsert to topics done') #!! checkpoint                
+    # print('upsert to topics done') #!! checkpoint                
     
     logging.debug('debug 4')
 
@@ -546,7 +546,7 @@ def topic_classify_main(event,
                               contents_database_name=contents_database_name,
                               contents_collection_name=contents_collection_name)
 
-    print('upsert to content_test done') #!! checkpoint
+    # print('upsert to content_test done') #!! checkpoint
 
     # comment this due to 'dev' will handle hashtags
     # logging.debug('debug 5')
@@ -557,5 +557,8 @@ def topic_classify_main(event,
     #                   contents_collection_name, # original collection which will be add hashtags field to content 
     #                   hashtags_database_name, # destination database which is consider as master collection
     #                   hashtags_collection_name)
+
+
+        print('topic classification of content id:', df['_id'][0], 'is now finished') #!! checkpoint
     
     return None
