@@ -8,14 +8,17 @@ from mongo_client import mongo_client, ping_mongodb
 
 def handle(event, context):
 
+    # # warming lambda function
     # if event.get("source") == "serverless-plugin-warmup":
     #     ping_mongodb()
     #     print("WarmUp - Lambda is warm!")
     #     return
 
+    from pprint import pprint
     # from pprint import pprint
-    # print('this is event is:')
-    # pprint(event)
+    print('the event schema:')
+    pprint(event)
+    print('end of event schema')
 
     from modules.topic_classify.topic_classification \
         import topic_classify_main
