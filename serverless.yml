@@ -95,6 +95,10 @@ custom:
     dev: 616c720770473219e696b055
     staging: 616c720770473219e696b055
     prod: 616c720770473219e696b055
+  perCtTrainerEventBus:
+    dev: 618de22cb0acf0b1a0ffdc47
+    staging: 618de22cb0acf0b1a0ffdc47
+    prod: 618de22cb0acf0b1a0ffdc47
 
 provider:
   name: aws
@@ -193,10 +197,9 @@ functions:
               - "044086777883"
   userInsert:
     name: ${self:provider.stage}-mongodb-trigger-user-insert
-    memorySize: 2048
     warmup:
       default:
-        enabled: true
+        enabled: false
     image:
       name: app_image
       command:
@@ -250,6 +253,21 @@ functions:
     events:
       - eventBridge:
           eventBus: arn:aws:events:us-east-1:044086777883:event-bus/aws.partner/mongodb.com/stitch.trigger/${self:custom.userStatsEventBus.${self:provider.stage}}
+          pattern:
+            account:
+              - "044086777883"
+  perCtTrainer:
+    name: ${self:provider.stage}-mongodb-trigger-per-ct-trainer
+    warmup:
+      default:
+        enabled: false
+    image:
+      name: app_image
+      command:
+        - per_ct_trainer.handle
+    events:
+      - eventBridge:
+          eventBus: arn:aws:events:us-east-1:044086777883:event-bus/aws.partner/mongodb.com/stitch.trigger/${self:custom.perCtTrainerEventBus.${self:provider.stage}}
           pattern:
             account:
               - "044086777883"
