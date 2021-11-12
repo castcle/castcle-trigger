@@ -500,11 +500,8 @@ def topic_classify_main(event,
         
     logging.info("Start topic classification")
 
-    print('topic classification of content id:', ObjectId(event['detail']['fullDocument']['_id'], 'is now begin')) #!! checkpoint
-
     # print('Start topic classification') #!! checkpoint
-    
-    
+
     # #! 0. just for testing stage -> remove this when stable
     # parallele_insert(event)
     
