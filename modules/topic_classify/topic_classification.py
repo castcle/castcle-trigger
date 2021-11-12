@@ -81,7 +81,7 @@ def lang_detect(text: str):
     return result_lang
 
 # topic classify from text
-def classify_text(message: str, _id, language) -> dict:
+def classify_text(message: str, _id, language: str, updatedAt) -> dict:
     
     """
     Classifying Content in a String
@@ -177,17 +177,17 @@ def get_topic_document(df):
 
             try:
                 # perform classify text
-                topics_list = classify_text(message, _id, language)
+                topics_list = classify_text(message, _id, language, updatedAt)
 
             except UnicodeEncodeError: 
 
                 pass
-    # case non-English language
     else:
         
             # return only content id
             topics_list = {'_id': _id,
-                           'language': language}
+                           'language': language,
+                          'updatedAt': updatedAt}
     
     return topics_list 
 
