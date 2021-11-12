@@ -17,9 +17,9 @@ def data_ingest(event):
     
     # reformat by deconstruct nest json
     temp = {
-        '_id': event['fullDocument']['_id'],
-        'message': event['fullDocument']['payload']['message'],
-        'updatedAt': event['fullDocument']['updatedAt']
+        '_id': event['detail']['fullDocument']['_id'],
+        'message': event['detail']['fullDocument']['payload']['message'],
+        'updatedAt': event['detail']['fullDocument']['updatedAt']
     }
     
     # convert event document to dataframe
