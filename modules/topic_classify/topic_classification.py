@@ -486,7 +486,7 @@ def topic_classify_main(event,
         
     logging.info("Start topic classification")
 
-    print(Start topic classification) #!! checkpoint
+    print('Start topic classification') #!! checkpoint
     
     # #! 0. just for testing stage -> remove this when stable
     # parallele_insert(event)

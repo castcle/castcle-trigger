@@ -11,9 +11,9 @@ def handle(event, context):
         print("WarmUp - Lambda is warm!")
         return
 
-    from pprint import pprint
-    print('this is event is:')
-    pprint(event)
+    # from pprint import pprint
+    # print('this is event is:')
+    # pprint(event)
 
     from modules.topic_classify.topic_classification \
         import topic_classify_main
