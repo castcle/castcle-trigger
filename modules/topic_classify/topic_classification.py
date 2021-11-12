@@ -81,7 +81,7 @@ def lang_detect(text: str):
     return result_lang
 
 # topic classify from text
-def classify_text(message: str, _id, updatedAt) -> dict:
+def classify_text(message: str, _id, language) -> dict:
     
     """
     Classifying Content in a String
@@ -96,8 +96,6 @@ def classify_text(message: str, _id, updatedAt) -> dict:
     # Optional. If not specified, the language is automatically detected.
     # For list of supported languages:
     # https://cloud.google.com/natural-language/docs/languages
-#    language = "en"
-    language = lang_detect(message)
     document = {"content": message, "type_": type_, "language": language}
 
     response = client.classify_text(request = {'document': document})
@@ -107,41 +105,44 @@ def classify_text(message: str, _id, updatedAt) -> dict:
     
     #add more information
     classify_result['_id'] = _id
-    classify_result['language'] = language
+    classify_result['language'] = language  
     
-    for category in response.categories:
-        
-        # Get the name of the category representing the document.
-        # See the predefined taxonomy of categories:
-        
-        # https://cloud.google.com/natural-language/docs/categories
-#        print(u"Category name: {}".format(category.name))
+    # use google language API only if language = English
+    if language == 'en':
+    
+        for category in response.categories:
 
-        # Get the confidence. Number representing how certain the classifier
-    
-        # is that this category represents the provided text.
-#        print(u"Confidence: {}".format(category.confidence))
-        
-        categories_name = category.name
-        
-        if categories_name:
-            
-            if categories_name.startswith('/'):
-                # remove startswith /
-                categories = categories_name[1:]
-                categories = categories.split('/')
-                
-                categories_list = [] # empty list for collecting categories name
-                
-                # loop inside splitted categories
-                for category_name in categories:
-                    
-                    # slug construction; lower and replace '&' = 'and' & ' ' => '-'
-                    categories_list.append(re.sub("\s+", "-", re.sub("&", "and", category_name)).lower())
-                
-            classify_result['categories'] = categories_list
-            classify_result['confidence'] = category.confidence
-            classify_result['updatedAt'] = updatedAt
+            # Get the name of the category representing the document.
+            # See the predefined taxonomy of categories:
+
+            # https://cloud.google.com/natural-language/docs/categories
+    #        print(u"Category name: {}".format(category.name))
+
+            # Get the confidence. Number representing how certain the classifier
+
+            # is that this category represents the provided text.
+    #        print(u"Confidence: {}".format(category.confidence))
+
+            categories_name = category.name
+
+            if categories_name:
+
+                if categories_name.startswith('/'):
+                    # remove startswith /
+                    categories = categories_name[1:]
+                    categories = categories.split('/')
+
+                    categories_list = [] # empty list for collecting categories name
+
+                    # loop inside splitted categories
+                    for category_name in categories:
+
+                        # slug construction; lower and replace '&' = 'and' & ' ' => '-'
+                        categories_list.append(re.sub("\s+", "-", re.sub("&", "and", category_name)).lower())
+
+                classify_result['categories'] = categories_list
+                classify_result['confidence'] = category.confidence
+                classify_result['updatedAt'] = updatedAt
         
     return classify_result
 
@@ -156,28 +157,39 @@ def get_topic_document(df):
     updatedAt = df['updatedAt'][0]
     message = clean_text(df['message'][0])
     
+    language = lang_detect(message)
+    
     # tokenize text by slice for 1st row (input has only single row)
     splitted = message.split(' ')
+    
+    # use google language API only if language = English
+    if language == 'en':
         
-    # check threshold of word length
-    # case of insufficient text to classify topic
-    if len(splitted) < message_length_threshold:
-        
-        # return only content id
-        topics_list = {'_id': _id}
-        
-    # case of able to classify text
+        # check threshold of word length
+        # case of insufficient text to classify topic
+        if len(splitted) < message_length_threshold:
+
+            # return only content id
+            topics_list = {'_id': _id}
+
+        # case of able to classify text
+        else:
+
+            try:
+                # perform classify text
+                topics_list = classify_text(message, _id, language)
+
+            except UnicodeEncodeError: 
+
+                pass
+    # case non-English language
     else:
         
-        try:
-            # perform classify text
-            topics_list = classify_text(message, _id, updatedAt)
-
-        except UnicodeEncodeError: 
-
-            pass
+            # return only content id
+            topics_list = {'_id': _id,
+                           'language': language}
     
-    return topics_list
+    return topics_list 
 
 # define mapping function then upsert to collection 'topics'
 # there are 2 minor consecutive functions i.e upsert raw slug & mapping object ids, respectively
