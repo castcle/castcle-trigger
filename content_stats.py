@@ -17,7 +17,8 @@ def handle(event, context):
 
     from modules.topic_classify.topic_classification \
         import topic_classify_main
-    print(json.dumps(event, indent=4))
+
+    # print(json.dumps(event, indent=4)) # comment for now
 
     # # 1 topic_classify_main
     # topic_classify_main(mongo_client=mongo_client)
