@@ -373,13 +373,6 @@ def upsert_topics_to_contents(topics_list,
                                         'language': language,
                                         'topics': topic_ids
                                     }}], upsert=True) # change to True when using contents
-
-        print('_id:')
-        print(_id)
-        print('query contents_test:')
-        print(mongo_client[contents_database_name][contents_collection_name].find_one({'_id': _id}))
-        print('topics list:')
-        print('topic_ids:', topic_ids)
         
     # case get language but not categories
     elif 'language' in topics_list:
@@ -391,11 +384,6 @@ def upsert_topics_to_contents(topics_list,
                                             '$set': {
                                                 'language': language,
                                             }}], upsert=True) # change to True when using contents
-
-        print('query from topics:')
-        print(topic_ids.append(mongo_client[topic_database_name][topic_collection_name].find_one({'slug': category}, {'_id':1})['_id']))
-        print('query contents_test:')
-        print(mongo_client[contents_database_name][contents_collection_name].find_one({'_id': _id}))
     
     return None
 
