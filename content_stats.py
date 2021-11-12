@@ -8,11 +8,11 @@ from mongo_client import mongo_client, ping_mongodb
 
 def handle(event, context):
 
-    # # warming lambda function
-    # if event.get("source") == "serverless-plugin-warmup":
-    #     ping_mongodb()
-    #     print("WarmUp - Lambda is warm!")
-    #     return
+    # warming lambda function
+    if event.get("source") == "serverless-plugin-warmup":
+        ping_mongodb()
+        print("WarmUp - Lambda is warm!")
+        return
 
     from pprint import pprint
     # from pprint import pprint
