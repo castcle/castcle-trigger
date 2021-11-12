@@ -499,7 +499,7 @@ def topic_classify_main(event,
     ## perform ingest data
     df = data_ingest(event)
 
-    print('df:', df) #!! checkpoint
+    # print('df:', df) #!! checkpoint
     
     
     # 2. data processing
@@ -508,7 +508,7 @@ def topic_classify_main(event,
     ## perform category labeling
     topics_list = get_topic_document(df)
 
-    print('topics is:', topics_list) #!! checkpoint
+    # print('topics is:', topics_list) #!! checkpoint
     
     # comment this due to 'dev' will handle hashtags
     # ## perform hashtag extraction
