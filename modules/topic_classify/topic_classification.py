@@ -500,7 +500,7 @@ def topic_classify_main(event,
         
     logging.info("Start topic classification")
 
-    print('topic classification of content id:', ObjectId(event['detail']['fullDocument']['_id'], 'is now begin') #!! checkpoint
+    print('topic classification of content id:', ObjectId(event['detail']['fullDocument']['_id'], 'is now begin')) #!! checkpoint
 
     # print('Start topic classification') #!! checkpoint
     
