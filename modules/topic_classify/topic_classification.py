@@ -374,6 +374,8 @@ def upsert_topics_to_contents(topics_list,
                                                 'topics': topic_ids
                                             }}], upsert=False) # change to True when using contents
 
+        print('topic_ids:', topic_ids)
+
     # case get language but not categories
     elif 'language' in topics_list:
         
