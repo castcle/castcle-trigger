@@ -372,7 +372,7 @@ def upsert_topics_to_contents(topics_list,
                                             '$set': {
                                                 'language': language,
                                                 'topics': topic_ids
-                                            }}], upsert=False) # change to True when using contents
+                                            }}], upsert=True) # change to True when using contents
 
         print('topic_ids:', topic_ids)
         
@@ -385,7 +385,7 @@ def upsert_topics_to_contents(topics_list,
         mongo_client[contents_database_name][contents_collection_name].update_one({'_id': _id}, [{
                                             '$set': {
                                                 'language': language,
-                                            }}], upsert=False) # change to True when using contents
+                                            }}], upsert=True) # change to True when using contents
     
     return None
 
