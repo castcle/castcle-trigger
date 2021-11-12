@@ -182,6 +182,7 @@ def get_topic_document(df):
             except UnicodeEncodeError: 
 
                 pass
+    # case non-English language
     else:
         
             # return only content id
