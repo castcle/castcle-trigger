@@ -19,7 +19,7 @@ def data_ingest(event):
     
     # reformat by deconstruct nest json
     temp = {
-        '_id': event['detail']['fullDocument']['_id'],
+        '_id': ObjectId(event['detail']['fullDocument']['_id']),
         'message': event['detail']['fullDocument']['payload']['message'],
         'updatedAt': event['detail']['fullDocument']['updatedAt']
     }
@@ -81,7 +81,7 @@ def lang_detect(text: str):
     return result_lang
 
 # topic classify from text
-def classify_text(message: str, _id: str, updatedAt) -> dict:
+def classify_text(message: str, _id, updatedAt) -> dict:
     
     """
     Classifying Content in a String
