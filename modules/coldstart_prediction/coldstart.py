@@ -109,10 +109,7 @@ def cold_start_by_counytry_scroing( client,
     from datetime import datetime
     from pprint import pprint
     import numpy as np
-    '''
-    connectionUri = 'mongodb+srv://analytics-admin:pnYT55BGWwHePK1M@dev-cluster.fg2e5.mongodb.net/myFirstDatabase?retryWrites=true&w=majority'
-    client = pymongo.MongoClient(connectionUri)
-    '''
+    
     logging.info('Country Scoring Start')
     appDb = client['app-db']
     analyticsDb = client['analytics-db']
@@ -138,7 +135,7 @@ def cold_start_by_counytry_scroing( client,
         pickled_model = json_data['artifact']
     
         return pickle.loads(pickled_model)
- 
+
     xg_reg_load = load_model_from_mongodb(collection=mlArtifacts_country,
                                  account= countryId,
                                  model_name= model_name)
@@ -192,7 +189,7 @@ def coldstart_ret(country_scoring_result, head):
     
     return contents_res
 
-def coldstart_main(client, model_save_cllctn='mlArtifacts_country', countryId=None, 
+def coldstart_main(client, model_save_cllctn='mlArtifacts_country', countryId=['CH', 'EN', 'GER', 'LA', 'PHI', 'SP', 'TH', 'USA', 'VET'], 
                    model_name='xgboost', content_features='contentFeatures',
                    input_engagement='transactionEngagements_country2'):
     
@@ -204,11 +201,12 @@ def coldstart_main(client, model_save_cllctn='mlArtifacts_country', countryId=No
         model_name = model_name)
     
     # 2 predict
-#    country_scoring_result = cold_start_by_counytry_scroing(client,
-#                                saved_model = model_save_cllctn,
-#                                content_features = content_features,
-#                                countryId = countryId,
-#                                model_name = model_name)
+    for country in countryId:
+        cold_start_by_counytry_scroing(client,
+                                        saved_model = model_save_cllctn,
+                                        content_features = content_features,
+                                        countryId = country,
+                                        model_name = model_name)
     
     # 3 return result in json format
     #country_scoring_res_json = coldstart_ret(country_scoring_result, head=100)
