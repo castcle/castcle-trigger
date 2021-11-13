@@ -18,10 +18,10 @@ def cold_start_by_counytry_modeling(client,
     import numpy as np
     
     logging.info('Starting')
-    '''
+    ''''''
     connectionUri = 'mongodb+srv://analytics-admin:pnYT55BGWwHePK1M@dev-cluster.fg2e5.mongodb.net/myFirstDatabase?retryWrites=true&w=majority'
     client = pymongo.MongoClient(connectionUri)
-    '''
+    
     
     appDb = client['app-db']
     analyticsDb = client['analytics-db']
@@ -208,11 +208,11 @@ def coldstart_main(client, model_save_cllctn='mlArtifacts_country', countryId=No
         model_name = model_name)
     
     # 2 predict
-    country_scoring_result = cold_start_by_counytry_scroing(client,
-                                saved_model = model_save_cllctn,
-                                content_features = content_features,
-                                countryId = countryId,
-                                model_name = model_name)
+#    country_scoring_result = cold_start_by_counytry_scroing(client,
+#                                saved_model = model_save_cllctn,
+#                                content_features = content_features,
+#                                countryId = countryId,
+#                                model_name = model_name)
     
     # 3 return result in json format
     #country_scoring_res_json = coldstart_ret(country_scoring_result, head=100)
