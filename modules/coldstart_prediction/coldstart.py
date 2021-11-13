@@ -18,10 +18,6 @@ def cold_start_by_counytry_modeling(client,
     import numpy as np
     
     logging.info('Starting')
-    ''''''
-    connectionUri = 'mongodb+srv://analytics-admin:pnYT55BGWwHePK1M@dev-cluster.fg2e5.mongodb.net/myFirstDatabase?retryWrites=true&w=majority'
-    client = pymongo.MongoClient(connectionUri)
-    
     
     appDb = client['app-db']
     analyticsDb = client['analytics-db']
