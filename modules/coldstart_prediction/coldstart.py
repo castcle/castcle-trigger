@@ -189,7 +189,8 @@ def coldstart_ret(country_scoring_result, head):
     
     return contents_res
 
-def coldstart_main(client, model_save_cllctn='mlArtifacts_country', countryId=['CH', 'EN', 'GER', 'LA', 'PHI', 'SP', 'TH', 'USA', 'VET'], 
+def coldstart_main(client, model_save_cllctn='mlArtifacts_country', 
+                   countryId: list=['CH', 'EN', 'GER', 'LA', 'PHI', 'SP', 'TH', 'USA', 'VET'], 
                    model_name='xgboost', content_features='contentFeatures',
                    input_engagement='transactionEngagements_country2'):
     
