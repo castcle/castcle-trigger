@@ -1,6 +1,7 @@
 import logging
 
-def cold_start_by_counytry_modeling(input_engagement = 'transactionEngagements_country2',
+def cold_start_by_counytry_modeling(client,
+                                    input_engagement = 'transactionEngagements_country2',
                                     saved_model = 'mlArtifacts_country',
                                     content_features = 'contentFeatures',
                                     model_name = 'xgboost'):
@@ -17,9 +18,11 @@ def cold_start_by_counytry_modeling(input_engagement = 'transactionEngagements_c
     import numpy as np
     
     logging.info('Starting')
+    '''
     connectionUri = 'mongodb+srv://analytics-admin:pnYT55BGWwHePK1M@dev-cluster.fg2e5.mongodb.net/myFirstDatabase?retryWrites=true&w=majority'
     client = pymongo.MongoClient(connectionUri)
- 
+    '''
+    
     appDb = client['app-db']
     analyticsDb = client['analytics-db']
     users = appDb['users']
@@ -92,7 +95,8 @@ def cold_start_by_counytry_modeling(input_engagement = 'transactionEngagements_c
         logging.info('Model Saved to MongoDB')
         return None
         
-def cold_start_by_counytry_scroing( saved_model = 'mlArtifacts_country',
+def cold_start_by_counytry_scroing( client,
+                                    saved_model = 'mlArtifacts_country',
                                     saved_data = 'saved_prediction_country',
                                     content_features = 'contentFeatures',
                                     countryId = 'TH',
@@ -109,10 +113,10 @@ def cold_start_by_counytry_scroing( saved_model = 'mlArtifacts_country',
     from datetime import datetime
     from pprint import pprint
     import numpy as np
-
+    '''
     connectionUri = 'mongodb+srv://analytics-admin:pnYT55BGWwHePK1M@dev-cluster.fg2e5.mongodb.net/myFirstDatabase?retryWrites=true&w=majority'
     client = pymongo.MongoClient(connectionUri)
-    
+    '''
     logging.info('Country Scoring Start')
     appDb = client['app-db']
     analyticsDb = client['analytics-db']
@@ -192,19 +196,19 @@ def coldstart_ret(country_scoring_result, head):
     
     return contents_res
 
-def coldstart_main(model_save_cllctn='mlArtifacts_country', countryId=None, 
+def coldstart_main(client, model_save_cllctn='mlArtifacts_country', countryId=None, 
                    model_name='xgboost', content_features='contentFeatures',
                    input_engagement='transactionEngagements_country2'):
     
     # 1 train
-#    cold_start_by_counytry_modeling(
-#        input_engagement = input_engagement,
-#        saved_model = model_save_cllctn,
-#        content_features = content_features,
-#        model_name = model_name)
+    cold_start_by_counytry_modeling(client,
+        input_engagement = input_engagement,
+        saved_model = model_save_cllctn,
+        content_features = content_features,
+        model_name = model_name)
     
     # 2 predict
-    country_scoring_result = cold_start_by_counytry_scroing(
+    country_scoring_result = cold_start_by_counytry_scroing(client,
                                 saved_model = model_save_cllctn,
                                 content_features = content_features,
                                 countryId = countryId,
