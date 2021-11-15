@@ -19,7 +19,7 @@ def handle(event, context):
     # print('the event schema:')
     # pprint(event)
     # print('end of event schema')
-    print(topic classification started)
+    print('topic classification started')
 
     from modules.topic_classify.topic_classification \
         import topic_classify_main
