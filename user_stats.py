@@ -1,4 +1,11 @@
-# * coldstart_prediction
+'''
+Coldstart Content Trainer
+Main Logic
+1. Train ML artifact
+
+Scheduling:
+hourly
+'''
 import json
 from mongo_client import mongo_client, ping_mongodb
 
@@ -16,12 +23,7 @@ def handle(event, context):
     print(json.dumps(event, indent=4))
     print(event)
 
-    countryId = event.get('countryId', None)
-
     coldstart_main_result = coldstart_main(mongo_client)
-
-    #! debug
-    print(coldstart_main_result)
 
     return {
         "status": 200
