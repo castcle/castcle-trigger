@@ -16,9 +16,10 @@ def handle(event, context):
 
     from pprint import pprint
     # from pprint import pprint
-    print('the event schema:')
-    pprint(event)
-    print('end of event schema')
+    # print('the event schema:')
+    # pprint(event)
+    # print('end of event schema')
+    print(topic classification started)
 
     from modules.topic_classify.topic_classification \
         import topic_classify_main
