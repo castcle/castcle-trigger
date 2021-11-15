@@ -558,6 +558,6 @@ def topic_classify_main(event,
     #                   hashtags_collection_name)
 
 
-    print('topic classification of content id:', df['_id'][0], done) #!! checkpoint
+    print('topic classification of content id:', df['_id'][0], 'done') #!! checkpoint
     
     return None
