@@ -159,6 +159,8 @@ def get_topic_document(df):
     message = clean_text(df['message'][0])
     
     language = lang_detect(message)
+
+    print('language:', language) #! just for mornitoring
     
     # tokenize text by slice for 1st row (input has only single row)
     splitted = message.split(' ')
@@ -179,6 +181,8 @@ def get_topic_document(df):
             try:
                 # perform classify text
                 topics_list = classify_text(message, _id, language, updatedAt)
+
+                print('topics:', topics_list['categories']) #! just for mornitoring
 
             except UnicodeEncodeError: 
 
