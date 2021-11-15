@@ -194,7 +194,7 @@ def coldstart_main(client, model_save_cllctn='mlArtifacts_country',
                    model_name='xgboost', content_features='contentFeatures',
                    input_engagement='transactionEngagements_country2'):
     
-    # 1 train
+    # 1 train move to new lambda
     cold_start_by_counytry_modeling(client,
         input_engagement = input_engagement,
         saved_model = model_save_cllctn,
@@ -202,13 +202,14 @@ def coldstart_main(client, model_save_cllctn='mlArtifacts_country',
         model_name = model_name)
     
     # 2 predict
+    '''
     for country in countryId:
         cold_start_by_counytry_scroing(client,
                                         saved_model = model_save_cllctn,
                                         content_features = content_features,
                                         countryId = country,
                                         model_name = model_name)
-    
+    '''
     # 3 return result in json format
     #country_scoring_res_json = coldstart_ret(country_scoring_result, head=100)
     
