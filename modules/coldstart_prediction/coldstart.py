@@ -29,6 +29,9 @@ def cold_start_by_counytry_modeling(client,
     contentFeatures = pd.DataFrame(list(contentFeatures.find()))
     mlArtifacts_country = analyticsDb[saved_model]
     
+    # debug
+    print(contentFeatures.columns)
+    
     contentFeatures_1 = contentFeatures.fillna(0).rename({'_id':'contentId'},axis = 1).drop('userId',axis = 1)
     trans_add = trans.merge(contentFeatures_1, on = 'contentId',how ='left')
     trans_add['label'] = trans_add['like']+trans_add['comment'] +trans_add['recast'] +trans_add['quote']  
