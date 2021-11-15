@@ -1,18 +1,19 @@
 # update content creator statistics as sheduled
 import json
 import sys
-from mongo_client import mongo_client, ping_mongodb
 from bson.objectid import ObjectId
 from datetime import datetime, timedelta
 
-def update_creator_stats_main(src_database_name=src_database_name,
-                         src_collection_name=src_collection_name,
-                         contentDateThreshold=contentDateThreshold,
-                         likedWeight=likedWeight,
-                         recastedWeight=recastedWeight,
-                         quotedWeight=quotedWeight,
-                         followedWeight=followedWeight,
-                         halfLifeHours=halfLifeHours):
+def update_creator_stats_main(src_database_name: str,
+                              src_collection_name: str,
+                              dst_database_name: str,
+                              dst_collection_name: str,
+                              contentDateThreshold: float,
+                              likedWeight: float,
+                              recastedWeight: float,
+                              quotedWeight: float,
+                              followedWeight: float,
+                              halfLifeHours: float):
 
     try:
 
@@ -352,8 +353,8 @@ def update_creator_stats_main(src_database_name=src_database_name,
                 # upsert to 'userStats' collection
                 '$merge': {
                     'into': {
-                        'db': 'analytics-db',
-                        'coll': 'creatorStats'
+                        'db': dst_database_name,
+                        'coll': dst_collection_name
                     },
                     'on': '_id',
                     'whenMatched': 'replace',
