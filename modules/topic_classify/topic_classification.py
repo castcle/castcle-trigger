@@ -6,6 +6,7 @@ import json
 import bson.objectid
 from bson import ObjectId
 import pandas as pd
+from dateutil import parser
 from google.cloud import language_v1
 from mongo_client import mongo_client
 
@@ -21,7 +22,7 @@ def data_ingest(event):
     temp = {
         '_id': ObjectId(event['detail']['fullDocument']['_id']),
         'message': event['detail']['fullDocument']['payload']['message'],
-        'updatedAt': event['detail']['fullDocument']['updatedAt']
+        'updatedAt': parser.parse(event['detail']['fullDocument']['updatedAt'])
     }
     
     # convert event document to dataframe
