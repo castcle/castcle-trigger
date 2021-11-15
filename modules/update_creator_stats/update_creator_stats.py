@@ -5,17 +5,6 @@ from mongo_client import mongo_client, ping_mongodb
 from bson.objectid import ObjectId
 from datetime import datetime, timedelta
 
-# define content parameters
-src_database_name = 'app-db'
-src_collection_name = 'contents'
-contentDateThreshold = 14
-likedWeight = 1
-commentedWeight = 1
-recastedWeight = 1
-quotedWeight = 1
-followedWeight = 0.01
-halfLifeHours = 24
-
 def update_creator_stats_main(src_database_name=src_database_name,
                          src_collection_name=src_collection_name,
                          contentDateThreshold=contentDateThreshold,
