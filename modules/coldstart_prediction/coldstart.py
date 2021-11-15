@@ -204,6 +204,6 @@ def coldstart_main(client, model_save_cllctn='mlArtifacts_country',
         content_features = content_features,
         model_name = model_name)
     
-    logging.info('Country scoring done')
+    logging.info('coldstart trained')
     
     return None
