@@ -182,7 +182,7 @@ def get_topic_document(df):
                 # perform classify text
                 topics_list = classify_text(message, _id, language, updatedAt)
 
-                print('topics:', topics_list['categories']) #! just for mornitoring
+                print('topics:', topics_list) #! just for mornitoring
 
             except UnicodeEncodeError: 
 
