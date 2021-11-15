@@ -13,6 +13,8 @@ def handle(event, context):
     from modules.update_creator_stats.update_creator_stats import update_creator_stats_main
 
     # define content parameters
+    src_database_name = 'app-db'
+    src_collection_name = 'contents'
     contentDateThreshold = 14
     likedWeight = 1
     commentedWeight = 1
