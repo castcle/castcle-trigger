@@ -15,7 +15,7 @@ def handle(event, context):
     # define content parameters
     src_database_name = 'app-db'
     src_collection_name = 'contents'
-    contentDateThreshold = 14
+    contentDateThreshold = 2
     likedWeight = 1
     commentedWeight = 1
     recastedWeight = 1
