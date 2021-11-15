@@ -215,7 +215,7 @@ functions:
     memorySize: 512
     warmup:
       default:
-        enabled: true
+        enabled: false
     image:
       name: app_image
       command:
