@@ -11,7 +11,7 @@ def handle(event, context):
 
     try:
 
-        from modules.personalize_content_trainer.personalize_content_trainer import personalize_content_trainer_main
+        from modules.personalized_content.personalize_content_trainer import personalize_content_trainer_main
 
         personalized_content_trainer_main(updatedAtThreshold = 30.0, # define content age
                                         app_db = 'app-db',
