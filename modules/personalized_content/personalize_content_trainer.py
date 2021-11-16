@@ -111,7 +111,7 @@ def personalized_content_trainer_main(updatedAtThreshold: float, # define conten
             '$group': {
                 '_id': {
                     'userId': '$user',
-                    'contentId': '$itemId'
+                    'contentId': '$targetRef.$id'
                 },
                 'engangements': {
                     '$push': '$type'
