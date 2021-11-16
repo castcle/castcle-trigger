@@ -19,10 +19,19 @@ def handle(event, context):
                               dst_collection_name='creatorStats',
                               contentDateThreshold=2.0,
                               likedWeight=1.0,
+                              commentedWeight=1.0,
                               recastedWeight=1.0,
                               quotedWeight=1.0,
                               followedWeight=0.01,
                               halfLifeHours=24.0)
+
+                              contentDateThreshold: float,
+                              likedWeight: float,
+                              recastedWeight: float,
+                              quotedWeight: float,
+                              followedWeight: float,
+                              halfLifeHours: float
+
 
     print('update content creator statistics done')
 
