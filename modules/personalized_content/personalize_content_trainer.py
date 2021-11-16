@@ -33,6 +33,7 @@ def save_model_to_mongodb(dst_database_name: str,
 
     return None
 
+# define main function for training as follow personalize content
 def personalized_content_trainer_main(updatedAtThreshold: float, # define content age
                                        app_db: str,
                                        engagement_collection: str ,
