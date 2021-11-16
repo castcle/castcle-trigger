@@ -25,14 +25,6 @@ def handle(event, context):
                               followedWeight=0.01,
                               halfLifeHours=24.0)
 
-                              contentDateThreshold: float,
-                              likedWeight: float,
-                              recastedWeight: float,
-                              quotedWeight: float,
-                              followedWeight: float,
-                              halfLifeHours: float
-
-
     print('update content creator statistics done')
 
     return None
