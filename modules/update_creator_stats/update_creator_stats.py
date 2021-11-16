@@ -366,7 +366,7 @@ def update_creator_stats_main(src_database_name: str,
         ]
 
         # perform aggregation w/ resulting in upsert 'creatorStats' collection
-        mongo_client[src_database_name][src_collection_name]
+        mongo_client[src_database_name][src_collection_name].aggregate(creatorStatsCursor)
 
         # print message on complete aggregation
         print('this aggregation has completed at', datetime.utcnow())
