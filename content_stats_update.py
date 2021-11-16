@@ -17,8 +17,8 @@ def handle(event, context):
                               dst_database_name='analytics-db',
                               dst_collection_name='contentStats',
                               contentDateThreshold=14.0,
-                              halfLifeHours=24.0,
-                              topContentslimit=100.0)
+                              halfLifeHours=24.0)
+                            #   topContentslimit=100.0) # not use yet 
 
     print('update content statistics done')
 
