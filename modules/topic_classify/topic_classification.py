@@ -173,7 +173,9 @@ def get_topic_document(df):
         if len(splitted) < message_length_threshold:
 
             # return only content id
-            topics_list = {'_id': _id}
+            topics_list = {'_id': _id,
+                           'language': language,
+                           'updatedAt': updatedAt}
 
         # case of able to classify text
         else:
@@ -192,7 +194,7 @@ def get_topic_document(df):
             # return only content id
             topics_list = {'_id': _id,
                            'language': language,
-                          'updatedAt': updatedAt}
+                           'updatedAt': updatedAt}
     
     return topics_list 
 
