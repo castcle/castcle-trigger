@@ -9,29 +9,23 @@ def handle(event, context):
         print("WarmUp - Lambda is warm!")
         return
 
+
     # print(json.dumps(event, indent=4)) # print event
     from modules.update_creator_stats.update_creator_stats import update_creator_stats_main
 
-    # define content parameters
-    src_database_name = 'app-db'
-    src_collection_name = 'contents'
-    contentDateThreshold = 2
-    likedWeight = 1
-    commentedWeight = 1
-    recastedWeight = 1
-    quotedWeight = 1
-    followedWeight = 0.01
-    halfLifeHours = 24
-
-    update_creator_stats_main(src_database_name=src_database_name,
-                              src_collection_name=src_collection_name,
-                              contentDateThreshold=contentDateThreshold,
-                              likedWeight=likedWeight,
-                              recastedWeight=recastedWeight,
-                              quotedWeight=quotedWeight,
-                              followedWeight=followedWeight,
-                              halfLifeHours=halfLifeHours)
+    update_creator_stats_main(src_database_name='app-db',
+                              src_collection_name='contents',
+                              dst_database_name='analytics-db',
+                              dst_collection_name='creatorStats',
+                              contentDateThreshold=2.0,
+                              likedWeight=1.0,
+                              recastedWeight=1.0,
+                              quotedWeight=1.0,
+                              followedWeight=0.01,
+                              halfLifeHours=24.0)
 
     print('update content creator statistics done')
+
+    return None
 
     
