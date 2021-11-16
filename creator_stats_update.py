@@ -9,6 +9,7 @@ def handle(event, context):
         print("WarmUp - Lambda is warm!")
         return
 
+
     # print(json.dumps(event, indent=4)) # print event
     from modules.update_creator_stats.update_creator_stats import update_creator_stats_main
 

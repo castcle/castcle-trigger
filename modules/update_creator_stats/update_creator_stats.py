@@ -1,6 +1,8 @@
 # update content creator statistics as sheduled
+import os
 import json
 import sys
+from mongo_client import mongo_client
 from bson.objectid import ObjectId
 from datetime import datetime, timedelta
 
