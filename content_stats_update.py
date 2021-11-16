@@ -10,7 +10,7 @@ def handle(event, context):
         return
 
     # print(json.dumps(event, indent=4))
-    from modules.update_creator_stats.update_creator_stats import update_creator_stats_main
+    from modules.update_content_stats.update_content_stats import update_content_stats_main
 
     update_content_stats_main(src_database_name='app-db',
                               src_collection_name='contents',
