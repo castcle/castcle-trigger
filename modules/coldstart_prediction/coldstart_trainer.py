@@ -1,7 +1,7 @@
 import logging
 
 def cold_start_by_counytry_modeling(client,
-    								input_engagement = 'transactionEngagements_country',
+                                    input_engagement = 'transactionEngagements_country',
                                     saved_model = 'mlArtifacts_country_test',
                                     content_features = 'contentFeatures',
                                     model_name = 'xgboost',
@@ -107,8 +107,8 @@ def cold_start_by_counytry_modeling(client,
                     'features' : mlArtifacts_base.iloc[0,3]
                 }
                }, upsert= True)
-	
-	return None
+    
+    return None
 
 def coldstart_train_main(client):
     cold_start_by_counytry_modeling(client, 
