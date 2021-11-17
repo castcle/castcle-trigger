@@ -8,6 +8,7 @@ hourly
 '''
 import json
 from mongo_client import mongo_client, ping_mongodb
+import datetime
 
 db = mongo_client['analytics-db']
 
@@ -18,13 +19,14 @@ def handle(event, context):
         print("WarmUp - Lambda is warm!")
         return
 
-    from modules.coldstart_prediction.coldstart \
-        import coldstart_main
+    from modules.coldstart_prediction.coldstart_trainer \
+        import coldstart_trainer_main
     print(json.dumps(event, indent=4))
     print(event)
 
-    coldstart_main_result = coldstart_main(mongo_client)
+    coldstart_main_result = coldstart_trainer_main(mongo_client)
 
     return {
-        "status": 200
+        "status": 200,
+        "trained_at": datetime.datetime.now()
     }
