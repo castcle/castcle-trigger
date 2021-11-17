@@ -27,5 +27,5 @@ def handle(event, context):
 
     return {
         "status": 200,
-        "trained_at": datetime.datetime.now()
+        "trained_at": str(datetime.datetime.now())
     }
