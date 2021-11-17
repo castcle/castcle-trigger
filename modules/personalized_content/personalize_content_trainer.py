@@ -33,16 +33,13 @@ def save_model_to_mongodb(dst_database_name: str,
 
     return None
 
-# define main function for training as follow personalize content
-def personalized_content_trainer_main(updatedAtThreshold: float, # define content age
-                                       app_db: str,
-                                       engagement_collection: str ,
-                                       analytics_db: str,
-                                       creator_stats_collection: str,
-                                       content_stats_collection: str,
-                                       dst_database_name: str,
-                                       dst_collection_name: str,
-                                       model_name: str):
+# define feature preparation function from content id list
+def prepare_features(updatedAtThreshold: float,
+                     app_db: str,
+                     analytics_db: str,
+                     content_stats_collection: str,
+                     creator_stats_collection: str,
+                     engagement_collection: str):
     
     # define cursor of content features
     contentFeaturesCursor = [
@@ -100,17 +97,30 @@ def personalized_content_trainer_main(updatedAtThreshold: float, # define conten
     # assign result to dataframe
     # alias 'contentFeatures_1'
     content_features = pd.DataFrame(list(mongo_client[analytics_db][content_stats_collection].aggregate(contentFeaturesCursor))).rename({'_id':'contentId'},axis = 1)
-    
+
 #     #! only in testing
 #     pprint(list(mongo_client[analytics_db][content_stats_collection].aggregate(contentFeaturesCursor)))
 
     # define cursor of engagement transaction
     transactionEngagementsCursor = [
         {
+            # join to map account id
+            '$lookup': {
+            'from': 'users', 
+            'localField': 'user', 
+            'foreignField': '_id', 
+            'as': 'users'
+            }
+        }, {
+            # deconstruct users
+            '$unwind': {
+                'path': '$users'
+            }
+        }, {
             # summarize by pairing of user ID & content ID
             '$group': {
                 '_id': {
-                    'userId': '$user',
+                    'accountId': '$users.ownerAccount', # change from user id
                     'contentId': '$targetRef.$id'
                 },
                 'engangements': {
@@ -175,7 +185,7 @@ def personalized_content_trainer_main(updatedAtThreshold: float, # define conten
             # map output format as followed requirement
             '$project': {
                 '_id': 0,
-                'userId': '$_id.userId',
+                'accountId': '$_id.accountId',
                 'contentId': '$_id.contentId',
                 'like': '$like',
                 'comment': '$comment',
@@ -208,27 +218,53 @@ def personalized_content_trainer_main(updatedAtThreshold: float, # define conten
     ## in case of 'creatorStats' does not update yet -> fill NaN
     transaction_engagements.fillna(0,inplace=True)
 
+
+    
+    return transaction_engagements
+
+
+# define main function for training as follow personalize content
+def personalized_content_trainer_main(updatedAtThreshold: float, # define content age
+                                      app_db: str,
+                                      engagement_collection: str,
+                                      analytics_db: str,
+                                      creator_stats_collection: str,
+                                      content_stats_collection: str,
+                                      dst_database_name: str,
+                                      dst_collection_name: str,
+                                      model_name: str):
+    
+    # 1. query & preparation
+    # prepare_features
+    transaction_engagements = prepare_features(updatedAtThreshold = updatedAtThreshold,
+                                               app_db = app_db,
+                                               analytics_db = analytics_db,
+                                               content_stats_collection = content_stats_collection,
+                                               creator_stats_collection = creator_stats_collection,
+                                               engagement_collection = engagement_collection)
+
 #     ## simply explore dataframe
 #     print(transaction_engagements.head(2))
 #     print('\n')
 
-    select_user = transaction_engagements.groupby('userId')['contentId'].agg('count').reset_index()
+    select_user = transaction_engagements.groupby('accountId')['contentId'].agg('count').reset_index()
     
     # select only user with ever engaged more than 2 contents 
     select_user = select_user[select_user['contentId'] > 2]
     
     
+    # 2. model training
     ## model training
     ml_artifacts = [] # pre-define model artifacts
 
     # loop through user id of selected user
-    for user in list(select_user.userId.unique()):
+    for user in list(select_user.accountId.unique()):
         
         # filter for only selected user
-        focused_transaction_engagements = transaction_engagements[transaction_engagements['userId'] == user]  
+        focused_transaction_engagements = transaction_engagements[transaction_engagements['accountId'] == user]  
         
         # summary engagements of selected user
-        portion = focused_transaction_engagements.groupby('userId').agg( 
+        portion = focused_transaction_engagements.groupby('accountId').agg( 
                                 like_count = ('like','sum'),
                                 comment_count = ('comment','sum'),
                                 recast_count = ('recast','sum'),
@@ -244,11 +280,8 @@ def personalized_content_trainer_main(updatedAtThreshold: float, # define conten
         focused_transaction_engagements['engagements'] = focused_transaction_engagements['like'] + focused_transaction_engagements['comment'] + focused_transaction_engagements['recast'] + focused_transaction_engagements['quote']  
 
         # separate features & label
-        features = focused_transaction_engagements.drop(['engagements','userId','contentId','like','comment','recast','quote'],axis = 1)
+        features = focused_transaction_engagements.drop(['engagements','accountId','contentId','like','comment','recast','quote'],axis = 1)
         label = focused_transaction_engagements['engagements']
-        
-#         #! only testing
-#         print(list(features.columns))
     
         # define estimator
         xg_reg = xgb.XGBRegressor(random_state = 123)
@@ -256,12 +289,13 @@ def personalized_content_trainer_main(updatedAtThreshold: float, # define conten
         # fitting model
         xg_reg.fit(features, label)
         
-        # print result
-        print('finish training user id:')
-        print(user)
+#         # print result
+#         print('finish training user id:')
+#         print(user)
         
         ml_artifacts.append(xg_reg) # collect list of artifacts
 
+        # 3. model saveing
         # upsert to database
         save_model_to_mongodb(dst_database_name = dst_database_name,
                               dst_collection_name = dst_collection_name,
@@ -269,4 +303,5 @@ def personalized_content_trainer_main(updatedAtThreshold: float, # define conten
                               account_id = user,   
                               model_artifact = xg_reg,
                               features_list = list(features.columns))
+    
     return None
