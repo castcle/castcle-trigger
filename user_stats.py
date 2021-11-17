@@ -20,11 +20,11 @@ def handle(event, context):
         return
 
     from modules.coldstart_prediction.coldstart_trainer \
-        import coldstart_trainer_main
+        import coldstart_train_main
     print(json.dumps(event, indent=4))
     print(event)
 
-    coldstart_main_result = coldstart_trainer_main(mongo_client)
+    coldstart_main_result = coldstart_train_main(mongo_client)
 
     return {
         "status": 200,
