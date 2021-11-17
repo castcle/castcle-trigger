@@ -59,10 +59,6 @@ custom:
     dev: subnet-0a3704862892675cb
     staging: subnet-081ef1e25f7f56a09
     prod: subnet-01ce362ad1c488b27
-  postsEventBus:
-    dev: 614b4cb6b23f417e5e559c3f
-    staging: 614b4cb6b23f417e5e559c3f
-    prod: 614b4cb6b23f417e5e559c3f
   uxSessionStartEventBus:
     dev: 615401a5cf5aeb8af6e146a4
     staging: 615401a5cf5aeb8af6e146a4

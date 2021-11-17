@@ -1,16 +1,18 @@
+import os
 import json
 import sys
-from mongo_client import mongo_client, ping_mongodb
+from mongo_client import mongo_client
 from bson.objectid import ObjectId
 from bson import regex
 from datetime import datetime, timedelta
-import math
+# import math
 
-def update_content_stats_main(src_database_name=src_database_name,
-                              src_collection_name=src_collection_name,
-                              contentDateThreshold=contentDateThreshold,
-                              halfLifeHours=halfLifeHours,
-                              topContentslimit=topContentslimit):
+def update_content_stats_main(src_database_name: str,
+                              src_collection_name: str,
+                              dst_database_name: str,
+                              dst_collection_name: str,
+                              contentDateThreshold: float,
+                              halfLifeHours: float):
 
     try:
 
@@ -113,8 +115,8 @@ def update_content_stats_main(src_database_name=src_database_name,
                 ## equation: score = ageScore*(engagementScore + 1)*(hastagDiversityScore)
                 '$merge': {
                     'into': {
-                        'db': 'analytics-db',
-                        'coll': 'contentStats'
+                        'db': dst_database_name,
+                        'coll': dst_collection_name
                     },
                     'on': '_id',
                     'whenMatched': 'replace',
