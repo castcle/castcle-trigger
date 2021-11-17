@@ -26,6 +26,19 @@ def update_content_stats_main(src_database_name: str,
                     },
                     'visibility': 'publish'
                 }
+            }, { 
+                # join for account id  
+                '$lookup': {
+                    'from': 'users', 
+                    'localField': 'author.id', 
+                    'foreignField': '_id', 
+                    'as': 'users'
+                }
+            }, {
+                # deconstruct array
+                '$unwind': {
+                    'path': '$users'
+                }
             }, {
                 # map to calculate content low-level score
                 '$project': {
@@ -80,7 +93,7 @@ def update_content_stats_main(src_database_name: str,
                     'commentCount': '$engagements.comment.count',
                     'recastCount': '$engagements.recast.count',
                     'quoteCount': '$engagements.quote.count',
-                    'authorId': '$author.id',
+                    'ownerAccount': '$users.ownerAccount', # change from 'author.id'
                     'photoCount': {
                         '$size': {
                             '$ifNull': [
