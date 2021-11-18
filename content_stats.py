@@ -20,12 +20,14 @@ def handle(event, context):
     # pprint(event)
     # print('end of event schema')
     print('topic classification started')
-
+    
+    from modules.utils.download_gcp import download_gcp_main
     from modules.topic_classify.topic_classification \
         import topic_classify_main
 
     # print(json.dumps(event, indent=4)) # comment for now
-
+    # download gcp.json
+    download_gcp_main(local_path='./modules/topic_classify/gcp_data-science_service-account_key.json')
     # # 1 topic_classify_main
     # topic_classify_main(mongo_client=mongo_client)
     topic_classify_main(event,   
