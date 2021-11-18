@@ -31,6 +31,10 @@ custom:
     dev: ${ssm:dev-data-analytics-mongodb-password}
     staging: ${ssm:staging-data-analytics-mongodb-password}
     prod: ${ssm:prod-data-analytics-mongodb-password}
+  gcpKey:
+    dev: ${ssm:dev-ds-gcp-key}
+    staging: ${ssm:staging-ds-gcp-key}
+    prod: ${ssm:prod-ds-gcp-key}
   securityGroup:
     dev: sg-0a85d287510c750fb
     staging: sg-0a676a88fdcd07038
@@ -129,6 +133,7 @@ provider:
     ENV: ${self:provider.stage}
     MONGO_HOST: ${self:custom.mongoHost.${self:provider.stage}}
     MONGO_PASSWORD: ${self:custom.mongoPassword.${self:provider.stage}}
+    GCP_KEY: ${self:custom.gcpKey.${self:provider.stage}}
 
 functions:
   uxSessionStart:
