@@ -16,3 +16,10 @@ if env != local:
 # print(f'mongo_uri={mongo_uri}')
 
 mongo_client = MongoClient(mongo_uri, server_api=ServerApi('1'))
+
+
+def ping_mongodb():
+    try:
+        mongo_client.app_db.command('ping')
+    except Exception as error:
+        print("ERROR", error)
