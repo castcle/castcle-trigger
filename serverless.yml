@@ -66,8 +66,8 @@ custom:
     prod: subnet-01ce362ad1c488b27
   topicClassifyEventBus:
     dev: 616af95670473219e6dcabd0
-    staging: 616af95670473219e6dcabd0
-    prod: 616af95670473219e6dcabd0
+    staging: 6197e7e47c52acf715643c77
+    prod: 6197e7e47c52acf715643c77
 
 provider:
   name: aws
