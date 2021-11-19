@@ -9,10 +9,14 @@ import pandas as pd
 from dateutil import parser
 from google.cloud import language_v1
 from mongo_client import mongo_client
+import base64
 
 
 # assign credential for google cloud platform
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"]="./modules/topic_classify/gcp_data-science_service-account_key.json"
+gcp_key_64 = os.environ["GCP_KEY"]
+_GOOGLE_APPLICATION_CREDENTIALS = base64.b64decode(gcp_key_64)
+#os.environ["GOOGLE_APPLICATION_CREDENTIALS"]="./modules/topic_classify/gcp_data-science_service-account_key.json"
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = _GOOGLE_APPLICATION_CREDENTIALS
 
 
 # integrate data loading and query_to_df
