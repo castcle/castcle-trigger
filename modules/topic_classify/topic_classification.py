@@ -15,7 +15,8 @@ import base64
 # assign credential for google cloud platform
 gcp_key_64 = os.environ["GCP_KEY"]
 _GOOGLE_APPLICATION_CREDENTIALS = base64.b64decode(gcp_key_64).decode("utf-8") 
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = _GOOGLE_APPLICATION_CREDENTIALS
+GCP_obj = json.loads(_GOOGLE_APPLICATION_CREDENTIALS)
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = GCP_obj
 
 
 # integrate data loading and query_to_df
