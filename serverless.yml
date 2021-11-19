@@ -5,6 +5,7 @@ variablesResolutionMode: 20210326
 plugins:
   - serverless-stage-manager
   - serverless-plugin-warmup
+  - serverless-disable-functions
 
 custom:
   stages:
@@ -128,6 +129,7 @@ functions:
       - schedule: cron(23 * * * ? *)
   hashtagStatsUpdate:
     name: ${self:provider.stage}-mongodb-trigger-hashtag-stats-update
+    enabled: false
     warmup:
       default:
         enabled: false
