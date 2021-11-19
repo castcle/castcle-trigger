@@ -63,42 +63,10 @@ custom:
     dev: subnet-0a3704862892675cb
     staging: subnet-081ef1e25f7f56a09
     prod: subnet-01ce362ad1c488b27
-  uxSessionStartEventBus:
-    dev: 615401a5cf5aeb8af6e146a4
-    staging: 615401a5cf5aeb8af6e146a4
-    prod: 615401a5cf5aeb8af6e146a4
-  contentStatsUpdateEventBus:
-    dev: 61540f2ebf5a3119b91b6497
-    staging: 61540f2ebf5a3119b91b6497
-    prod: 61540f2ebf5a3119b91b6497
-  creatorStatsUpdateEventBus:
-    dev: 61540f9dac3a15f38bc8faa1
-    staging: 61540f9dac3a15f38bc8faa1
-    prod: 61540f9dac3a15f38bc8faa1
-  hashtagStatsUpdateEventBus:
-    dev: 61541005cf5aeb8af6e7e70f
-    staging: 61541005cf5aeb8af6e7e70f
-    prod: 61541005cf5aeb8af6e7e70f
-  userInsertEventBus:
-    dev: 616af85670473219e6dc15e8
-    staging: 616af85670473219e6dc15e8
-    prod: 616af85670473219e6dc15e8
-  contentStatsEventBus:
+  topicClassifyEventBus:
     dev: 616af95670473219e6dcabd0
     staging: 616af95670473219e6dcabd0
     prod: 616af95670473219e6dcabd0
-  aggregatorTestEventBus:
-    dev: 616af9c13ef907d00d135e33
-    staging: 616af9c13ef907d00d135e33
-    prod: 616af9c13ef907d00d135e33
-  userStatsEventBus:
-    dev: 616c720770473219e696b055
-    staging: 616c720770473219e696b055
-    prod: 616c720770473219e696b055
-  perCtTrainerEventBus:
-    dev: 618de22cb0acf0b1a0ffdc47
-    staging: 618de22cb0acf0b1a0ffdc47
-    prod: 618de22cb0acf0b1a0ffdc47
 
 provider:
   name: aws
@@ -136,21 +104,6 @@ provider:
     GCP_KEY: ${self:custom.gcpKey.${self:provider.stage}}
 
 functions:
-  uxSessionStart:
-    name: ${self:provider.stage}-mongodb-trigger-ux-session-start
-    warmup:
-      default:
-        enabled: false
-    image:
-      name: app_image
-      command:
-        - ux_session_start.handle
-    events:
-      - eventBridge:
-          eventBus: arn:aws:events:us-east-1:044086777883:event-bus/aws.partner/mongodb.com/stitch.trigger/${self:custom.uxSessionStartEventBus.${self:provider.stage}}
-          pattern:
-            account:
-              - "044086777883"
   contentStatsUpdate:
     name: ${self:provider.stage}-mongodb-trigger-content-stats-update
     warmup:
@@ -161,11 +114,7 @@ functions:
       command:
         - content_stats_update.handle
     events:
-      - eventBridge:
-          eventBus: arn:aws:events:us-east-1:044086777883:event-bus/aws.partner/mongodb.com/stitch.trigger/${self:custom.contentStatsUpdateEventBus.${self:provider.stage}}
-          pattern:
-            account:
-              - "044086777883"
+      - schedule: cron(22 * * * ? *)
   creatorStatsUpdate:
     name: ${self:provider.stage}-mongodb-trigger-creator-stats-update
     warmup:
@@ -176,11 +125,7 @@ functions:
       command:
         - creator_stats_update.handle
     events:
-      - eventBridge:
-          eventBus: arn:aws:events:us-east-1:044086777883:event-bus/aws.partner/mongodb.com/stitch.trigger/${self:custom.creatorStatsUpdateEventBus.${self:provider.stage}}
-          pattern:
-            account:
-              - "044086777883"
+      - schedule: cron(23 * * * ? *)
   hashtagStatsUpdate:
     name: ${self:provider.stage}-mongodb-trigger-hashtag-stats-update
     warmup:
@@ -191,28 +136,9 @@ functions:
       command:
         - hashtag_stats_update.handle
     events:
-      - eventBridge:
-          eventBus: arn:aws:events:us-east-1:044086777883:event-bus/aws.partner/mongodb.com/stitch.trigger/${self:custom.hashtagStatsUpdateEventBus.${self:provider.stage}}
-          pattern:
-            account:
-              - "044086777883"
-  userInsert:
-    name: ${self:provider.stage}-mongodb-trigger-user-insert
-    warmup:
-      default:
-        enabled: false
-    image:
-      name: app_image
-      command:
-        - user_insert.handle
-    events:
-      - eventBridge:
-          eventBus: arn:aws:events:us-east-1:044086777883:event-bus/aws.partner/mongodb.com/stitch.trigger/${self:custom.userInsertEventBus.${self:provider.stage}}
-          pattern:
-            account:
-              - "044086777883"
-  contentStats:
-    name: ${self:provider.stage}-mongodb-trigger-content-stats
+      - schedule: cron(30 * * * ? *)
+  topicClassify:
+    name: ${self:provider.stage}-mongodb-trigger-topic-classify
     memorySize: 512
     warmup:
       default:
@@ -220,30 +146,26 @@ functions:
     image:
       name: app_image
       command:
-        - content_stats.handle
+        - topic_classify.handle
     events:
       - eventBridge:
-          eventBus: arn:aws:events:us-east-1:044086777883:event-bus/aws.partner/mongodb.com/stitch.trigger/${self:custom.contentStatsEventBus.${self:provider.stage}}
+          eventBus: arn:aws:events:us-east-1:044086777883:event-bus/aws.partner/mongodb.com/stitch.trigger/${self:custom.topicClassifyEventBus.${self:provider.stage}}
           pattern:
             account:
               - "044086777883"
-  aggregatorTest:
-    name: ${self:provider.stage}-mongodb-trigger-aggregator-test
+  personalizeContentTrainer:
+    name: ${self:provider.stage}-mongodb-trigger-personalize-content-trainer
     warmup:
       default:
         enabled: false
     image:
       name: app_image
       command:
-        - aggregator_test.handle
+        - personalize_content_trainer.handle
     events:
-      - eventBridge:
-          eventBus: arn:aws:events:us-east-1:044086777883:event-bus/aws.partner/mongodb.com/stitch.trigger/${self:custom.aggregatorTestEventBus.${self:provider.stage}}
-          pattern:
-            account:
-              - "044086777883"
-  userStats:
-    name: ${self:provider.stage}-mongodb-trigger-user-stats
+      - schedule: cron(25 20 * * ? *)
+  coldStartTrainer:
+    name: ${self:provider.stage}-mongodb-trigger-cold-start-trainer
     memorySize: 2048
     warmup:
       default:
@@ -251,13 +173,9 @@ functions:
     image:
       name: app_image
       command:
-        - user_stats.handle
+        - cold_start_trainer.handle
     events:
-      - eventBridge:
-          eventBus: arn:aws:events:us-east-1:044086777883:event-bus/aws.partner/mongodb.com/stitch.trigger/${self:custom.userStatsEventBus.${self:provider.stage}}
-          pattern:
-            account:
-              - "044086777883"
+      - schedule: cron(50 * * * ? *)
   perCtTrainer:
     name: ${self:provider.stage}-mongodb-trigger-per-ct-trainer
     warmup:
@@ -268,8 +186,4 @@ functions:
       command:
         - per_ct_trainer.handle
     events:
-      - eventBridge:
-          eventBus: arn:aws:events:us-east-1:044086777883:event-bus/aws.partner/mongodb.com/stitch.trigger/${self:custom.perCtTrainerEventBus.${self:provider.stage}}
-          pattern:
-            account:
-              - "044086777883"
+      - schedule: cron(0 7 * * ? *)
