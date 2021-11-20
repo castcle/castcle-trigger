@@ -167,7 +167,7 @@ functions:
     events:
       - schedule: cron(25 20 * * ? *)
   coldStartTrainer:
-    name: ${self:provider.stage}-mongodb-trigger-cold-start-trainer
+    name: ${self:provider.stage}-mongodb-trigger-coldstart-trainer
     memorySize: 2048
     warmup:
       default:
@@ -175,7 +175,7 @@ functions:
     image:
       name: app_image
       command:
-        - cold_start_trainer.handle
+        - coldstart_trainer.handle
     events:
       - schedule: cron(50 * * * ? *)
   perCtTrainer:
