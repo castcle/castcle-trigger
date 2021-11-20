@@ -139,8 +139,8 @@ functions:
         - hashtag_stats_update.handle
     events:
       - schedule: cron(0 0 1 1 ? 1970)
-  topicClassify:
-    name: ${self:provider.stage}-mongodb-trigger-topic-classify
+  topicClassification:
+    name: ${self:provider.stage}-mongodb-trigger-topic-classification
     memorySize: 512
     warmup:
       default:
@@ -148,7 +148,7 @@ functions:
     image:
       name: app_image
       command:
-        - topic_classify.handle
+        - topic_classification.handle
     events:
       - eventBridge:
           eventBus: arn:aws:events:us-east-1:044086777883:event-bus/aws.partner/mongodb.com/stitch.trigger/${self:custom.topicClassifyEventBus.${self:provider.stage}}
