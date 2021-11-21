@@ -29,9 +29,9 @@ custom:
     staging: stg-cluster-pl-0.7ljem.mongodb.net
     prod: prd-cluster-pl-0.5rvfa.mongodb.net
   mongoPassword:
-    dev: ${ssm:dev-data-analytics-mongodb-password}
-    staging: ${ssm:staging-data-analytics-mongodb-password}
-    prod: ${ssm:prod-data-analytics-mongodb-password}
+    dev: ${ssm:dev-ds-mongodb-password}
+    staging: ${ssm:staging-ds-mongodb-password}
+    prod: ${ssm:prod-ds-mongodb-password}
   gcpKey:
     dev: ${ssm:dev-ds-gcp-key}
     staging: ${ssm:staging-ds-gcp-key}
