@@ -69,6 +69,7 @@ def prepare_features(updatedAtThreshold: float,
             # map output format
             '$project': {
                 '_id': 1,
+                'contentId': 1,
                 'likeCount': 1,
                 'commentCount': 1,
                 'recastCount': 1,
@@ -80,23 +81,14 @@ def prepare_features(updatedAtThreshold: float,
                 'creatorCommentedCount': '$creatorStats.creatorCommentedCount',
                 'creatorRecastedCount': '$creatorStats.creatorRecastedCount',
                 'creatorQuotedCount': '$creatorStats.creatorQuotedCount',
-                'ageScore': '$aggregator.ageScore'
-#                 # alias 'total label'
-#                 'engagements': {
-#                     '$sum': [
-#                         '$likeCount', 
-#                         '$commentCount',
-#                         '$recastCount',
-#                         '$quoteCount'
-#                     ]
-#                 }
+                'ageScore': '$aggregator.ageScore' 
             }
         }
     ]
 
     # assign result to dataframe
     # alias 'contentFeatures_1'
-    content_features = pd.DataFrame(list(mongo_client[analytics_db][content_stats_collection].aggregate(contentFeaturesCursor))).rename({'_id':'contentId'},axis = 1)
+    content_features = pd.DataFrame(list(mongo_client[analytics_db][content_stats_collection].aggregate(contentFeaturesCursor)))
 
 #     #! only in testing
 #     pprint(list(mongo_client[analytics_db][content_stats_collection].aggregate(contentFeaturesCursor)))
