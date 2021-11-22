@@ -391,8 +391,9 @@ def upsert_topics_to_contents(topics_list,
             topic_ids.append(mongo_client[topic_database_name][topic_collection_name].find_one({'slug': category}, {'_id':1})['_id'])
 
         # update to original content
-        mongo_client[contents_database_name][contents_collection_name].update_one({'_id': _id}, [{
+        mongo_client[contents_database_name][contents_collection_name].update_one({'contentId': _id}, [{
                                     '$set': {
+                                        'contentId': _id,
                                         'language': language,
                                         'topics': topic_ids
                                     }}], upsert=True) # change to True when using contents
@@ -403,8 +404,9 @@ def upsert_topics_to_contents(topics_list,
         language = topics_list['language']
 
         # update to original content
-        mongo_client[contents_database_name][contents_collection_name].update_one({'_id': _id}, [{
+        mongo_client[contents_database_name][contents_collection_name].update_one({'contentId': _id}, [{
                                             '$set': {
+                                                'contentId': _id,
                                                 'language': language,
                                             }}], upsert=True) # change to True when using contents
     
@@ -500,14 +502,10 @@ def upsert_topics_to_contents(topics_list,
 
 # define main function
 def topic_classify_main(event,   
-                        topic_database_name='analytics-db', 
-                        topic_collection_name='topics',
-                        # hashtags_database_name = 'analytics-db', # comment this due to 'dev' will handle hashtags
-                        # hashtags_collection_name = 'hashtags', # comment this due to 'dev' will handle hashtags
-                        # contents_database_name = 'analytics-db', #! test, remove this then uncomment below
-                        # contents_collection_name = 'contents_test'): #! test, remove this then uncomment below
-                        contents_database_name = 'app-db',
-                        contents_collection_name = 'contents'):
+                        topic_database_name:str, 
+                        topic_collection_name:str,
+                        contents_database_name:str,
+                        contents_collection_name:str):
         
     logging.info("Start topic classification")
 
@@ -519,7 +517,7 @@ def topic_classify_main(event,
     # 1. loading data
     logging.debug('debug 1')
     
-    
+
     ## perform ingest data
     df = data_ingest(event)
 
