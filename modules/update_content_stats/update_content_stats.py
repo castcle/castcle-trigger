@@ -75,6 +75,8 @@ def update_content_stats_main(src_database_name: str,
                     },
                     # project for investigation
                     # add photo count & message character length
+                    '_id': 0,
+                    'contentId': '$_id'
                     'updatedAt': 1,
                     'likeCount': '$engagements.like.count',
                     'commentCount': '$engagements.comment.count',
@@ -118,7 +120,7 @@ def update_content_stats_main(src_database_name: str,
                         'db': dst_database_name,
                         'coll': dst_collection_name
                     },
-                    'on': '_id',
+                    'on': 'contentId',
                     'whenMatched': 'replace',
                     'whenNotMatched': 'insert'
                 }
