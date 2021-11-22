@@ -33,7 +33,7 @@ def handle(event, context):
                         topic_collection_name='topics',
                         contents_database_name = 'app-db',
                         # contents_collection_name = 'contents')
-                        contents_collection_name = 'contentInfo') # changed follows dev's requirement
+                        contents_collection_name = 'contentinfo') # changed follows dev's requirement
 
 
     return {
