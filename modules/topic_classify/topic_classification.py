@@ -519,6 +519,7 @@ def topic_classify_main(event,
     # 1. loading data
     logging.debug('debug 1')
     
+    
     ## perform ingest data
     df = data_ingest(event)
 
