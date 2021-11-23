@@ -28,4 +28,7 @@ phases:
   post_build:
     commands:
       - bash -c "if [ /"$CODEBUILD_BUILD_SUCCEEDING/" == /"0/" ]; then exit 1; fi"
+      # - echo Destroying Lambda functions...
+      # - npm run remove -- -s $NODE_ENV
+      - echo Deploying Lambda functions...
       - npm run deploy -- -s $NODE_ENV

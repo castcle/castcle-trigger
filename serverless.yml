@@ -4,59 +4,90 @@ variablesResolutionMode: 20210326
 
 plugins:
   - serverless-stage-manager
+  - serverless-plugin-warmup
+  - serverless-disable-functions
 
 custom:
   stages:
     - dev
+    - test
     - staging
     - prod
+  warmup:
+    default:
+      enabled: true
+      prewarm: true
+      timeout: 30
+      name: ${self:provider.stage}-mongodb-triggers-warmer
+      concurrency: ${self:custom.warmupConcurrency.${self:provider.stage}}
+      role: ${opt:role, 'arn:aws:iam::044086777883:role/dataAnalyticsLambdaRole'}
+  warmupConcurrency:
+    dev: 1
+    test: 1
+    staging: 1
+    prod: 10
   mongoHost:
-    dev: dev-cluster-pl-0.fg2e5.mongodb.net
-    staging: dev-cluster-pl-0.fg2e5.mongodb.net
-    prod: dev-cluster-pl-0.fg2e5.mongodb.net
+    dev: dev-cluster.fg2e5.mongodb.net
+    test: test-cluster.9mc2r.mongodb.net
+    staging: stg-cluster-pl-0.7ljem.mongodb.net
+    prod: prd-cluster-pl-0.5rvfa.mongodb.net
   mongoPassword:
-    dev: ${ssm:dev-data-analytics-mongodb-password}
-    staging: ${ssm:staging-data-analytics-mongodb-password}
-    prod: ${ssm:prod-data-analytics-mongodb-password}
+    dev: ${ssm:dev-ds-mongodb-password}
+    test: ${ssm:test-ds-mongodb-password}
+    staging: ${ssm:staging-ds-mongodb-password}
+    prod: ${ssm:prod-ds-mongodb-password}
+  gcpKey:
+    dev: ${ssm:dev-ds-gcp-key}
+    test: ${ssm:test-ds-gcp-key}
+    staging: ${ssm:staging-ds-gcp-key}
+    prod: ${ssm:prod-ds-gcp-key}
   securityGroup:
     dev: sg-0a85d287510c750fb
+    test: sg-0821f0b9421d5c942
     staging: sg-0a676a88fdcd07038
     prod: sg-02f9c88c7e05b1f05
   subnetAzA:
     dev: subnet-06dd909aac8fd1948
+    test: subnet-090044e7a4daccd43
     staging: subnet-07a1a18b1527f00c7
     prod: subnet-0290592d406bccc27
   subnetAzB:
     dev: subnet-08688e4403d21037e
+    test: subnet-06ed558d84fc9724e
     staging: subnet-0587b148568217c70
     prod: subnet-0790d32929fd45c33
   subnetAzC:
     dev: subnet-074ee31c582c2cbfa
+    test: subnet-006fd91684c0bbda3
     staging: subnet-0685f5c67f247769a
     prod: subnet-03aeae9f13764217c
   subnetAzD:
     dev: subnet-0734c25674eded0ac
+    test: subnet-08add80ac0c4b4030
     staging: subnet-01ebaa837f7ed8258
     prod: subnet-0e59ee98c9d5c760e
   subnetAzE:
     dev: subnet-086b2062d3bfb6fa1
+    test: subnet-00d39205611d1668b
     staging: subnet-0401577626c6d60e7
     prod: subnet-03000365f0e4a2cf2
   subnetAzF:
     dev: subnet-0a3704862892675cb
+    test: subnet-0dd1873570608c890
     staging: subnet-081ef1e25f7f56a09
     prod: subnet-01ce362ad1c488b27
-  postsEventBus:
-    dev: arn:aws:events:us-east-1:044086777883:event-bus/aws.partner/mongodb.com/stitch.trigger/614b4cb6b23f417e5e559c3f
-    staging: arn:aws:events:us-east-1:044086777883:event-bus/aws.partner/mongodb.com/stitch.trigger/614b4cb6b23f417e5e559c3f
-    prod: arn:aws:events:us-east-1:044086777883:event-bus/aws.partner/mongodb.com/stitch.trigger/614b4cb6b23f417e5e559c3f
+  topicClassifyEventBus:
+    dev: 616af95670473219e6dcabd0
+    test: 619b653f5eed5334ed0cf454
+    staging: 6197e7e47c52acf715643c77
+    prod: 619b67a86d52a17958345276
 
 provider:
   name: aws
   lambdaHashingVersion: 20201221
   stage: ${opt:stage, 'dev'}
   region: ${opt:region, 'us-east-1'}
-  memorySize: 128
+  memorySize: 256
   timeout: 900
   stackName: ${self:provider.stage}-mongodb-triggers
   logRetentionInDays: 14
@@ -84,17 +115,90 @@ provider:
     ENV: ${self:provider.stage}
     MONGO_HOST: ${self:custom.mongoHost.${self:provider.stage}}
     MONGO_PASSWORD: ${self:custom.mongoPassword.${self:provider.stage}}
+    GCP_KEY: ${self:custom.gcpKey.${self:provider.stage}}
 
 functions:
-  app:
-    name: ${self:provider.stage}-mongodb-trigger
+  contentStatsUpdate:
+    name: ${self:provider.stage}-mongodb-trigger-content-stats-update
+    warmup:
+      default:
+        enabled: false
     image:
       name: app_image
       command:
-        - app.handle
+        - content_stats_update.handle
+    events:
+      - schedule: cron(22 * * * ? *)
+  creatorStatsUpdate:
+    name: ${self:provider.stage}-mongodb-trigger-creator-stats-update
+    warmup:
+      default:
+        enabled: false
+    image:
+      name: app_image
+      command:
+        - creator_stats_update.handle
+    events:
+      - schedule: cron(23 * * * ? *)
+  hashtagStatsUpdate:
+    name: ${self:provider.stage}-mongodb-trigger-hashtag-stats-update
+    enabled: false
+    warmup:
+      default:
+        enabled: false
+    image:
+      name: app_image
+      command:
+        - hashtag_stats_update.handle
+    events:
+      - schedule: cron(0 0 1 1 ? 1970)
+  topicClassification:
+    name: ${self:provider.stage}-mongodb-trigger-topic-classification
+    memorySize: 512
+    warmup:
+      default:
+        enabled: false
+    image:
+      name: app_image
+      command:
+        - topic_classification.handle
     events:
       - eventBridge:
-          eventBus: ${self:custom.postsEventBus.${self:provider.stage}}
+          eventBus: arn:aws:events:us-east-1:044086777883:event-bus/aws.partner/mongodb.com/stitch.trigger/${self:custom.topicClassifyEventBus.${self:provider.stage}}
           pattern:
             account:
               - "044086777883"
+  personalizeContentTrainer:
+    name: ${self:provider.stage}-mongodb-trigger-personalize-content-trainer
+    warmup:
+      default:
+        enabled: false
+    image:
+      name: app_image
+      command:
+        - personalize_content_trainer.handle
+    events:
+      - schedule: cron(25 20 * * ? *)
+  coldStartTrainer:
+    name: ${self:provider.stage}-mongodb-trigger-coldstart-trainer
+    memorySize: 2048
+    warmup:
+      default:
+        enabled: true
+    image:
+      name: app_image
+      command:
+        - coldstart_trainer.handle
+    events:
+      - schedule: cron(50 * * * ? *)
+  perCtTrainer:
+    name: ${self:provider.stage}-mongodb-trigger-per-ct-trainer
+    warmup:
+      default:
+        enabled: false
+    image:
+      name: app_image
+      command:
+        - per_ct_trainer.handle
+    events:
+      - schedule: cron(0 7 * * ? *)
