@@ -1,3 +1,5 @@
+# can delete
+# using personalize_content_trainer.py instead
 import json
 from mongo_client import mongo_client, ping_mongodb
 

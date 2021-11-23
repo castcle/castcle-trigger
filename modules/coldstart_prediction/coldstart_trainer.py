@@ -1,33 +1,88 @@
 import logging
-
+ 
 def cold_start_by_counytry_modeling(client,
                                     input_engagement = 'transactionEngagements_country',
-                                    saved_model = 'mlArtifacts_country_test',
-                                    content_features = 'contentFeatures',
+                                    saved_model = 'mlArtifacts_country',
                                     model_name = 'xgboost',
-                                    based_model = 'US'):    
-    import pymongo # connect to MongoDB
-    from pymongo import MongoClient # client connection to MongoDB
-    import sklearn
+                                    based_model = 'US'):
     import pandas as pd
-    import json
     import xgboost as xgb
-    import bson.objectid
     import pickle
     from datetime import datetime
     from pprint import pprint
-    import numpy as np
     import iso3166    
- 
+
     appDb = client['app-db']
     analyticsDb = client['analytics-db']
     trans = analyticsDb[input_engagement]
     trans = pd.DataFrame(list(trans.find()))
-    contentFeatures = analyticsDb[content_features]
-    contentFeatures = pd.DataFrame(list(contentFeatures.find()))
-    mlArtifacts_country = analyticsDb[saved_model]
     
-    contentFeatures_1 = contentFeatures.fillna(0).rename({'_id':'contentId'},axis = 1).drop('userId',axis = 1)
+    def prepare_features(mongo_client, 
+                     analytics_db: str,
+                     content_stats_collection: str,
+                     creator_stats_collection: str):
+    
+    # define cursor of content features
+        contentFeaturesCursor = [
+         {
+            # join with creator stats
+                '$lookup': {
+                    'from': creator_stats_collection, # previous:'creatorStats',
+                    'localField': 'authorId',
+                    'foreignField': '_id',
+                    'as': 'creatorStats'
+                }
+            }, {
+            # deconstruct array
+                '$unwind': {
+                    'path': '$creatorStats',
+                    'preserveNullAndEmptyArrays': True
+                }
+            }, {
+            # map output format
+                '$project': {
+                    '_id': 1,
+                    'likeCount': 1,
+                    'commentCount': 1,
+                    'recastCount': 1,
+                    'quoteCount': 1,
+                    'photoCount': 1,
+                    'characterLength': 1,
+                    'creatorContentCount' :'$creatorStats.contentCount',
+                    'creatorLikedCount': '$creatorStats.creatorLikedCount',
+                    'creatorCommentedCount': '$creatorStats.creatorCommentedCount',
+                    'creatorRecastedCount': '$creatorStats.creatorRecastedCount',
+                    'creatorQuotedCount': '$creatorStats.creatorQuotedCount',
+                    'ageScore': '$aggregator.ageScore'
+#                 # alias 'total label'
+#                 'engagements': {
+#                     '$sum': [
+#                         '$likeCount', 
+#                         '$commentCount',
+#                         '$recastCount',
+#                         '$quoteCount'
+#                     ]
+#                 }
+                }
+            }
+        ]
+
+    # assign result to dataframe
+    # alias 'contentFeatures_1'
+
+        content_features = pd.DataFrame(list(client[analytics_db][content_stats_collection].aggregate(contentFeaturesCursor))).rename({'_id':'contentId'},axis = 1)
+    
+        return content_features
+
+    contentFeatures = prepare_features(mongo_client = client, # default
+                                        analytics_db = 'analytics-db',
+                                        content_stats_collection = 'contentStats',
+                                        creator_stats_collection = 'creatorStats')
+    
+    
+    mlArtifacts_country = analyticsDb[saved_model]
+
+    contentFeatures_1 = contentFeatures.fillna(0)
     trans_add = trans.merge(contentFeatures_1, on = 'contentId',how ='left')
     trans_add['label'] = trans_add['like']+trans_add['comment'] +trans_add['recast'] +trans_add['quote']  
     trans_add = trans_add.drop(['_id'],axis = 1)
@@ -111,13 +166,11 @@ def cold_start_by_counytry_modeling(client,
     return None
 
 def coldstart_train_main(client):
-    cold_start_by_counytry_modeling(client, 
+    cold_start_by_counytry_modeling(client,
                                     input_engagement = 'transactionEngagements_country',
-                                    saved_model = 'mlArtifacts_country_test',
-                                    content_features = 'contentFeatures',
+                                    saved_model = 'mlArtifacts_country',
                                     model_name = 'xgboost',
                                     based_model = 'US') 
-    
 
     
     return
