@@ -313,6 +313,20 @@ def update_creator_stats_main(src_database_name: str,
                         '$sum': '$creatorQuotedCount'
                     }
                 }
+
+            }, {
+                # join with 'accounts' for 'country code'
+                '$lookup': {
+                    'from': 'accounts',
+                    'localField': 'ownerAccount',
+                    'foreignField': '_id',
+                    'as': 'accounts'
+                }
+            }, {
+                # deconstruct array => object format
+                '$unwind': {
+                    'path': '$accounts'
+                }                
             }, {
                 # map final result format
                 '$project': {
@@ -325,6 +339,7 @@ def update_creator_stats_main(src_database_name: str,
                     'followedCount': 1,
                     'followerCount': 1,
                     'summary': 1,
+                    'geolocation': '$accounts.geolocation',
                     'contentCount': '$creatorContentCount',
                     'aggregator.ageScore': '$ageScore',
                     'aggregator.engagementScore': '$aggregator.engagementScore',
@@ -377,4 +392,4 @@ def update_creator_stats_main(src_database_name: str,
 
         print("ERROR", error)
 
-    return None
+    return pprint(list(mongo_client[src_database_name][src_collection_name].aggregate(creatorStatsCursor)))
