@@ -1,7 +1,7 @@
 import os
 import json
 import sys
-from mongo_client import mongo_client
+# from mongo_client import mongo_client
 from bson.objectid import ObjectId
 from bson import regex
 from datetime import datetime, timedelta
@@ -75,7 +75,7 @@ def update_content_stats_main(src_database_name: str,
                     },
                     # project for investigation
                     # add photo count & message character length
-                    '_id': 0,
+                    '_id': 1,
                     'contentId': '$_id',
                     'updatedAt': 1,
                     'likeCount': '$engagements.like.count',
@@ -120,7 +120,7 @@ def update_content_stats_main(src_database_name: str,
                         'db': dst_database_name,
                         'coll': dst_collection_name
                     },
-                    'on': 'contentId',
+                    'on': '_id', # cannot use 'contentId'
                     'whenMatched': 'replace',
                     'whenNotMatched': 'insert'
                 }

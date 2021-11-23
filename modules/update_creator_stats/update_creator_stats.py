@@ -392,4 +392,4 @@ def update_creator_stats_main(src_database_name: str,
 
         print("ERROR", error)
 
-    return pprint(list(mongo_client[src_database_name][src_collection_name].aggregate(creatorStatsCursor)))
+    return None
