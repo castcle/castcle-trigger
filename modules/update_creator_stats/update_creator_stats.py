@@ -316,7 +316,8 @@ def update_creator_stats_main(src_database_name: str,
             }, {
                 # map final result format
                 '$project': {
-                    '_id': 1,
+                    '_id': 0,
+                    'creatorId': '$_id',
                     'ownerAccount': 1,
                     'displayId': 1,
                     'userCreatedAt': 1,
