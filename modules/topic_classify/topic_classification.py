@@ -22,7 +22,7 @@ os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = GCP_obj
 '''
 
 # assign credential for google cloud platform
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = gcp_data_science_service_account_key.json
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = './gcp_data_science_service_account_key.json'
 
 
 # # try 2
