@@ -56,7 +56,7 @@ def prepare_features(updatedAtThreshold: float,
             '$lookup': {
                 'from': creator_stats_collection, # previous:'creatorStats',
                 'localField': 'authorId',
-                'foreignField': '_id',
+                'foreignField': 'creatorId',
                 'as': 'creatorStats'
             }
         }, {
