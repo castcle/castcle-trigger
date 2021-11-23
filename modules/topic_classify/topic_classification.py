@@ -21,6 +21,10 @@ GCP_obj = json.dumps(_GOOGLE_APPLICATION_CREDENTIALS)
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = GCP_obj
 '''
 
+# assign credential for google cloud platform
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = gcp_data_science_service_account_key.json
+
+
 # try 2
 client = boto3.client('s3')
 response = client.get_object( Bucket='ml-dev.castcle.com', Key='gcp_data-science_service-account_key.json')
