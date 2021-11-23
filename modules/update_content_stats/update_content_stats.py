@@ -135,3 +135,5 @@ def update_content_stats_main(src_database_name: str,
 
     except Exception as error:
         print("ERROR", error)
+
+    return None
