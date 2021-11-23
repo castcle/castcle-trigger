@@ -243,10 +243,6 @@ def personalized_content_trainer_main(updatedAtThreshold: float, # define conten
     
     # select only user with ever engaged more than 2 contents 
     select_user = select_user[select_user['contentId'] > 2]
-    
-    #! debug
-    print('1 passed')
-
 
     # 2. model training
     ## model training
@@ -275,7 +271,7 @@ def personalized_content_trainer_main(updatedAtThreshold: float, # define conten
         focused_transaction_engagements['engagements'] = focused_transaction_engagements['like'] + focused_transaction_engagements['comment'] + focused_transaction_engagements['recast'] + focused_transaction_engagements['quote']  
 
         # separate features & label
-        features = focused_transaction_engagements.drop(['engagements','accountId','contentId','like','comment','recast','quote'],axis = 1)
+        features = focused_transaction_engagements.drop(['_id','engagements','accountId','contentId','like','comment','recast','quote'],axis = 1)
         label = focused_transaction_engagements['engagements']
     
         # define estimator
@@ -287,9 +283,6 @@ def personalized_content_trainer_main(updatedAtThreshold: float, # define conten
 #         # print result
 #         print('finish training user id:')
 #         print(user)
-        
-        #! debug
-        print('2 passed')
 
         ml_artifacts.append(xg_reg) # collect list of artifacts
 
@@ -301,8 +294,5 @@ def personalized_content_trainer_main(updatedAtThreshold: float, # define conten
                               account_id = user,   
                               model_artifact = xg_reg,
                               features_list = list(features.columns))
-
-        #! debug
-        print('3 passed')
     
     return None
