@@ -161,16 +161,16 @@ def prepare_features(updatedAtThreshold: float,
             '$group': {
                 '_id': '$_id',
                 'like': {
-                    '$first': '$like'
+                    '$sum': '$like'
                 },
                 'comment': {
-                    '$first': '$comment'
+                    '$sum': '$comment'
                 },
                 'recast': {
-                    '$first': '$recast'
+                    '$sum': '$recast'
                 },
                 'quote': {
-                    '$first': '$quote'
+                    '$sum': '$quote'
                 }
             }
         }, {
