@@ -23,6 +23,7 @@ os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = GCP_obj
 
 #! debug check file existence
 path_to_json = './gcp_data_science_service_account_key.json'
+print(os.listdir())
 print(os.listdir(path_to_json))
 
 
