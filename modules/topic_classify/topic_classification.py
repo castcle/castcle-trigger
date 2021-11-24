@@ -28,7 +28,7 @@ print(os.listdir('./'))
 
 
 # assign credential for google cloud platform
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = 'gcp_data_science_service_account_key.json'
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = './gcp_data_science_service_account_key.json'
 
 # # try 2
 # client = boto3.client('s3')
