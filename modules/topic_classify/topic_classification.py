@@ -21,14 +21,8 @@ GCP_obj = json.dumps(_GOOGLE_APPLICATION_CREDENTIALS)
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = GCP_obj
 '''
 
-#! debug check file existence
-# path_to_json = 'gcp_data_science_service_account_key.json'
-print(os.listdir('./'))
-# print(os.listdir(path_to_json))
-
-
 # assign credential for google cloud platform
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = './gcp_data_science_service_account_key.json'
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = './gcp_data_science_service_account_key.json'รอ
 
 # # try 2
 # client = boto3.client('s3')
@@ -173,7 +167,7 @@ def classify_text(message: str, _id, language: str, updatedAt) -> dict:
 def get_topic_document(df):
     
     # define threshold
-    message_length_threshold = 20
+    message_length_threshold = 21 # changed from 20
     
     # perform clean text
     _id = df['_id'][0]
