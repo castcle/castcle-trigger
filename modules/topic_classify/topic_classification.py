@@ -22,13 +22,13 @@ os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = GCP_obj
 '''
 
 #! debug check file existence
-path_to_json = './gcp_data_science_service_account_key.json'
-print(os.listdir())
-print(os.listdir(path_to_json))
+# path_to_json = 'gcp_data_science_service_account_key.json'
+print(os.listdir('./'))
+# print(os.listdir(path_to_json))
 
 
 # assign credential for google cloud platform
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = './gcp_data_science_service_account_key.json'
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = 'gcp_data_science_service_account_key.json'
 
 # # try 2
 # client = boto3.client('s3')
