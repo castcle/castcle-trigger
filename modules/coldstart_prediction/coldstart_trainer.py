@@ -103,7 +103,7 @@ def cold_start_by_counytry_modeling(client,
                 'account': account,
                 'model': str(model_name),
                 'artifact': pickled_model,
-                'trainedAt': datetime.now(),
+                'trainedAt': datetime.utcnow(),
                 'features' : list(Xlr.columns)
             }
            }, upsert= True)
