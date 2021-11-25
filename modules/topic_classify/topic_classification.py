@@ -10,14 +10,26 @@ from dateutil import parser
 from google.cloud import language_v1
 from mongo_client import mongo_client
 import base64
+import boto3
 
-
+'''
+# try 1
 # assign credential for google cloud platform
 gcp_key_64 = os.environ["GCP_KEY"]
 _GOOGLE_APPLICATION_CREDENTIALS = base64.b64decode(gcp_key_64).decode("utf-8") 
 GCP_obj = json.dumps(_GOOGLE_APPLICATION_CREDENTIALS)
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = GCP_obj
+'''
 
+# assign credential for google cloud platform
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = './gcp_data_science_service_account_key.json'
+
+# # try 2
+# client = boto3.client('s3')
+# response = client.get_object( Bucket='ml-dev.castcle.com', Key='gcp_data-science_service-account_key.json')
+# body = response['Body'].read().decode('utf-8')
+# json_content = json.loads(body)
+# os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = json_content
 
 # integrate data loading and query_to_df
 def data_ingest(event):
@@ -155,7 +167,7 @@ def classify_text(message: str, _id, language: str, updatedAt) -> dict:
 def get_topic_document(df):
     
     # define threshold
-    message_length_threshold = 20
+    message_length_threshold = 21 # changed from 20
     
     # perform clean text
     _id = df['_id'][0]

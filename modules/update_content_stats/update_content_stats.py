@@ -7,6 +7,23 @@ from bson import regex
 from datetime import datetime, timedelta
 # import math
 
+# define function to remove old contents from 'contentStats' 
+def remove_old_contents(contentDateThreshold: float,
+                     database_name: str,
+                     collection_name: str):
+    
+    # query statement to find contents with 'updatedAt' older than (less than) 'contentDateThreshold'
+    query_statement = {
+        'updatedAt': {
+            '$lte': (datetime.utcnow() - timedelta(days=contentDateThreshold))
+        }
+    }
+    
+    #! remove contents as above query statement
+    mongo_client[database_name][collection_name].remove(query_statement)
+    
+    return None
+
 def update_content_stats_main(src_database_name: str,
                               src_collection_name: str,
                               dst_database_name: str,
@@ -16,6 +33,16 @@ def update_content_stats_main(src_database_name: str,
 
     try:
 
+        # 1. clear old contents
+        # perform content removal according to 'updatedAt'
+        remove_old_contents(contentDateThreshold = contentDateThreshold,
+                            database_name = dst_database_name, # query from dst
+                            collection_name = dst_collection_name) # query from dst
+
+        # print log
+        print('contents age greater than', datetime.utcnow() - timedelta(days=contentDateThreshold), 'have been removed')
+
+        # 2. extract data from src collection then update to dst collection
         # define cursor
         contentStatsCursor = [
             {
@@ -75,8 +102,8 @@ def update_content_stats_main(src_database_name: str,
                     },
                     # project for investigation
                     # add photo count & message character length
-                    '_id': 0,
-                    'contentId': '$_id'
+                    '_id': 1,
+                    'contentId': '$_id',
                     'updatedAt': 1,
                     'likeCount': '$engagements.like.count',
                     'commentCount': '$engagements.comment.count',
@@ -120,7 +147,7 @@ def update_content_stats_main(src_database_name: str,
                         'db': dst_database_name,
                         'coll': dst_collection_name
                     },
-                    'on': 'contentId',
+                    'on': '_id', # cannot use 'contentId'
                     'whenMatched': 'replace',
                     'whenNotMatched': 'insert'
                 }
@@ -135,3 +162,5 @@ def update_content_stats_main(src_database_name: str,
 
     except Exception as error:
         print("ERROR", error)
+
+    return None
