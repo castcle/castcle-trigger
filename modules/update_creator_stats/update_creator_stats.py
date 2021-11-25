@@ -26,7 +26,7 @@ def update_creator_stats_main(src_database_name: str,
                 # filter age of contents for only newer than specific days
                 # filter only visible contents
                 '$match': {
-                    'createdAt': {
+                    'updatedAt': {
                         '$gte': (datetime.utcnow() - timedelta(days=contentDateThreshold))
                     },
                     'visibility': 'publish'
