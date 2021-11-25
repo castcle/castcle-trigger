@@ -110,6 +110,7 @@ provider:
     ENV: ${self:provider.stage}
     MONGO_HOST: ${self:custom.mongoHost.${self:provider.stage}}
     MONGO_PASSWORD: ${self:custom.mongoPassword.${self:provider.stage}}
+    GCP_KEY: ${self:custom.gcpKey.${self:provider.stage}}
 
 functions:
   contentStatsUpdate:

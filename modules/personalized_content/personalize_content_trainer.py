@@ -243,7 +243,6 @@ def personalized_content_trainer_main(updatedAtThreshold: float, # define conten
     
     # select only user with ever engaged more than 2 contents 
     select_user = select_user[select_user['contentId'] > 2]
-
     # 2. model training
     ## model training
     ml_artifacts = [] # pre-define model artifacts
@@ -283,7 +282,6 @@ def personalized_content_trainer_main(updatedAtThreshold: float, # define conten
 #         # print result
 #         print('finish training user id:')
 #         print(user)
-
         ml_artifacts.append(xg_reg) # collect list of artifacts
 
         # 3. model saveing

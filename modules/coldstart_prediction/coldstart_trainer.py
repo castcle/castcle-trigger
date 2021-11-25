@@ -1,21 +1,148 @@
-import logging
- 
 def cold_start_by_counytry_modeling(client,
-                                    input_engagement = 'transactionEngagements_country',
                                     saved_model = 'mlArtifacts_country',
                                     model_name = 'xgboost',
-                                    based_model = 'US'):
+                                    based_model = 'TH',
+                                    updatedAtThreshold = 30.0):    
     import pandas as pd
+    import json
     import xgboost as xgb
+    import bson.objectid
     import pickle
     from datetime import datetime
     from pprint import pprint
     import iso3166    
-
+    
     appDb = client['app-db']
     analyticsDb = client['analytics-db']
-    trans = analyticsDb[input_engagement]
-    trans = pd.DataFrame(list(trans.find()))
+#     trans = analyticsDb[input_engagement]
+#     trans = pd.DataFrame(list(trans.find()))
+    
+    def prepare_features_country(updatedAtThreshold: float,
+                     app_db: str,
+                     engagement_collection: str):
+        from datetime import datetime, timedelta
+        
+    
+        transactionEngagementsCountry = [
+            {
+            # filter age of contents for only newer than specific days
+                '$match': {
+                    'updatedAt': {
+                        '$gte': (datetime.utcnow() - timedelta(days=updatedAtThreshold))
+                    }
+                }
+            }, {
+            # join with 'app-db.users' for account id
+                '$lookup': {
+                    'from': 'users', 
+                    'localField': 'user', 
+                    'foreignField': '_id', 
+                    'as': 'users'
+                }
+            }, {
+            # deconstruct array => object format
+                '$unwind': {
+                    'path': '$users'
+                }
+            }, {
+            # join with 'app-db.accounts' of country code
+                '$lookup': {
+                    'from': 'accounts', 
+                    'localField': 'users.ownerAccount', 
+                    'foreignField': '_id', 
+                    'as': 'accounts'
+                }
+            }, {
+            # deconstruct array => object format
+                '$unwind': {
+                    'path': '$accounts'
+                }
+            }, {
+            # group by content id & country code
+                '$group': {
+                    '_id': {
+                        'contentId': '$targetRef.$id', 
+                        'countryCode': '$accounts.geolocation.countryCode'
+                    }, 
+                    'engangements': {
+                        '$push': '$type'
+                    }
+                }
+            }, {
+            # deconstruct array => object format
+                '$unwind': {
+                    'path': '$engangements'
+                }
+            }, {
+            # convert engagement to integer type
+                '$addFields': {
+                    'like': {
+                        '$toInt': {
+                            '$eq': [
+                                '$engangements', 'like'
+                            ]
+                        }
+                    }, 
+                    'comment': {
+                        '$toInt': {
+                            '$eq': [
+                                '$engangements', 'comment'
+                            ]
+                        }
+                    }, 
+                    'recast': {
+                        '$toInt': {
+                            '$eq': [
+                                '$engangements', 'recast'
+                            ]
+                        }
+                    }, 
+                    'quote': {
+                        '$toInt': {
+                            '$eq': [
+                                '$engangements', 'quote'
+                            ]
+                        }
+                    }
+                }
+            }, {
+            # group by again but sum engagement
+                '$group': {
+                    '_id': '$_id', 
+                    'like': {
+                        '$sum': '$like'
+                    }, 
+                    'comment': {
+                        '$sum': '$comment'
+                    }, 
+                    'recast': {
+                        '$sum': '$recast'
+                    }, 
+                    'quote': {
+                        '$sum': '$quote'
+                    }
+                }
+            }, {
+            # map output format
+                '$project': {
+                    '_id': 0, 
+                    'contentId': '$_id.contentId', 
+                    'countryCode': '$_id.countryCode', 
+                    'like': 1, 
+                    'comment': 1, 
+                    'recast': 1, 
+                    'quote': 1
+                }
+            }
+        ]
+    
+        transaction_engagements_country = pd.DataFrame(list(client[app_db][engagement_collection].aggregate(transactionEngagementsCountry)))
+    
+        return transaction_engagements_country
+
+    trans = prepare_features_country(updatedAtThreshold = updatedAtThreshold, # number of days to keep content
+                                      app_db = 'app-db',
+                                      engagement_collection = 'engagements')
     
     def prepare_features(mongo_client, 
                      analytics_db: str,
@@ -85,9 +212,9 @@ def cold_start_by_counytry_modeling(client,
     contentFeatures_1 = contentFeatures.fillna(0)
     trans_add = trans.merge(contentFeatures_1, on = 'contentId',how ='left')
     trans_add['label'] = trans_add['like']+trans_add['comment'] +trans_add['recast'] +trans_add['quote']  
-    trans_add = trans_add.drop(['_id'],axis = 1)
+    trans_add = trans_add
     
-    select_user = trans_add.groupby('country_code')['contentId'].agg('count').reset_index()
+    select_user = trans_add.groupby('countryCode')['contentId'].agg('count').reset_index()
     select_user = select_user[select_user['contentId'] > 2]
 
     def save_model_to_mongodb(collection, model_name, account, model):
@@ -109,10 +236,10 @@ def cold_start_by_counytry_modeling(client,
            }, upsert= True)
     ml_artifacts = [] # pre-define model artifacts
 
-    for n in list(select_user.country_code.unique()):
+    for n in list(select_user.countryCode.unique()):
     
-        focus_trans = trans_add[trans_add['country_code'] == n]  
-        portion = focus_trans.groupby('country_code').agg( 
+        focus_trans = trans_add[trans_add['countryCode'] == n]  
+        portion = focus_trans.groupby('countryCode').agg( 
                                 like_count = ('like','sum'),
                                 comment_count = ('comment','sum'),
                                 recast_count = ('recast','sum'),
@@ -126,7 +253,7 @@ def cold_start_by_counytry_modeling(client,
         focus_trans.loc[:,'quote'] = focus_trans.loc[:,'quote']*portion.loc[0,'quote_count']
         focus_trans['label'] = focus_trans['like']+focus_trans['comment'] +focus_trans['recast'] +focus_trans['quote']  
 
-        Xlr = focus_trans.drop(['label','country_code','contentId','like','comment','recast','quote'],axis = 1)
+        Xlr = focus_trans.drop(['label','countryCode','contentId','like','comment','recast','quote'],axis = 1)
         ylr = focus_trans.label
 
         xg_reg = xgb.XGBRegressor(random_state = 123)
@@ -145,7 +272,7 @@ def cold_start_by_counytry_modeling(client,
     mlArtifacts = pd.DataFrame(list(mlArtifacts_country.find()))
     mlArtifacts_base = mlArtifacts[mlArtifacts['account'] == based_model].drop(['account'],axis = 1)
     
-    country_list = list(set(iso3166.countries_by_alpha2.keys()).difference(set(select_user['country_code'])))
+    country_list = list(set(iso3166.countries_by_alpha2.keys()).difference(set(select_user['countryCode'])))
     for i in country_list:
     # update collection  
         pprint(i)
@@ -166,11 +293,11 @@ def cold_start_by_counytry_modeling(client,
     return None
 
 def coldstart_train_main(client):
+    
     cold_start_by_counytry_modeling(client,
-                                    input_engagement = 'transactionEngagements_country',
                                     saved_model = 'mlArtifacts_country',
                                     model_name = 'xgboost',
-                                    based_model = 'US') 
-
+                                    based_model = 'TH',
+                                    updatedAtThreshold = 30.0) 
     
     return
