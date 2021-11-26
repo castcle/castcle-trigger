@@ -4,18 +4,13 @@ def cold_start_by_counytry_modeling(client,
                                     based_model = 'TH',
                                     updatedAtThreshold = 30.0):    
     import pandas as pd
-    import json
     import xgboost as xgb
-    import bson.objectid
     import pickle
     from datetime import datetime
     from pprint import pprint
     import iso3166    
     
-    appDb = client['app-db']
     analyticsDb = client['analytics-db']
-#     trans = analyticsDb[input_engagement]
-#     trans = pd.DataFrame(list(trans.find()))
     
     def prepare_features_country(updatedAtThreshold: float,
                      app_db: str,
@@ -193,9 +188,6 @@ def cold_start_by_counytry_modeling(client,
                 }
             }
         ]
-
-    # assign result to dataframe
-    # alias 'contentFeatures_1'
 
         content_features = pd.DataFrame(list(client[analytics_db][content_stats_collection].aggregate(contentFeaturesCursor))).rename({'_id':'contentId'},axis = 1)
     
