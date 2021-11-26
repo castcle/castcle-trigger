@@ -185,7 +185,7 @@ functions:
       command:
         - coldstart_trainer.handle
     events:
-      - schedule: cron(50 * * * ? *)
+      - schedule: cron(25 * * * ? *)
   perCtTrainer:
     name: ${self:provider.stage}-mongodb-trigger-per-ct-trainer
     warmup:
