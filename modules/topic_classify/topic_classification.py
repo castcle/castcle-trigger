@@ -424,93 +424,7 @@ def upsert_topics_to_contents(topics_list,
     
     return None
 
-# comment this due to 'dev' will handle hashtags
-# # define hashtag extract from 'contents' => 'hashtags' & 'content.hastags' function
-# def hashtag_extract(df):
-    
-#     _id = df['_id'][0]
-#     message = df['message'][0]
-#     updatedAt = df['updatedAt'][0]
-    
-#     hashtags_list = {} # assign empty variable
-    
-#     # define regex pattern to extract hashtag(s) from event document 
-#     hastag_pattern = re.compile(r"(?<=#)[a-zA-Z0-9]+")
-    
-#     hashtags = re.findall(hastag_pattern, message)
-    
-#     if len(hashtags) != 0:
-    
-#         hashtags_list['_id'] = _id
-#         hashtags_list['hashtags'] = hashtags
-#         hashtags_list['updatedAt'] = updatedAt
-        
-#     else:
-        
-#         hashtags_list['_id'] = _id
-    
-#     return hashtags_list
 
-# def upsert_to_hashtags_and_update_contents(hashtags_list,
-#                       contents_database_name: str, # original database which will be add hashtags field to content
-#                       contents_collection_name: str, # original collection which will be add hashtags field to content 
-#                       hashtags_database_name: str, # destination database which is consider as master collection
-#                       hashtags_collection_name: str): # destination collection which is consider as master collection
-    
-#     if 'hashtags' in hashtags_list:
-    
-#         _id = hashtags_list['_id']
-#         hashtags = hashtags_list['hashtags']
-#         updatedAt = hashtags_list['updatedAt']
-
-#         # condition for accept only event document that is able to extract hashtag(s)
-#         if len(hashtags) != 0:
-
-#             hashtag_ids = [] # assign empty list to collect object id(s) of hashtag(s) through for loop
-
-#             # for loop through each element of hashtags
-#             for hashtag_capital in hashtags:
-
-#                 hashtag = hashtag_capital.lower() # decapitalize to slug form
-
-#                 # update | insert to 'hashtags' master collection
-#                 mongo_client[hashtags_database_name][hashtags_collection_name].update_one({'slug': hashtag}, [{
-#                     '$project': {
-#                         'slug': hashtag,
-#                         'createdAt': {'$ifNull': ['$createdAt', updatedAt]},
-#                         'updatedAt': updatedAt
-#                     }}], upsert=True)
-
-#                 # append the assigned list
-#                 hashtag_ids.append(mongo_client[hashtags_database_name][hashtags_collection_name].find_one({'slug': hashtag}, {'_id': 1})['_id'])
-
-#             # update by adding 'hashtags' field to original collection of event document with the appended list
-#             mongo_client[contents_database_name][contents_collection_name].update_one({'_id': _id}, [{
-#                 '$set': {
-#                     'hastags': hashtag_ids
-#                 }}], upsert=False)
-        
-#     return None
-
-#######################################################################
-# #! just in testing stage -> create parallele document in 'contents_test'
-# def parallele_insert(event,
-#                      dst_database_name='analytics-db',
-#                      dst_collection_name='contents_test'):
-    
-#     # reformat from event => document
-#     parallele_document = {
-    
-#     '_id': event['documentKey']['_id'],
-#     'payload': {
-#         'message': event['fullDocument']['payload']['message']
-#     },
-#     'updatedAt': event['fullDocument']['updatedAt']
-#                      }
-    
-#     mongo_client[dst_database_name][dst_collection_name].insert_one(parallele_document)
-
-#     return None
 
 # define main function
 def topic_classify_main(event,   
@@ -541,11 +455,7 @@ def topic_classify_main(event,
     ## perform category labeling
     topics_list = get_topic_document(df)
 
-    # print('topics is:', topics_list) #!! checkpoint
-    
-    # comment this due to 'dev' will handle hashtags
-    # ## perform hashtag extraction
-    # hashtags_list = hashtag_extract(df)
+    print('topics is:', topics_list) #!! checkpoint
     
     # 3. upload to databases
     
@@ -566,19 +476,6 @@ def topic_classify_main(event,
                               topic_collection_name=topic_collection_name,
                               contents_database_name=contents_database_name,
                               contents_collection_name=contents_collection_name)
-
-    # print('upsert to content_test done') #!! checkpoint
-
-    # comment this due to 'dev' will handle hashtags
-    # logging.debug('debug 5')
-    
-    # ## perform upsert hashtags to 'hashtags' master collection then update original content by adding 'hashtags' field
-    # upsert_to_hashtags_and_update_contents(hashtags_list,
-    #                   contents_database_name, # original database which will be add hashtags field to content
-    #                   contents_collection_name, # original collection which will be add hashtags field to content 
-    #                   hashtags_database_name, # destination database which is consider as master collection
-    #                   hashtags_collection_name)
-
 
     print('topic classification of content id:', df['_id'][0], 'done') #!! checkpoint
     

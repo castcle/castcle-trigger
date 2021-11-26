@@ -5,7 +5,6 @@ from mongo_client import mongo_client
 from bson.objectid import ObjectId
 from bson import regex
 from datetime import datetime, timedelta
-# import math
 
 # define function to remove old contents from 'contentStats' 
 def remove_old_contents(contentDateThreshold: float,

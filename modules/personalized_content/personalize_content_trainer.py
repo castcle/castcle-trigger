@@ -199,9 +199,6 @@ def prepare_features(updatedAtThreshold: float,
     # assign result to dataframe
     transaction_engagements = pd.DataFrame(list(mongo_client[app_db][engagement_collection].aggregate(transactionEngagementsCursor)))
     
-#     # only in testing
-#     pprint(list(mongo_client[app_db][engagement_collection].aggregate(transactionEngagementsCursor)))
-    
     # join together
     transaction_engagements = transaction_engagements.merge(content_features,
                                                         on='contentId',
@@ -234,10 +231,6 @@ def personalized_content_trainer_main(updatedAtThreshold: float, # define conten
                                                content_stats_collection = content_stats_collection,
                                                creator_stats_collection = creator_stats_collection,
                                                engagement_collection = engagement_collection)
-
-#     ## simply explore dataframe
-#     print(transaction_engagements.head(2))
-#     print('\n')
 
     select_user = transaction_engagements.groupby('accountId')['contentId'].agg('count').reset_index()
     
@@ -279,9 +272,6 @@ def personalized_content_trainer_main(updatedAtThreshold: float, # define conten
         # fitting model
         xg_reg.fit(features, label)
         
-#         # print result
-#         print('finish training user id:')
-#         print(user)
         ml_artifacts.append(xg_reg) # collect list of artifacts
 
         # 3. model saveing
