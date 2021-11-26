@@ -172,7 +172,8 @@ functions:
       command:
         - personalize_content_trainer.handle
     events:
-      - schedule: cron(25 20 * * ? *)
+      - schedule: cron(25 * * * ? *)
+      
   coldStartTrainer:
     name: ${self:provider.stage}-mongodb-trigger-coldstart-trainer
     memorySize: 2048
