@@ -461,13 +461,13 @@ def topic_classify_main(event,
     print('topic classification of content id:', df['_id'][0], 'done') #!! checkpoint
 
     # observe output
-    print('content id & message:')
+    print('content id & message:', topics_list['_id'])
     print(list(mongo_client['app-db']['content'].find({'_id': topics_list['_id']}, {'payload.message': 1})))
 
-    print('content info:')
+    print('content info:', topics_list['_id'])
     print(list(mongo_client['app-db']['contentinfo'].find({'_id': topics_list['_id']})))
 
-    print('topics (filtered by updatedAt):')
-    print(list(mongo_client['analytics-db']['topics'].find({'updatedAt': topics_list[0]})))
+    print('topics (filtered by updatedAt):', topics_list['updatedAt'])
+    print(list(mongo_client['analytics-db']['topics'].find({'updatedAt': topics_list['updatedAt']})))
     
     return None
