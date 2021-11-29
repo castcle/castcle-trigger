@@ -467,7 +467,8 @@ def topic_classify_main(event,
     print('content info:', topics_list['_id'])
     print(list(mongo_client['app-db']['contentinfo'].find({'contentId': topics_list['_id']})))
 
-    print('topics (filtered by updatedAt):', topics_list['updatedAt'])
-    print(list(mongo_client['analytics-db']['topics'].find({'updatedAt': topics_list['categories']})))
+    if 'categories' in topics_list:
+        print('topics (filtered by updatedAt):', topics_list['updatedAt'])
+        print(list(mongo_client['analytics-db']['topics'].find({'updatedAt': topics_list['categories']})))
     
     return None
