@@ -11,6 +11,7 @@ from google.cloud import language_v1
 from mongo_client import mongo_client
 import base64
 import boto3
+from langdetect.lang_detect_exception import LangDetectException
 
 # assign credential for google cloud platform
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = './gcp_data_science_service_account_key.json'
@@ -160,8 +161,14 @@ def get_topic_document(df):
     updatedAt = df['updatedAt'][0]
     message = clean_text(df['message'][0])
 
-    #! apply try-except here
-    language = lang_detect(message)
+    # extract language
+    try: 
+    
+        language = lang_detect(message)
+        
+    except LangDetectException:
+        
+        language = "N/A"
 
     print('language:', language) #! just for mornitoring
     
