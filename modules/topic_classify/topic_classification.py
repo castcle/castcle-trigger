@@ -159,7 +159,8 @@ def get_topic_document(df):
     _id = df['_id'][0]
     updatedAt = df['updatedAt'][0]
     message = clean_text(df['message'][0])
-    
+
+    #! apply try-except here
     language = lang_detect(message)
 
     print('language:', language) #! just for mornitoring
