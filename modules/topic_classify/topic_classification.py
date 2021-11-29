@@ -469,6 +469,6 @@ def topic_classify_main(event,
 
     if 'categories' in topics_list:
         print('topics (filtered by updatedAt):', topics_list['updatedAt'])
-        print(list(mongo_client['analytics-db']['topics'].find({'updatedAt': topics_list['categories']})))
+        print(list(mongo_client['analytics-db']['topics'].find({'slug': {'$in': topics_list['categories']}})))
     
     return None
