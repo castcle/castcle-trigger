@@ -74,7 +74,9 @@ def clean_text(message: str):
     pre_result = re.sub(filter_pattern, '', message)
     
     # whitespace removing
-    symbol_filter_pattern = re.compile(r"[\n\!\@\#\$\%\^\&\*\-\+\:\;]")
+    # bullets removing
+    symbol_filter_pattern = re.compile(r"[\n\!\@\#\$\%\^\&\*\-\+\:\;\u2022,\u2023,\u25E6,\u2043,\u2219]")
+    
     
     pre_result = symbol_filter_pattern.sub(" ", pre_result)
 
