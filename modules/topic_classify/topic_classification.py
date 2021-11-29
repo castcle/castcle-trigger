@@ -462,12 +462,12 @@ def topic_classify_main(event,
 
     # observe output
     print('content id & message:')
-    print(list(mongo_client['app-db']['content'].find({'_id': df['_id'][0]}, {'payload.message': 1})))
+    print(list(mongo_client['app-db']['content'].find({'_id': topics_list['_id']}, {'payload.message': 1})))
 
     print('content info:')
-    print(list(mongo_client['app-db']['contentinfo'].find({'_id': df['contentId'][0]})))
+    print(list(mongo_client['app-db']['contentinfo'].find({'_id': topics_list['_id']})))
 
     print('topics (filtered by updatedAt):')
-    print(list(mongo_client['analytics-db']['topics'].find({'updatedAt': df['updatedAt'][0]})))
+    print(list(mongo_client['analytics-db']['topics'].find({'updatedAt': topics_list[0]})))
     
     return None
