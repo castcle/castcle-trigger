@@ -12,24 +12,8 @@ from mongo_client import mongo_client
 import base64
 import boto3
 
-'''
-# try 1
-# assign credential for google cloud platform
-gcp_key_64 = os.environ["GCP_KEY"]
-_GOOGLE_APPLICATION_CREDENTIALS = base64.b64decode(gcp_key_64).decode("utf-8") 
-GCP_obj = json.dumps(_GOOGLE_APPLICATION_CREDENTIALS)
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = GCP_obj
-'''
-
 # assign credential for google cloud platform
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = './gcp_data_science_service_account_key.json'
-
-# # try 2
-# client = boto3.client('s3')
-# response = client.get_object( Bucket='ml-dev.castcle.com', Key='gcp_data-science_service-account_key.json')
-# body = response['Body'].read().decode('utf-8')
-# json_content = json.loads(body)
-# os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = json_content
 
 # integrate data loading and query_to_df
 def data_ingest(event):
@@ -77,7 +61,7 @@ def clean_text(message: str):
     # bullets removing
     symbol_filter_pattern = re.compile(r"[\n\!\@\#\$\%\^\&\*\-\+\:\;\u2022,\u2023,\u25E6,\u2043,\u2219]")
     
-    
+
     pre_result = symbol_filter_pattern.sub(" ", pre_result)
 
     # r/ removing
@@ -436,11 +420,6 @@ def topic_classify_main(event,
                         contents_collection_name:str):
         
     logging.info("Start topic classification")
-
-    # print('Start topic classification') #!! checkpoint
-
-    # #! 0. just for testing stage -> remove this when stable
-    # parallele_insert(event)
     
     # 1. loading data
     logging.debug('debug 1')
@@ -449,7 +428,7 @@ def topic_classify_main(event,
     ## perform ingest data
     df = data_ingest(event)
 
-    # print('df:', df) #!! checkpoint
+    print('input data:', df) #!! checkpoint
     
     # 2. data processing
     logging.debug('debug 2')
