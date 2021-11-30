@@ -173,10 +173,14 @@ def get_topic_document(df):
         # Thai language case
         if re.match("^[\u0E00-\u0E7F]", message):
 
+            print('language: TH')
+
             language = "TH"
 
         # unknow language
         else:
+
+            print('language: unknown')
 
             language = "N/A"
 
