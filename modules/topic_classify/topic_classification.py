@@ -169,7 +169,7 @@ def get_topic_document(df):
     except LangDetectException:
         
         # regex thai letters
-        pattern = re.compile(u"^[\u0E00-\u0E7F]")
+        pattern = re.compile(u"[\u0E00-\u0E7F]")
 
         # Thai language case
         if len(re.findall(pattern, message)) > 0:
