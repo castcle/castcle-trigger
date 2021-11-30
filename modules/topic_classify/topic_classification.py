@@ -169,18 +169,20 @@ def get_topic_document(df):
     except LangDetectException:
         
         # regex thai letters
+        pattern = re.compile(u"^[\u0E00-\u0E7F]")
 
         # Thai language case
-        if re.match("^[\u0E00-\u0E7F]", message):
+        if len(re.findall(pattern, message)) > 0:
 
-            print('language: TH')
+            print('Thai letter(s) found')
 
             language = "TH"
 
-        # unknow language
+        # unknown language
         else:
 
-            print('language: unknown')
+
+            print('Thai letter(s) not found')
 
             language = "N/A"
 
