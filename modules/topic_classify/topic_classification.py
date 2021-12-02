@@ -162,31 +162,34 @@ def get_topic_document(df):
     message = clean_text(df['message'][0])
 
     # extract language
-    try: 
+  
+    print('message is:')
+    print(df['message'][0])
+    print(repr(df['message'][0]))
+
+    # regex thai letters
+    pattern = re.compile(u"[\u0E00-\u0E7F]")
+
+    # Thai language case
+    if len(re.findall(pattern, df['message'][0])) > 0:
+
+        print('Thai letter(s) found')
+
+        language = "th"
+
+    # unknown language
+    else:
+
+        print('Thai letter(s) not found')
+
+        # case non-Thai but detectable language
+        try:
+
+            language = lang_detect(message)
     
-        language = lang_detect(message)
-        
-    except LangDetectException:
-        
-        print('message is:')
-        print(df['message'][0])
-        print(repr(df['message'][0]))
-
-        # regex thai letters
-        pattern = re.compile(u"[\u0E00-\u0E7F]")
-
-        # Thai language case
-        if len(re.findall(pattern, df['message'][0])) > 0:
-
-            print('Thai letter(s) found')
-
-            language = "th"
-
-        # unknown language
-        else:
-
-            print('Thai letter(s) not found')
-
+        # case non-Thai and undetectable language
+        except LangDetectException:
+    
             language = "n/a"
 
     print('language:', language) #! just for mornitoring
