@@ -180,14 +180,14 @@ def get_topic_document(df):
 
             print('Thai letter(s) found')
 
-            language = "TH"
+            language = "th"
 
         # unknown language
         else:
 
             print('Thai letter(s) not found')
 
-            language = "N/A"
+            language = "n/a"
 
     print('language:', language) #! just for mornitoring
     
