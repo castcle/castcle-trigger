@@ -185,6 +185,7 @@ def get_topic_document(df):
         # case non-Thai but detectable language
         try:
 
+
             language = lang_detect(message)
     
         # case non-Thai and undetectable language
