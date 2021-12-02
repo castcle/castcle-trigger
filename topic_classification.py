@@ -3,9 +3,6 @@
 import json
 from mongo_client import mongo_client, ping_mongodb
 
-# db = mongo_client['analytics-db']
-
-
 def handle(event, context):
 
     # warming lambda function
@@ -15,10 +12,9 @@ def handle(event, context):
         return
 
     from pprint import pprint
-    # from pprint import pprint
-    # print('the event schema:')
-    # pprint(event)
-    # print('end of event schema')
+
+    print(json.dumps(event, indent=4))
+
     print('topic classification started')
 
     from modules.topic_classify.topic_classification \

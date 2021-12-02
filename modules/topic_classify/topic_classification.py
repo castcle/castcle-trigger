@@ -11,25 +11,10 @@ from google.cloud import language_v1
 from mongo_client import mongo_client
 import base64
 import boto3
-
-'''
-# try 1
-# assign credential for google cloud platform
-gcp_key_64 = os.environ["GCP_KEY"]
-_GOOGLE_APPLICATION_CREDENTIALS = base64.b64decode(gcp_key_64).decode("utf-8") 
-GCP_obj = json.dumps(_GOOGLE_APPLICATION_CREDENTIALS)
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = GCP_obj
-'''
+from langdetect.lang_detect_exception import LangDetectException
 
 # assign credential for google cloud platform
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = './gcp_data_science_service_account_key.json'
-
-# # try 2
-# client = boto3.client('s3')
-# response = client.get_object( Bucket='ml-dev.castcle.com', Key='gcp_data-science_service-account_key.json')
-# body = response['Body'].read().decode('utf-8')
-# json_content = json.loads(body)
-# os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = json_content
 
 # integrate data loading and query_to_df
 def data_ingest(event):
@@ -74,8 +59,10 @@ def clean_text(message: str):
     pre_result = re.sub(filter_pattern, '', message)
     
     # whitespace removing
-    symbol_filter_pattern = re.compile(r"[\n\!\@\#\$\%\^\&\*\-\+\:\;]")
+    # bullets removing
+    symbol_filter_pattern = re.compile(r"[\n\!\@\#\$\%\^\&\*\-\+\:\;\u2022,\u2023,\u25E6,\u2043,\u2219]")
     
+
     pre_result = symbol_filter_pattern.sub(" ", pre_result)
 
     # r/ removing
@@ -173,8 +160,38 @@ def get_topic_document(df):
     _id = df['_id'][0]
     updatedAt = df['updatedAt'][0]
     message = clean_text(df['message'][0])
+
+    # extract language
+  
+    print('message is:')
+    print(df['message'][0])
+    print(repr(df['message'][0]))
+
+    # regex thai letters
+    pattern = re.compile(u"[\u0E00-\u0E7F]")
+
+    # Thai language case
+    if len(re.findall(pattern, df['message'][0])) > 0:
+
+        print('Thai letter(s) found')
+
+        language = "th"
+
+    # unknown language
+    else:
+
+        print('Thai letter(s) not found')
+
+        # case non-Thai but detectable language
+        try:
+
+
+            language = lang_detect(message)
     
-    language = lang_detect(message)
+        # case non-Thai and undetectable language
+        except LangDetectException:
+    
+            language = "n/a"
 
     print('language:', language) #! just for mornitoring
     
@@ -424,93 +441,7 @@ def upsert_topics_to_contents(topics_list,
     
     return None
 
-# comment this due to 'dev' will handle hashtags
-# # define hashtag extract from 'contents' => 'hashtags' & 'content.hastags' function
-# def hashtag_extract(df):
-    
-#     _id = df['_id'][0]
-#     message = df['message'][0]
-#     updatedAt = df['updatedAt'][0]
-    
-#     hashtags_list = {} # assign empty variable
-    
-#     # define regex pattern to extract hashtag(s) from event document 
-#     hastag_pattern = re.compile(r"(?<=#)[a-zA-Z0-9]+")
-    
-#     hashtags = re.findall(hastag_pattern, message)
-    
-#     if len(hashtags) != 0:
-    
-#         hashtags_list['_id'] = _id
-#         hashtags_list['hashtags'] = hashtags
-#         hashtags_list['updatedAt'] = updatedAt
-        
-#     else:
-        
-#         hashtags_list['_id'] = _id
-    
-#     return hashtags_list
 
-# def upsert_to_hashtags_and_update_contents(hashtags_list,
-#                       contents_database_name: str, # original database which will be add hashtags field to content
-#                       contents_collection_name: str, # original collection which will be add hashtags field to content 
-#                       hashtags_database_name: str, # destination database which is consider as master collection
-#                       hashtags_collection_name: str): # destination collection which is consider as master collection
-    
-#     if 'hashtags' in hashtags_list:
-    
-#         _id = hashtags_list['_id']
-#         hashtags = hashtags_list['hashtags']
-#         updatedAt = hashtags_list['updatedAt']
-
-#         # condition for accept only event document that is able to extract hashtag(s)
-#         if len(hashtags) != 0:
-
-#             hashtag_ids = [] # assign empty list to collect object id(s) of hashtag(s) through for loop
-
-#             # for loop through each element of hashtags
-#             for hashtag_capital in hashtags:
-
-#                 hashtag = hashtag_capital.lower() # decapitalize to slug form
-
-#                 # update | insert to 'hashtags' master collection
-#                 mongo_client[hashtags_database_name][hashtags_collection_name].update_one({'slug': hashtag}, [{
-#                     '$project': {
-#                         'slug': hashtag,
-#                         'createdAt': {'$ifNull': ['$createdAt', updatedAt]},
-#                         'updatedAt': updatedAt
-#                     }}], upsert=True)
-
-#                 # append the assigned list
-#                 hashtag_ids.append(mongo_client[hashtags_database_name][hashtags_collection_name].find_one({'slug': hashtag}, {'_id': 1})['_id'])
-
-#             # update by adding 'hashtags' field to original collection of event document with the appended list
-#             mongo_client[contents_database_name][contents_collection_name].update_one({'_id': _id}, [{
-#                 '$set': {
-#                     'hastags': hashtag_ids
-#                 }}], upsert=False)
-        
-#     return None
-
-#######################################################################
-# #! just in testing stage -> create parallele document in 'contents_test'
-# def parallele_insert(event,
-#                      dst_database_name='analytics-db',
-#                      dst_collection_name='contents_test'):
-    
-#     # reformat from event => document
-#     parallele_document = {
-    
-#     '_id': event['documentKey']['_id'],
-#     'payload': {
-#         'message': event['fullDocument']['payload']['message']
-#     },
-#     'updatedAt': event['fullDocument']['updatedAt']
-#                      }
-    
-#     mongo_client[dst_database_name][dst_collection_name].insert_one(parallele_document)
-
-#     return None
 
 # define main function
 def topic_classify_main(event,   
@@ -520,11 +451,6 @@ def topic_classify_main(event,
                         contents_collection_name:str):
         
     logging.info("Start topic classification")
-
-    # print('Start topic classification') #!! checkpoint
-
-    # #! 0. just for testing stage -> remove this when stable
-    # parallele_insert(event)
     
     # 1. loading data
     logging.debug('debug 1')
@@ -533,7 +459,7 @@ def topic_classify_main(event,
     ## perform ingest data
     df = data_ingest(event)
 
-    # print('df:', df) #!! checkpoint
+    print('input data:', df) #!! checkpoint
     
     # 2. data processing
     logging.debug('debug 2')
@@ -541,11 +467,7 @@ def topic_classify_main(event,
     ## perform category labeling
     topics_list = get_topic_document(df)
 
-    # print('topics is:', topics_list) #!! checkpoint
-    
-    # comment this due to 'dev' will handle hashtags
-    # ## perform hashtag extraction
-    # hashtags_list = hashtag_extract(df)
+    print('topics is:', topics_list) #!! checkpoint
     
     # 3. upload to databases
     
@@ -567,19 +489,17 @@ def topic_classify_main(event,
                               contents_database_name=contents_database_name,
                               contents_collection_name=contents_collection_name)
 
-    # print('upsert to content_test done') #!! checkpoint
-
-    # comment this due to 'dev' will handle hashtags
-    # logging.debug('debug 5')
-    
-    # ## perform upsert hashtags to 'hashtags' master collection then update original content by adding 'hashtags' field
-    # upsert_to_hashtags_and_update_contents(hashtags_list,
-    #                   contents_database_name, # original database which will be add hashtags field to content
-    #                   contents_collection_name, # original collection which will be add hashtags field to content 
-    #                   hashtags_database_name, # destination database which is consider as master collection
-    #                   hashtags_collection_name)
-
-
     print('topic classification of content id:', df['_id'][0], 'done') #!! checkpoint
+
+    # observe output
+    print('content id & message:', topics_list['_id'])
+    print(list(mongo_client['app-db']['contents'].find({'_id': topics_list['_id']}, {'payload.message': 1})))
+
+    print('content info:', topics_list['_id'])
+    print(list(mongo_client['app-db']['contentinfo'].find({'contentId': topics_list['_id']})))
+
+    if 'categories' in topics_list:
+        print('topics (filtered by updatedAt):', topics_list['updatedAt'])
+        print(list(mongo_client['analytics-db']['topics'].find({'slug': {'$in': topics_list['categories']}})))
     
     return None
