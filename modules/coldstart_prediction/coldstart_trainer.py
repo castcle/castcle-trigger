@@ -1,7 +1,7 @@
 def cold_start_by_counytry_modeling(client,
                                     saved_model = 'mlArtifacts_country',
                                     model_name = 'xgboost',
-                                    based_model = 'TH',
+                                    based_model = 'th',
                                     updatedAtThreshold = 30.0):    
     import pandas as pd
     import xgboost as xgb
@@ -10,8 +10,10 @@ def cold_start_by_counytry_modeling(client,
     from pprint import pprint
     import iso3166    
     
+ 
+    appDb = client['app-db']
     analyticsDb = client['analytics-db']
-    
+
     def prepare_features_country(updatedAtThreshold: float,
                      app_db: str,
                      engagement_collection: str):
@@ -138,8 +140,9 @@ def cold_start_by_counytry_modeling(client,
     trans = prepare_features_country(updatedAtThreshold = updatedAtThreshold, # number of days to keep content
                                       app_db = 'app-db',
                                       engagement_collection = 'engagements')
+    trans['countryCode'] = trans['countryCode'].str.lower()
     
-    def prepare_features(mongo_client, 
+    def prepare_features(client, 
                      analytics_db: str,
                      content_stats_collection: str,
                      creator_stats_collection: str):
@@ -176,15 +179,7 @@ def cold_start_by_counytry_modeling(client,
                     'creatorRecastedCount': '$creatorStats.creatorRecastedCount',
                     'creatorQuotedCount': '$creatorStats.creatorQuotedCount',
                     'ageScore': '$aggregator.ageScore'
-#                 # alias 'total label'
-#                 'engagements': {
-#                     '$sum': [
-#                         '$likeCount', 
-#                         '$commentCount',
-#                         '$recastCount',
-#                         '$quoteCount'
-#                     ]
-#                 }
+
                 }
             }
         ]
@@ -193,7 +188,7 @@ def cold_start_by_counytry_modeling(client,
     
         return content_features
 
-    contentFeatures = prepare_features(mongo_client = client, # default
+    contentFeatures = prepare_features(client = client, # default
                                         analytics_db = 'analytics-db',
                                         content_stats_collection = 'contentStats',
                                         creator_stats_collection = 'creatorStats')
@@ -264,7 +259,7 @@ def cold_start_by_counytry_modeling(client,
     mlArtifacts = pd.DataFrame(list(mlArtifacts_country.find()))
     mlArtifacts_base = mlArtifacts[mlArtifacts['account'] == based_model].drop(['account'],axis = 1)
     
-    country_list = list(set(iso3166.countries_by_alpha2.keys()).difference(set(select_user['countryCode'])))
+    country_list = list(set([x.lower() for x in iso3166.countries_by_alpha2.keys()]).difference(set(select_user['countryCode'])))
     for i in country_list:
     # update collection  
         pprint(i)
@@ -277,19 +272,21 @@ def cold_start_by_counytry_modeling(client,
                     'account': i,
                     'model': str(mlArtifacts_base.iloc[0,1]),
                     'artifact': mlArtifacts_base.iloc[0,2],
-                    'trainedAt': datetime.now(),
+                    'trainedAt': datetime.utcnow(),
                     'features' : mlArtifacts_base.iloc[0,3]
                 }
                }, upsert= True)
     
     return None
-
+        
 def coldstart_train_main(client):
     
     cold_start_by_counytry_modeling(client,
                                     saved_model = 'mlArtifacts_country',
                                     model_name = 'xgboost',
-                                    based_model = 'TH',
+                                    based_model = 'th',
                                     updatedAtThreshold = 30.0) 
+    
+
     
     return
