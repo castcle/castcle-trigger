@@ -1,0 +1,23 @@
+{
+  "name": "castcle-trigger",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "remove": "serverless remove",
+    "deploy": "serverless deploy"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:castcle/castcle-trigger.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "serverless": "^2.60.0",
+    "serverless-disable-functions": "^0.1.0",
+    "serverless-plugin-warmup": "^6.0.0",
+    "serverless-stage-manager": "^1.0.5"
+  }
+}
