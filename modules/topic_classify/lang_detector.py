@@ -22,6 +22,19 @@ def lang_detect(text: str):
     
     return result_lang
 
+def gcld(text: str):
+    import gcld3
+    
+    detector = gcld3.NNetLanguageIdentifier(min_num_bytes=10, max_num_bytes=1000)
+    results = detector.FindLanguage(text=text)
+    
+    lang = results.language
+    reliable = results.is_reliable
+    proportion = results.proportion
+    probability = results.probability
+    
+    return lang, reliable
+
 if __name__ == '__main__':
     import sys
     

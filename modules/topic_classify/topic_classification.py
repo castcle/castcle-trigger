@@ -152,6 +152,7 @@ def classify_text(message: str, _id, language: str, updatedAt) -> dict:
 
 # implement both languge & topic labeling
 def get_topic_document(df):
+    from lang_detector import gcld
     
     # define threshold
     message_length_threshold = 21 # changed from 20
@@ -171,11 +172,17 @@ def get_topic_document(df):
     pattern = re.compile(u"[\u0E00-\u0E7F]")
 
     # Thai language case
-    if len(re.findall(pattern, df['message'][0])) > 0:
+    if len(re.findall(pattern, message)) > 0:
 
         print('Thai letter(s) found')
 
-        language = "th"
+        lang, reliable = gcld(message)
+        
+        if lang == 'th' and reliable == True:
+            # case TH reliable
+            language = lang
+        else:
+            language = lang_detect(message)
 
     # unknown language
     else:
