@@ -84,6 +84,20 @@ def lang_detect(text: str):
     
     return result_lang
 
+# TH detector
+def gcld(text: str):
+    import gcld3
+    
+    detector = gcld3.NNetLanguageIdentifier(min_num_bytes=10, max_num_bytes=1000)
+    results = detector.FindLanguage(text=text)
+    
+    lang = results.language
+    reliable = results.is_reliable
+    proportion = results.proportion
+    probability = results.probability
+    
+    return lang, reliable
+
 # topic classify from text
 def classify_text(message: str, _id, language: str, updatedAt) -> dict:
     
@@ -152,7 +166,6 @@ def classify_text(message: str, _id, language: str, updatedAt) -> dict:
 
 # implement both languge & topic labeling
 def get_topic_document(df):
-    from lang_detector import gcld
     
     # define threshold
     message_length_threshold = 21 # changed from 20
