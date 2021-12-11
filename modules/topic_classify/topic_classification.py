@@ -84,6 +84,20 @@ def lang_detect(text: str):
     
     return result_lang
 
+# TH detector
+def gcld(text: str):
+    import gcld3
+    
+    detector = gcld3.NNetLanguageIdentifier(min_num_bytes=10, max_num_bytes=1000)
+    results = detector.FindLanguage(text=text)
+    
+    lang = results.language
+    reliable = results.is_reliable
+    proportion = results.proportion
+    probability = results.probability
+    
+    return lang, reliable
+
 # topic classify from text
 def classify_text(message: str, _id, language: str, updatedAt) -> dict:
     
@@ -171,11 +185,17 @@ def get_topic_document(df):
     pattern = re.compile(u"[\u0E00-\u0E7F]")
 
     # Thai language case
-    if len(re.findall(pattern, df['message'][0])) > 0:
+    if len(re.findall(pattern, message)) > 0:
 
         print('Thai letter(s) found')
 
-        language = "th"
+        lang, reliable = gcld(message)
+        
+        if lang == 'th' and reliable == True:
+            # case TH reliable
+            language = lang
+        else:
+            language = lang_detect(message)
 
     # unknown language
     else:
