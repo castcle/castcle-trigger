@@ -195,6 +195,7 @@ def get_topic_document(df):
             # case TH reliable
             language = lang
         else:
+            print('else')
             language = lang_detect(message)
 
     # unknown language
