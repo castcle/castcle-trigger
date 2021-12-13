@@ -185,7 +185,7 @@ def get_topic_document(df):
     pattern = re.compile(u"[\u0E00-\u0E7F]")
 
     # Thai language case
-    if len(re.findall(pattern, message)) > 0:
+    if len(re.findall(pattern, df['message'][0])) > 0:
 
         print('Thai letter(s) found')
 
