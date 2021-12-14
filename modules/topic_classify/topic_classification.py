@@ -235,6 +235,8 @@ def get_topic_document(df):
         else:
 
             try:
+                #! log
+                print('classifying message:', message)
                 # perform classify text
                 topics_list = classify_text(message, _id, language, updatedAt)
 
