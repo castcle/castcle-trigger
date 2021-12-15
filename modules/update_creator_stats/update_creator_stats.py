@@ -1,4 +1,6 @@
-# update content creator statistics as sheduled
+'''
+extract data from contents in aspect of content creator users then upserts into database
+'''
 import os
 import json
 import sys
@@ -17,6 +19,11 @@ def update_creator_stats_main(src_database_name: str,
                               quotedWeight: float,
                               followedWeight: float,
                               halfLifeHours: float):
+
+'''
+main function of update creator statistics
+extract data from contents in aspect of content creator users then upserts into database
+'''
 
     try:
 
