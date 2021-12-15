@@ -20,10 +20,10 @@ def update_creator_stats_main(src_database_name: str,
                               followedWeight: float,
                               halfLifeHours: float):
 
-'''
-main function of update creator statistics
-extract data from contents in aspect of content creator users then upserts into database
-'''
+    '''
+    main function of update creator statistics
+    extract data from contents in aspect of content creator users then upserts into database
+    '''
 
     try:
 

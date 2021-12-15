@@ -39,11 +39,11 @@ def update_content_stats_main(src_database_name: str,
                               contentDateThreshold: float,
                               halfLifeHours: float):
 
-'''
-main function of update content statistics
-1. clear old contents
-2. extract data from content in aspect of contents themselves then upserts to database
-'''
+    '''
+    main function of update content statistics
+    1. clear old contents
+    2. extract data from content in aspect of contents themselves then upserts to database
+    '''
 
     try:
 

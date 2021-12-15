@@ -21,9 +21,9 @@ def prepare_features(updatedAtThreshold: float,
                      creator_stats_collection: str,
                      engagement_collection: str):
 
-'''
-feature preparation using both "contentStats" & "creatorStats" then summary engagement behavior for each user
-'''
+    '''
+    feature preparation using both "contentStats" & "creatorStats" then summary engagement behavior for each user
+    '''
     
     # define cursor of content features
     contentFeaturesCursor = [
@@ -198,9 +198,9 @@ def save_model_to_mongodb(dst_database_name: str,
                           model_artifact,
                           features_list):
 
-'''
-upserts model artifact from model training into database
-'''
+    '''
+    upserts model artifact from model training into database
+    '''
 
     pickled_model = pickle.dumps(model_artifact) # pickling the model
 
@@ -231,12 +231,12 @@ def personalized_content_trainer_main(updatedAtThreshold: float, # define conten
                                       dst_collection_name: str,
                                       model_name: str):
     
-'''
-main function of personalize content model trainer
-1. feature preparation
-2. model training
-3. model saveing
-'''
+    '''
+    main function of personalize content model trainer
+    1. feature preparation
+    2. model training
+    3. model saveing
+    '''
 
     # 1. feature preparation
     # prepare_features
