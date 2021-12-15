@@ -1,3 +1,8 @@
+'''
+main function of update content statistics
+1. clear old contents
+2. extract data from content in aspect of contents themselves then upserts to database
+'''
 import os
 import json
 import sys
@@ -8,8 +13,12 @@ from datetime import datetime, timedelta
 
 # define function to remove old contents from 'contentStats' 
 def remove_old_contents(contentDateThreshold: float,
-                     database_name: str,
-                     collection_name: str):
+                        database_name: str,
+                        collection_name: str):
+
+    '''
+    remove/delete contents those have been updated older than "contentDateThreshold"
+    '''
     
     # query statement to find contents with 'updatedAt' older than (less than) 'contentDateThreshold'
     query_statement = {
@@ -30,6 +39,12 @@ def update_content_stats_main(src_database_name: str,
                               contentDateThreshold: float,
                               halfLifeHours: float):
 
+'''
+main function of update content statistics
+1. clear old contents
+2. extract data from content in aspect of contents themselves then upserts to database
+'''
+
     try:
 
         # 1. clear old contents
@@ -41,7 +56,7 @@ def update_content_stats_main(src_database_name: str,
         # print log
         print('contents age greater than', datetime.utcnow() - timedelta(days=contentDateThreshold), 'have been removed')
 
-        # 2. extract data from src collection then update to dst collection
+        # 2. extract data from content in aspect of contents themselves then upserts to database
         # define cursor
         contentStatsCursor = [
             {

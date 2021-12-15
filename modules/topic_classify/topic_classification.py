@@ -1,3 +1,10 @@
+'''
+modules topic classification
+function
+    1. ingest data
+    2. detect topics & language
+    3. upsert to databases
+'''
 import os
 import re
 import itertools
@@ -16,9 +23,13 @@ from langdetect.lang_detect_exception import LangDetectException
 # assign credential for google cloud platform
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = './gcp_data_science_service_account_key.json'
 
-# integrate data loading and query_to_df
+# obtain desirable data format from event
 def data_ingest(event):
     
+    '''
+    reformat event data then convert into dataframe
+    '''
+
     # reformat by deconstruct nest json
     temp = {
         '_id': ObjectId(event['detail']['fullDocument']['_id']),
@@ -27,13 +38,16 @@ def data_ingest(event):
     }
     
     # convert event document to dataframe
-    df = pd.DataFrame.from_dict([temp])
+    reformatted_dataframe = pd.DataFrame.from_dict([temp])
     
-    return df
+    return reformatted_dataframe
 
 # define text cleaning using regex
 def clean_text(message: str):
-    
+
+    '''
+    clean text by removing special characters, emojis
+    '''
     # symbolic removing
     filter_pattern = re.compile("["
         u"\U0001F600-\U0001F64F"  # emoticons
@@ -58,23 +72,22 @@ def clean_text(message: str):
     
     pre_result = re.sub(filter_pattern, '', message)
     
-    # whitespace removing
-    # bullets removing
+    # whitespace & bullets removing
     symbol_filter_pattern = re.compile(r"[\n\!\@\#\$\%\^\&\*\-\+\:\;\.\u2022,\u2023,\u25E6,\u2043,\u2219]")
     
-
     pre_result = symbol_filter_pattern.sub(" ", pre_result)
 
     # r/ removing
     rslash_filter_pattern = re.compile(r"r/")
+
     pre_result = rslash_filter_pattern.sub(" ", pre_result)
     
     # space removing
     space_filter_pattern = re.compile(r"\s+")
     
-    clean_result = space_filter_pattern.sub(" ", pre_result).strip()
+    cleaned_text = space_filter_pattern.sub(" ", pre_result).strip()
     
-    return clean_result
+    return cleaned_text
 
 # detect language
 def lang_detect(text: str):
@@ -165,27 +178,36 @@ def classify_text(message: str, _id, language: str, updatedAt) -> dict:
     return classify_result
 
 # implement both languge & topic labeling
-def get_topic_document(df):
+def get_topic_document(reformatted_dataframe):
     
+'''
+calls clean text function together with topic classify function as condition as follow, 
+1. message contains Thai character => language = "th" and no topic
+2. message is not English language => language = <detected language> and no topic
+3. message is English language => language = "en" and,
+    3.1 contains more than "message_length_threshold" => classify topics
+    3.2 contains more than "message_length_threshold" => no topic
+4. message is unknown langage => language = "n/a" and no topic
+'''
+
     # define threshold
     message_length_threshold = 21 # changed from 20
     
     # perform clean text
-    _id = df['_id'][0]
-    updatedAt = df['updatedAt'][0]
-    message = clean_text(df['message'][0])
+    _id = reformatted_dataframe['_id'][0]
+    updatedAt = reformatted_dataframe['updatedAt'][0]
+    message = clean_text(reformatted_dataframe['message'][0])
 
     # extract language
-  
     print('message is:')
-    print(df['message'][0])
-    print(repr(df['message'][0]))
+    print(reformatted_dataframe['message'][0])
+    print(repr(reformatted_dataframe['message'][0]))
 
     # regex thai letters
     pattern = re.compile(u"[\u0E00-\u0E7F]")
 
     # Thai language case
-    if len(re.findall(pattern, df['message'][0])) > 0:
+    if len(re.findall(pattern, reformatted_dataframe['message'][0])) > 0:
 
         print('Thai letter(s) found')
 
@@ -205,7 +227,6 @@ def get_topic_document(df):
 
         # case non-Thai but detectable language
         try:
-
 
             language = lang_detect(message)
     
@@ -259,6 +280,10 @@ def get_topic_document(df):
 def upsert_to_topics(topics_list, 
                     topic_database_name: str, 
                     topic_collection_name: str): 
+
+'''
+if message has topics/categories is detected, reformat to json for each topic and assigns children/parents relationship then upsert to database twice then upserts topics into database hierachically to stamp topic slugs
+'''
     
     if 'categories' in topics_list:
     
@@ -287,9 +312,6 @@ def upsert_to_topics(topics_list,
                             'createdAt': {'$ifNull': ['$createdAt', updatedAt]},
                             'updatedAt': updatedAt 
                         }}], upsert=True)
-
-
-
 
                 # sub-case: last children
                 elif index == len(topics) - 1:
@@ -423,7 +445,13 @@ def upsert_topics_to_contents(topics_list,
                               topic_collection_name: str,
                               contents_database_name: str,
                               contents_collection_name: str):
-    
+
+'''
+upsert topic object IDs and language to database,
+    - if topic is detected, finds correspond object ID then insert into database
+    - insert language to the same database
+'''
+
     # assign fields to variables
     _id = topics_list['_id']
     
@@ -464,8 +492,6 @@ def upsert_topics_to_contents(topics_list,
     
     return None
 
-
-
 # define main function
 def topic_classify_main(event,   
                         topic_database_name:str, 
@@ -473,27 +499,32 @@ def topic_classify_main(event,
                         contents_database_name:str,
                         contents_collection_name:str):
         
+'''
+main function of topic classification
+1. ingest data
+2. detect topics & language
+3. upsert to databases
+''' 
+
     logging.info("Start topic classification")
     
-    # 1. loading data
+    # 1. ingest data
     logging.debug('debug 1')
     
-
     ## perform ingest data
-    df = data_ingest(event)
+    reformatted_dataframe = data_ingest(event)
 
-    print('input data:', df) #!! checkpoint
+    print('input data:', reformatted_dataframe) #!! checkpoint
     
-    # 2. data processing
+    # 2. detect topics & language
     logging.debug('debug 2')
     
     ## perform category labeling
-    topics_list = get_topic_document(df)
+    topics_list = get_topic_document(reformatted_dataframe)
 
     print('topics is:', topics_list) #!! checkpoint
     
-    # 3. upload to databases
-    
+    # 3. upsert to databases
     logging.debug('debug 3')
     
     ## perform upsert category to 'topics' master collection
@@ -512,7 +543,7 @@ def topic_classify_main(event,
                               contents_database_name=contents_database_name,
                               contents_collection_name=contents_collection_name)
 
-    print('topic classification of content id:', df['_id'][0], 'done') #!! checkpoint
+    print('topic classification of content id:', reformatted_dataframe['_id'][0], 'done') #!! checkpoint
 
     # observe output
     print('content id & message:', topics_list['_id'])
