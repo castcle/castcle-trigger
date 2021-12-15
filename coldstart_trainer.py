@@ -18,11 +18,16 @@ def handle(event, context):
         return
 
     from modules.coldstart_prediction.coldstart_trainer import coldstart_train_main
+    
     print(json.dumps(event, indent=4))
     print(event)
 
+    # call modules main function
     coldstart_main_result = coldstart_train_main(mongo_client)
 
+    print('update content statistics start')
+
+    # return output as status code & timestamp
     return {
         "status": 200,
         "trained_at": str(datetime.datetime.now())
