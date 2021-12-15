@@ -180,15 +180,15 @@ def classify_text(message: str, _id, language: str, updatedAt) -> dict:
 # implement both languge & topic labeling
 def get_topic_document(reformatted_dataframe):
     
-'''
-calls clean text function together with topic classify function as condition as follow, 
-1. message contains Thai character => language = "th" and no topic
-2. message is not English language => language = <detected language> and no topic
-3. message is English language => language = "en" and,
-    3.1 contains more than "message_length_threshold" => classify topics
-    3.2 contains more than "message_length_threshold" => no topic
-4. message is unknown langage => language = "n/a" and no topic
-'''
+    '''
+    calls clean text function together with topic classify function as condition as follow, 
+    1. message contains Thai character => language = "th" and no topic
+    2. message is not English language => language = <detected language> and no topic
+    3. message is English language => language = "en" and,
+        3.1 contains more than "message_length_threshold" => classify topics
+        3.2 contains more than "message_length_threshold" => no topic
+    4. message is unknown langage => language = "n/a" and no topic
+    '''
 
     # define threshold
     message_length_threshold = 21 # changed from 20
@@ -281,9 +281,9 @@ def upsert_to_topics(topics_list,
                     topic_database_name: str, 
                     topic_collection_name: str): 
 
-'''
-if message has topics/categories is detected, reformat to json for each topic and assigns children/parents relationship then upsert to database twice then upserts topics into database hierachically to stamp topic slugs
-'''
+    '''
+    if message has topics/categories is detected, reformat to json for each topic and assigns children/parents relationship then upsert to database twice then upserts topics into database hierachically to stamp topic slugs
+    '''
     
     if 'categories' in topics_list:
     
@@ -446,11 +446,11 @@ def upsert_topics_to_contents(topics_list,
                               contents_database_name: str,
                               contents_collection_name: str):
 
-'''
-upsert topic object IDs and language to database,
-    - if topic is detected, finds correspond object ID then insert into database
-    - insert language to the same database
-'''
+    '''
+    upsert topic object IDs and language to database,
+        - if topic is detected, finds correspond object ID then insert into database
+        - insert language to the same database
+    '''
 
     # assign fields to variables
     _id = topics_list['_id']
@@ -499,12 +499,12 @@ def topic_classify_main(event,
                         contents_database_name:str,
                         contents_collection_name:str):
         
-'''
-main function of topic classification
-1. ingest data
-2. detect topics & language
-3. upsert to databases
-''' 
+    '''
+    main function of topic classification
+    1. ingest data
+    2. detect topics & language
+    3. upsert to databases
+    ''' 
 
     logging.info("Start topic classification")
     
