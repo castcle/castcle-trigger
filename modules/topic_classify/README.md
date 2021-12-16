@@ -137,55 +137,7 @@ def get_topic_document(reformatted_dataframe):
 ### Language Detection [language-detection-code](https://github.com/castcle/castcle-trigger/blob/501cbacaa9e42daa3c2390aa9fa8fc9cf182184a/modules/topic_classify/topic_classification.py#L93)
 We use [langdetect](https://pypi.org/project/langdetect/) python package which supports 55 languages.But it's not support Thai language.
 For the Thai language we use Regex match thai case.
-### Topic Classification [topic-classification-code](https://github.com/castcle/castcle-trigger/blob/501cbacaa9e42daa3c2390aa9fa8fc9cf182184a/modules/topic_classify/topic_classification.py#L115)
-We use [google-natural-language](https://cloud.google.com/natural-language/docs) for content classfication only support English language [supported language](https://cloud.google.com/natural-language/docs/languages#content_classification).
-## Helper functions
 ```python
-# define text cleaning using regex
-def clean_text(message: str):
-    
-    # symbolic removing
-    filter_pattern = re.compile("["
-        u"\U0001F600-\U0001F64F"  # emoticons
-        u"\U0001F300-\U0001F5FF"  # symbols & pictographs
-        u"\U0001F680-\U0001F6FF"  # transport & map symbols
-        u"\U0001F1E0-\U0001F1FF"  # flags (iOS)
-        u"\U00002500-\U00002BEF"  # chinese char
-        u"\U00002702-\U000027B0"
-        u"\U00002702-\U000027B0"
-        u"\U000024C2-\U0001F251"
-        u"\U0001f926-\U0001f937"
-        u"\U00010000-\U0010ffff"
-        u"\u2640-\u2642" 
-        u"\u2600-\u2B55"
-        u"\u200d"
-        u"\u23cf"
-        u"\u23e9"
-        u"\u231a"
-        u"\ufe0f"  # dingbats
-        u"\u3030"
-                      "]+|http\S+|[\u0E00-\u0E7F']", re.UNICODE)
-    
-    pre_result = re.sub(filter_pattern, '', message)
-    
-    # whitespace removing
-    # bullets removing
-    symbol_filter_pattern = re.compile(r"[\n\!\@\#\$\%\^\&\*\-\+\:\;\u2022,\u2023,\u25E6,\u2043,\u2219]")
-    
-
-    pre_result = symbol_filter_pattern.sub(" ", pre_result)
-
-    # r/ removing
-    rslash_filter_pattern = re.compile(r"r/")
-    pre_result = rslash_filter_pattern.sub(" ", pre_result)
-    
-    # space removing
-    space_filter_pattern = re.compile(r"\s+")
-    
-    clean_result = space_filter_pattern.sub(" ", pre_result).strip()
-    
-    return clean_result
-
 # detect language
 def lang_detect(text: str):
     from langdetect import detect
@@ -193,21 +145,10 @@ def lang_detect(text: str):
     result_lang = detect(text)
     
     return result_lang
-
-# TH detector
-def gcld(text: str):
-    import gcld3
-    
-    detector = gcld3.NNetLanguageIdentifier(min_num_bytes=10, max_num_bytes=1000)
-    results = detector.FindLanguage(text=text)
-    
-    lang = results.language
-    reliable = results.is_reliable
-    proportion = results.proportion
-    probability = results.probability
-    
-    return lang, reliable
-
+```
+### Topic Classification [topic-classification-code](https://github.com/castcle/castcle-trigger/blob/501cbacaa9e42daa3c2390aa9fa8fc9cf182184a/modules/topic_classify/topic_classification.py#L115)
+We use [google-natural-language](https://cloud.google.com/natural-language/docs) for content classfication only support English language [supported language](https://cloud.google.com/natural-language/docs/languages#content_classification).
+```python
 # topic classify from text
 def classify_text(message: str, _id, language: str, updatedAt) -> dict:
     
@@ -273,4 +214,65 @@ def classify_text(message: str, _id, language: str, updatedAt) -> dict:
                 classify_result['updatedAt'] = updatedAt
         
     return classify_result
+```
+## Helper functions (developing)
+```python
+# define text cleaning using regex
+def clean_text(message: str):
+    
+    # symbolic removing
+    filter_pattern = re.compile("["
+        u"\U0001F600-\U0001F64F"  # emoticons
+        u"\U0001F300-\U0001F5FF"  # symbols & pictographs
+        u"\U0001F680-\U0001F6FF"  # transport & map symbols
+        u"\U0001F1E0-\U0001F1FF"  # flags (iOS)
+        u"\U00002500-\U00002BEF"  # chinese char
+        u"\U00002702-\U000027B0"
+        u"\U00002702-\U000027B0"
+        u"\U000024C2-\U0001F251"
+        u"\U0001f926-\U0001f937"
+        u"\U00010000-\U0010ffff"
+        u"\u2640-\u2642" 
+        u"\u2600-\u2B55"
+        u"\u200d"
+        u"\u23cf"
+        u"\u23e9"
+        u"\u231a"
+        u"\ufe0f"  # dingbats
+        u"\u3030"
+                      "]+|http\S+|[\u0E00-\u0E7F']", re.UNICODE)
+    
+    pre_result = re.sub(filter_pattern, '', message)
+    
+    # whitespace removing
+    # bullets removing
+    symbol_filter_pattern = re.compile(r"[\n\!\@\#\$\%\^\&\*\-\+\:\;\u2022,\u2023,\u25E6,\u2043,\u2219]")
+    
+
+    pre_result = symbol_filter_pattern.sub(" ", pre_result)
+
+    # r/ removing
+    rslash_filter_pattern = re.compile(r"r/")
+    pre_result = rslash_filter_pattern.sub(" ", pre_result)
+    
+    # space removing
+    space_filter_pattern = re.compile(r"\s+")
+    
+    clean_result = space_filter_pattern.sub(" ", pre_result).strip()
+    
+    return clean_result
+
+# new TH detector
+def gcld(text: str):
+    import gcld3
+    
+    detector = gcld3.NNetLanguageIdentifier(min_num_bytes=10, max_num_bytes=1000)
+    results = detector.FindLanguage(text=text)
+    
+    lang = results.language
+    reliable = results.is_reliable
+    proportion = results.proportion
+    probability = results.probability
+    
+    return lang, reliable
 ```
