@@ -13,9 +13,13 @@ Classify content when user create content on their account
 ## Parse event message
 the code below parse message from mongodb trigger to pandas dataframe
 ```python
-# integrate data loading and query_to_df
+# obtain desirable data format from event
 def data_ingest(event):
     
+    '''
+    reformat event data then convert into dataframe
+    '''
+
     # reformat by deconstruct nest json
     temp = {
         '_id': ObjectId(event['detail']['fullDocument']['_id']),
@@ -24,37 +28,45 @@ def data_ingest(event):
     }
     
     # convert event document to dataframe
-    df = pd.DataFrame.from_dict([temp])
+    reformatted_dataframe = pd.DataFrame.from_dict([temp])
     
-    return df
+    return reformatted_dataframe
 ```
 
 ## Language Detect and Classify
 To use language detector and topic classifier, you need to clean the unwanted character in content like special character
-------
 ```python
 # implement both languge & topic labeling
-def get_topic_document(df):
+def get_topic_document(reformatted_dataframe):
     
+    '''
+    calls clean text function together with topic classify function as condition as follow, 
+    1. message contains Thai character => language = "th" and no topic
+    2. message is not English language => language = <detected language> and no topic
+    3. message is English language => language = "en" and,
+        3.1 contains more than "message_length_threshold" => classify topics
+        3.2 contains more than "message_length_threshold" => no topic
+    4. message is unknown langage => language = "n/a" and no topic
+    '''
+
     # define threshold
     message_length_threshold = 21 # changed from 20
     
     # perform clean text
-    _id = df['_id'][0]
-    updatedAt = df['updatedAt'][0]
-    message = clean_text(df['message'][0])
+    _id = reformatted_dataframe['_id'][0]
+    updatedAt = reformatted_dataframe['updatedAt'][0]
+    message = clean_text(reformatted_dataframe['message'][0])
 
     # extract language
-  
     print('message is:')
-    print(df['message'][0])
-    print(repr(df['message'][0]))
+    print(reformatted_dataframe['message'][0])
+    print(repr(reformatted_dataframe['message'][0]))
 
     # regex thai letters
     pattern = re.compile(u"[\u0E00-\u0E7F]")
 
     # Thai language case
-    if len(re.findall(pattern, df['message'][0])) > 0:
+    if len(re.findall(pattern, reformatted_dataframe['message'][0])) > 0:
 
         print('Thai letter(s) found')
 
@@ -74,7 +86,6 @@ def get_topic_document(df):
 
         # case non-Thai but detectable language
         try:
-
 
             language = lang_detect(message)
     
@@ -104,6 +115,8 @@ def get_topic_document(df):
         else:
 
             try:
+                #! log
+                print('classifying message:', message)
                 # perform classify text
                 topics_list = classify_text(message, _id, language, updatedAt)
 
@@ -119,9 +132,13 @@ def get_topic_document(df):
                            'language': language,
                            'updatedAt': updatedAt}
     
-    return topics_list 
+    return topics_list
 ```
-
+### Language Detection
+We use [langdetect](https://pypi.org/project/langdetect/) python package which supports 55 languages.But it's not support Thai language.
+For the Thai language we use Regex match thai case.
+### Topic Classification
+We use [google-natural-language](https://cloud.google.com/natural-language/docs) for content classfication only support English language [supported language](https://cloud.google.com/natural-language/docs/languages#content_classification).
 ## Helper functions
 ```python
 # define text cleaning using regex
