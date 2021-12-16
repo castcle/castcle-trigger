@@ -134,10 +134,10 @@ def get_topic_document(reformatted_dataframe):
     
     return topics_list
 ```
-### Language Detection
+### Language Detection [language-detection-code](https://github.com/castcle/castcle-trigger/blob/501cbacaa9e42daa3c2390aa9fa8fc9cf182184a/modules/topic_classify/topic_classification.py#L93)
 We use [langdetect](https://pypi.org/project/langdetect/) python package which supports 55 languages.But it's not support Thai language.
 For the Thai language we use Regex match thai case.
-### Topic Classification
+### Topic Classification [topic-classification-code](https://github.com/castcle/castcle-trigger/blob/501cbacaa9e42daa3c2390aa9fa8fc9cf182184a/modules/topic_classify/topic_classification.py#L115)
 We use [google-natural-language](https://cloud.google.com/natural-language/docs) for content classfication only support English language [supported language](https://cloud.google.com/natural-language/docs/languages#content_classification).
 ## Helper functions
 ```python
