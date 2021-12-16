@@ -8,7 +8,8 @@ Moreover, this file describes steps 1., 2. and a part of step 3., another part o
 
 ![castcle_ds_er drawio (5)](https://user-images.githubusercontent.com/90676485/145951393-3af8140e-cc63-429e-b034-94b63de75dfb.png)
  
-  1. **feature preparation**: Schedule of updating features involved with 3 processes using **Mongodb aggregation framework** and are set to execute every hour for ML model utilization. 
+### 1. feature preparation
+Schedule of updating features involved with 3 processes using **Mongodb aggregation framework** and are set to execute every hour for ML model utilization. 
 
   - **update content stats** employs Mongodb Atlas aggregation framework to extract data of such amount of engagement, amount of attachments, amount of character of message and age score using decay function of the recent updated contents from `app-db.contents` then upsert to `analytics-db.contentStats`
   - **update creator stats** also extracts data of such amount of engagement, amount of content, age score both overall and summarized by content type of the recent updated users  from `app-db.contents` including amount of followers, amount of following, geolocation from `app-db.users` and `app-db.accounts` then upsert to `analytics-db.creatorStats`
@@ -19,13 +20,15 @@ Moreover, this file describes steps 1., 2. and a part of step 3., another part o
   
 ![castcle_ds_er_topics drawio](https://user-images.githubusercontent.com/90676485/145948071-b17b16a0-ea6e-42f3-a62c-75e4603f9848.png)
 
-  2. **Modeling**: Execute as schedule to prepare trained model artifact for further prediction usage. There are 2 main processes in this step which are coldstart for guest users and personalize content for registered users.
+### 2. **Modeling**
+Execute as schedule to prepare trained model artifact for further prediction usage. There are 2 main processes in this step which are coldstart for guest users and personalize content for registered users.
   - **coldstart trainer** construct model artifact for guest users using XGboost libraries which will be discuss in the section 4., there 250 artifacts those are aligned by country code as follow ISO3166 using features from both `analytics-db.contentStats` and `analytics-db.creatorStats` and considers engagement from `app-db.engagements`. The country-based model artifacts are upserted into `analytics-db.mlArtifacts_country`.
   - **personalize content trainer** contructs personal model artifact for every registered user by taking features from both `analytics-db.contentStats` and `analytics-db.creatorStats` and consider `app-db.engagements` then schedule upserted the artifacts to `analytics-db.mlArtifacts` for further prediction propose. 
 
 ![castcle_ds_er_model drawio (1)](https://user-images.githubusercontent.com/90676485/145948315-36ccde10-674d-4943-bde7-58e57ac88ca3.png)
 
-  3. **Saving Persistent**: This step possesses response for both schedule and on demand execution available for guest and register users, respectively. There are also 2 processes in this step which are coldstart for guest users and personalize content for registered users which are located in [castcle-ds-predict](https://github.com/castcle/castcle-ds-predict). Another function to saving persistent is **topic classify** which is described below,
+### 3. Saving Persistent
+This step possesses response for both schedule and on demand execution available for guest and register users, respectively. There are also 2 processes in this step which are coldstart for guest users and personalize content for registered users which are located in [castcle-ds-predict](https://github.com/castcle/castcle-ds-predict). Another function to saving persistent is **topic classify** which is described below,
  - **topic classify** This executes together with **topics classify** in feauture preparation step but function in saving persistent. Both outputs from feature preparation step will be then upserted to `app-db.contentinfo` and hierachicaly upserted to `analytics-db.topics`, respectively.
 
 ![castcle_ds_er_topic_persist drawio](https://user-images.githubusercontent.com/90676485/145951328-be7f1a1b-d023-4217-8be2-4e1ab721cab3.png)
