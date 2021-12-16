@@ -78,7 +78,7 @@ This model will be used to rank within threshold contents based on countries' en
   - Collection contains countryCode, artifacts, time-stamp
 
   4. Model workflow (Training Section)
-  This file explain only model training section. If you would like to see another section, [click here](https://github.com/castcle/castcle-ds-predict/edit/develop-docds/README.md)
+  This file explain only model training section. If you would like to see another section, [click here](https://github.com/castcle/castcle-ds-predict/edit/develop/README.md)
    4.1. Prep engagement data ( app db engagement )
      1. Engagement List
      - Like
