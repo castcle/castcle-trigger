@@ -30,8 +30,8 @@ def data_ingest(event):
 ```
 
 ## Language Detect and Classify
-To use language detector and topic classifier, you need to clean the unwanted 
-character in content like special character
+To use language detector and topic classifier, you need to clean the unwanted character in content like special character
+------
 ```python
 # implement both languge & topic labeling
 def get_topic_document(df):
