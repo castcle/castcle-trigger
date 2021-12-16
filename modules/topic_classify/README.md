@@ -7,8 +7,8 @@ Classify content when user create content on their account
 2. content created in mongodb
 3. mongodb trigger to aws event bridge
 4. aws event bridge invoke lambda with message contains content
-5. content language detect then save the result to ...
-6. content topic classify then save the result to ...
+5. content language detect then save the result to mongodb
+6. content topic classify then save the result to mongodb
 
 ## Parse event message
 the code below parse message from mongodb trigger to pandas dataframe
@@ -216,6 +216,8 @@ def classify_text(message: str, _id, language: str, updatedAt) -> dict:
     return classify_result
 ```
 ## Helper functions (developing)
+### Text cleansing
+Clean unwanted character using Regex
 ```python
 # define text cleaning using regex
 def clean_text(message: str):
@@ -261,7 +263,9 @@ def clean_text(message: str):
     clean_result = space_filter_pattern.sub(" ", pre_result).strip()
     
     return clean_result
-
+```
+### new language detector (in development)
+```python
 # new TH detector
 def gcld(text: str):
     import gcld3
