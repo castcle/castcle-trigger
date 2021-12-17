@@ -86,15 +86,21 @@ This model will be used to ranking/scoring within threshold contents based on en
 
   4. Model workflow
   This file explain only model training section. If you would like to see another section, [click here](https://github.com/castcle/castcle-ds-predict/edit/develop/README.md)
+  
    4.1. Engagement data preparation
+     
      1. Engagement List
      - Like
      - Comment 
      - Quote
      - Recast
+     
      2. Aggregation : Sum
+     
      3. Group By : "countryCode" (ISO3166), "contentId" 
+     
    4.2. Content features preparation
+     
      1. Content Feature List
      - likeCount : Total like of each content based on subject
      - commentCount : Total comment of each content based on subject 	
@@ -108,9 +114,13 @@ This model will be used to ranking/scoring within threshold contents based on en
      - creatorRecastedCount : Total recast of the creator of this content 
      - creatorQuotedCount : Total quote of the creator of this content
      - ageScore : age score of this content
+     
      2. Aggregation : Sum, Count
+     
      3. Group By : contentId
+  
   4.3 Weight key metrics and create target value (like, comment, recast, quote)
+  
   4.4 Learn from enrich dataset and save model artifacts
    Output List
     - "account" (as "countryCode")
@@ -123,6 +133,7 @@ This model will be used to ranking/scoring within threshold contents based on en
 
 ## 6. Model Explanation: Personalized Content Model
 This model will be used to ranking/scoring the requested contents based on userâ€™s engagement behaviors. The model will be re-trained everyday then stored in `analytics-db.mlArtifacts`. These models support users that have their own personalized model meaning that they have at least one engagement history and can be used to give a wider range of content recommendation combined with cold start model.
+ 
  1. Model inputs
  - User engagement 
  - Content features 
@@ -136,37 +147,48 @@ This model will be used to ranking/scoring the requested contents based on userâ
  - Collection contains "userId", model artifacts, and timestamp 
 
  4. Model workflow
+ 
  4.1. Engagement data preparation
-  1. Engagement List
-  - Like
-  - Comment 
-  - Quote
-  - Recast
+   
+    1. Engagement List
+    - Like
+    - Comment 
+    - Quote
+    - Recast
+  
   2. Aggregation : Sum
-  3. Group By: "userId", "contentId"
+  
+  4. Group By: "userId", "contentId"
+  
  4.2. Content features preparation
-  1. Content Feature List
-  - likeCount: Total like of each content based on subject
-  - commentCount: Total comment of each content based on subject 	
-  - recastCount: Total recast of each content based on subject 	
-  - quoteCount: Total quote of each content based on subject 
-  - photoCount: Total photo of each content	
-  - characterLength: Number of charecter	
-  - creatorContentCount: Total content of the creator of this content
-  - creatorLikedCount: Total like of the creator of this content 
-  - creatorCommentedCount: Total comment of the creator of this content 
-  - creatorRecastedCount: Total recast of the creator of this content 
-  - creatorQuotedCount: Total quote of the creator of this content
-  - ageScore: age score of this content
+  
+    1. Content Feature List
+    - likeCount: Total like of each content based on subject
+    - commentCount: Total comment of each content based on subject 	
+    - recastCount: Total recast of each content based on subject 	
+    - quoteCount: Total quote of each content based on subject 
+    - photoCount: Total photo of each content	
+    - characterLength: Number of charecter	
+    - creatorContentCount: Total content of the creator of this content
+    - creatorLikedCount: Total like of the creator of this content 
+    - creatorCommentedCount: Total comment of the creator of this content 
+    - creatorRecastedCount: Total recast of the creator of this content 
+    - creatorQuotedCount: Total quote of the creator of this content
+    - ageScore: age score of this content
+  
   2. Aggregation: Sum, Count
+  
   3. Group By: "contentId"
+ 
  4.3.Weight key metrics and create target value ( like, comment, recast, quote )
+ 
  4.4.Learn from enrich dataset and save model artifacts
-  1. Output List
-  - "account"
-  - "model"
-  - "artifact"
-  - "features"
-  - "trainedAt"
+  
+    1. Output List
+    - "account"
+    - "model"
+    - "artifact"
+    - "features"
+    - "trainedAt"
 
 ![Personalized-content](https://user-images.githubusercontent.com/90676485/146510177-fe471f11-21e2-4864-b04e-ec3a49cfcf3d.jpg)
