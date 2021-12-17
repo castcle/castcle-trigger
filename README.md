@@ -93,8 +93,7 @@ This model will be used to ranking/scoring within threshold contents based on en
      - Quote
      - Recast
      2. Aggregation : Sum
-     3. Group By : "countryCode" (ISO3166), "contentId"
-     
+     3. Group By : "countryCode" (ISO3166), "contentId" 
    4.2. Content features preparation
      1. Content Feature List
      - likeCount : Total like of each content based on subject
@@ -111,9 +110,7 @@ This model will be used to ranking/scoring within threshold contents based on en
      - ageScore : age score of this content
      2. Aggregation : Sum, Count
      3. Group By : contentId
-    
   4.3 Weight key metrics and create target value (like, comment, recast, quote)
-  
   4.4 Learn from enrich dataset and save model artifacts
    Output List
     - "account" (as "countryCode")
@@ -146,23 +143,23 @@ This model will be used to ranking/scoring the requested contents based on userâ
   - Quote
   - Recast
   2. Aggregation : Sum
-  3. Group By : "userId", "contentId"
+  3. Group By: "userId", "contentId"
  4.2. Content features preparation
   1. Content Feature List
-  - likeCount : Total like of each content based on subject
-  - commentCount : Total comment of each content based on subject 	
-  - recastCount : Total recast of each content based on subject 	
-  - quoteCount : Total quote of each content based on subject 
-  - photoCount : Total photo of each content	
-  - characterLength : Number of charecter	
-  - creatorContentCount : Total content of the creator of this content
-  - creatorLikedCount : Total like of the creator of this content 
-  - creatorCommentedCount : Total comment of the creator of this content 
-  - creatorRecastedCount : Total recast of the creator of this content 
-  - creatorQuotedCount : Total quote of the creator of this content
-  - ageScore : age score of this content
-  2. Aggregation : Sum, Count
-  3. Group By : "contentId"
+  - likeCount: Total like of each content based on subject
+  - commentCount: Total comment of each content based on subject 	
+  - recastCount: Total recast of each content based on subject 	
+  - quoteCount: Total quote of each content based on subject 
+  - photoCount: Total photo of each content	
+  - characterLength: Number of charecter	
+  - creatorContentCount: Total content of the creator of this content
+  - creatorLikedCount: Total like of the creator of this content 
+  - creatorCommentedCount: Total comment of the creator of this content 
+  - creatorRecastedCount: Total recast of the creator of this content 
+  - creatorQuotedCount: Total quote of the creator of this content
+  - ageScore: age score of this content
+  2. Aggregation: Sum, Count
+  3. Group By: "contentId"
  4.3.Weight key metrics and create target value ( like, comment, recast, quote )
  4.4.Learn from enrich dataset and save model artifacts
   1. Output List
