@@ -4,7 +4,7 @@ content recommendation for anonymous or non-active user by country
 ### image
 run this trainer every 30 minute (subject to change)
 1. prepare aggregated features by country
-2. save model artifact by user to mongodb
+2. save model artifact by country to mongodb
 
 ## Prepare features
 preparing aggregated features by country of users
