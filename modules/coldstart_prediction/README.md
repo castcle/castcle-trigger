@@ -1,7 +1,7 @@
 # Coldstart trainer
 content recommendation for anonymous or non-active user by country
 ## scenario
-### image
+![coldstart-trainer](https://user-images.githubusercontent.com/91544452/146478873-70b5b526-0264-4df2-ac44-35c19534d29a.JPG)
 run this trainer every 30 minute (subject to change)
 1. prepare aggregated features by country
 2. save model artifact by country to mongodb
