@@ -1,8 +1,7 @@
 # Topic Classfier module
 Classify content when user create content on their account
 ## scenario
-### image
-
+![topic-classification](https://user-images.githubusercontent.com/91544452/146476238-e745a3d3-1d3e-46ea-b1aa-8fa01ff6981c.JPG)
 1. user create content in castcle app
 2. content created in mongodb
 3. mongodb trigger to aws event bridge
