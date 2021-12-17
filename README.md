@@ -69,33 +69,33 @@ In this section we will describe only collections those are interacted as output
   - [x] [topic_classification.py](https://github.com/castcle/castcle-trigger/blob/develop/topic_classification.py): responses for calling to execute [topic_classification.py](https://github.com/castcle/castcle-trigger/blob/develop/modules/topic_classify/topic_classification.py) to update `analytics-db.topics` and `app-db.contentinfo`.
 
 ## 5. Model Explanation: Cold-Start
-This model will be used to rank within threshold contents based on countries' engagement behaviors. The model will be re-trained everyday in the morning and stored in mlArtifact_country collection in db_analytics. The model is for users that still do not have their own personalized model and can be used to give a wider range of content recommendation.
+This model will be used to ranking/scoring within threshold contents based on engagement behavior in each specified country. The model will be re-trained everyday then stored in `analytics-db.mlArtifacts_country` collection. These models support users those do not have their own personalized model and can be used to give a wider range of content recommendation.
   1. Model inputs
   - Country engagement 
   - Content features 
-  - Country code ( 250 countries, iso3166)
+  - Country code (250 countries, ISO3166)
 
   2. Model detail
-  - Model Used : XGBOOST Regression Model
-  - Target variable : Weight engagement 
-  - Time Using : 1 mins (12/13/2021)
-  - Countries that do not have training data will adopt 'us' model
+  - Model: XGBOOST Regression Model
+  - Target variable: Weight engagement 
+  - Time using: 1 mins (12/13/2021)
+  - Countries that do not have training data will adopt "us" model
 
   3. Output
-  - Collection contains countryCode, artifacts, time-stamp
+  - Collection contains "countryCode", model artifacts, and timestamp
 
-  4. Model workflow (Training Section)
+  4. Model workflow
   This file explain only model training section. If you would like to see another section, [click here](https://github.com/castcle/castcle-ds-predict/edit/develop/README.md)
-   4.1. Prep engagement data ( app db engagement )
+   4.1. Engagement data preparation
      1. Engagement List
      - Like
      - Comment 
      - Quote
      - Recast
      2. Aggregation : Sum
-     3. Group By : countryCode (iso3166), contentId
+     3. Group By : "countryCode" (ISO3166), "contentId"
      
-   4.2. Prep content features ( analytics db contentStats, creatorStats )
+   4.2. Content features preparation
      1. Content Feature List
      - likeCount : Total like of each content based on subject
      - commentCount : Total comment of each content based on subject 	
@@ -112,42 +112,42 @@ This model will be used to rank within threshold contents based on countries' en
      2. Aggregation : Sum, Count
      3. Group By : contentId
     
-  4.3 Weight key metrics and create target value ( like, comment, recast, quote )
+  4.3 Weight key metrics and create target value (like, comment, recast, quote)
   
-  4.4 Learn from enrich dataset and save ML artifacts ( analytics db mlArtifacts_country)
+  4.4 Learn from enrich dataset and save model artifacts
    Output List
-    - account (countryCode)
-    - model
-    - artifact
-    - features
-    - trainedAt
+    - "account" (as "countryCode")
+    - "model"
+    - "artifact"
+    - "features"
+    - "trainedAt"
 
 ![Cold-start](https://user-images.githubusercontent.com/90676485/146301272-4d2cbb07-5810-48b1-ac91-0fddeb04905c.jpg)
 
 ## 6. Model Explanation: Personalized Content Model
-This model will be used to rank requested contents based on user’s engagement behaviors. The model will be re-trained everyday in the morning and stored in the mlArtifact collection in db_analytics. The model is for users that have their own personalized model meaning that they have at least one engagement history and can be used to give a wider range of content recommendation combined with cold start model.
+This model will be used to ranking/scoring the requested contents based on user’s engagement behaviors. The model will be re-trained everyday then stored in `analytics-db.mlArtifacts`. These models support users that have their own personalized model meaning that they have at least one engagement history and can be used to give a wider range of content recommendation combined with cold start model.
  1. Model inputs
  - User engagement 
  - Content features 
 
  2. Model detail 
- - Model Used : XGBOOST Regression Model
+ - Model Used: XGBOOST Regression Model
  - Target variable : Weight engagement 
- - Time Using : 1 mins (12/13/2021)
+ - Time using : 1 mins (12/13/2021)
 
  3. Output
- - Collection contains userId, artifacts, time-stamp 
+ - Collection contains "userId", model artifacts, and timestamp 
 
- 4. Model workflow (Training Section)
- 4.1.Prep engagement data ( app db engagement )
+ 4. Model workflow
+ 4.1. Engagement data preparation
   1. Engagement List
   - Like
   - Comment 
   - Quote
   - Recast
   2. Aggregation : Sum
-  3. Group By : userId, contentId
- 4.2.Prep content features ( analytics db contentStats, creatorStats )
+  3. Group By : "userId", "contentId"
+ 4.2. Content features preparation
   1. Content Feature List
   - likeCount : Total like of each content based on subject
   - commentCount : Total comment of each content based on subject 	
@@ -162,14 +162,14 @@ This model will be used to rank requested contents based on user’s engagement 
   - creatorQuotedCount : Total quote of the creator of this content
   - ageScore : age score of this content
   2. Aggregation : Sum, Count
-  3. Group By : contentId
+  3. Group By : "contentId"
  4.3.Weight key metrics and create target value ( like, comment, recast, quote )
- 4.4.Learn from enrich dataset and save ML artifacts ( analytics db mlArtifacts)
+ 4.4.Learn from enrich dataset and save model artifacts
   1. Output List
-  - account (userId)
-  - model
-  - artifact
-  - features
-  - trainedAt
+  - "account"
+  - "model"
+  - "artifact"
+  - "features"
+  - "trainedAt"
 
 ![Personalized-content](https://user-images.githubusercontent.com/90676485/146510177-fe471f11-21e2-4864-b04e-ec3a49cfcf3d.jpg)
