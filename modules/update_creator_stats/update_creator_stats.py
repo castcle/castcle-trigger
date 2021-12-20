@@ -8,6 +8,7 @@ from mongo_client import mongo_client
 from bson.objectid import ObjectId
 from datetime import datetime, timedelta
 
+# define main function of update content creator statistitcs
 def update_creator_stats_main(src_database_name: str,
                               src_collection_name: str,
                               dst_database_name: str,
@@ -18,7 +19,8 @@ def update_creator_stats_main(src_database_name: str,
                               recastedWeight: float,
                               quotedWeight: float,
                               followedWeight: float,
-                              halfLifeHours: float):
+                              halfLifeHours: float,
+                              bias: float):
 
     '''
     main function of update creator statistics
@@ -115,7 +117,7 @@ def update_creator_stats_main(src_database_name: str,
                                     '$quotedCount', quotedWeight
                                 ]
                                 # add bias = 1
-                            }, 1
+                            }, bias
                         ]
                     }
                 }
@@ -178,7 +180,7 @@ def update_creator_stats_main(src_database_name: str,
                                     '$creatorQuotedCount', quotedWeight
                                 ]
                                 # add bias = 1
-                            }, 1
+                            }, bias
                         ]
                     },
                     # calculate weights as fractions of content type per total contents
