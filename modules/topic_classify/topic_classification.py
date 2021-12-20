@@ -112,7 +112,10 @@ def gcld(text: str):
     return lang, reliable
 
 # topic classify from text
-def classify_text(message: str, _id, language: str, updatedAt) -> dict:
+def classify_text(message: str,
+                  _id, 
+                  language: str, 
+                  updatedAt) -> dict:
     
     """
     Classifying Content in a String
@@ -285,6 +288,7 @@ def upsert_to_topics(topics_list,
     if message has topics/categories is detected, reformat to json for each topic and assigns children/parents relationship then upsert to database twice then upserts topics into database hierachically to stamp topic slugs
     '''
     
+    # case 'categories' present in 'topic_list'
     if 'categories' in topics_list:
     
         # minor function 1: upsert raw slug
@@ -361,28 +365,32 @@ def upsert_to_topics(topics_list,
         # define ObjectId addition cursor
         objectidMappingCursor = [
             {
+                # filter of recent update contents
                 '$match': {
                     'updatedAt': updatedAt
                 }
             }, {
+                # find related parent topics
                 '$graphLookup': {
                     'from': 'topics', 
                     'startWith': '$parentsSlug', 
                     'connectFromField': 'parentsSlug', 
                     'connectToField': 'slug', 
                     'as': 'parentsTemp', 
-                    'maxDepth': 0
+                    'maxDepth': 0 # ~ degree of separation
                 }
             }, {
+                # find related children topics
                 '$graphLookup': {
                     'from': 'topics', 
                     'startWith': '$childrenSlug', 
                     'connectFromField': 'childrenSlug', 
                     'connectToField': 'slug', 
                     'as': 'childrenTemp', 
-                    'maxDepth': 0
+                    'maxDepth': 0 # ~ degree of separation
                 }
             }, {
+                # map output format
                 '$project': {
                     '_id': 1, 
                     'slug': 1,
@@ -396,6 +404,7 @@ def upsert_to_topics(topics_list,
                     'updatedAt': 1
                 }
             }, {
+                # map output format again, due to mongodb limitation
                 '$project': {
                     '_id': 1, 
                     'slug': 1, 
@@ -543,6 +552,7 @@ def topic_classify_main(event,
                               contents_database_name=contents_database_name,
                               contents_collection_name=contents_collection_name)
 
+    # end of implementation, below paragraphs are logging
     print('topic classification of content id:', reformatted_dataframe['_id'][0], 'done') #!! checkpoint
 
     # observe output
