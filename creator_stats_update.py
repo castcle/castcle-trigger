@@ -22,13 +22,14 @@ def handle(event, context):
                               src_collection_name='contents',
                               dst_database_name='analytics-db',
                               dst_collection_name='creatorStats',
-                              contentDateThreshold=30.0, # day unit
+                              contentDateThreshold=30.0, # days unit
                               likedWeight=1.0,
                               commentedWeight=1.0,
                               recastedWeight=1.0,
                               quotedWeight=1.0,
                               followedWeight=0.01,
-                              halfLifeHours=24.0)
+                              halfLifeHours=24.0,
+                              bias=1.0)
 
     print('update content creator statistics end')
 

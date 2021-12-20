@@ -37,7 +37,13 @@ def update_content_stats_main(src_database_name: str,
                               dst_database_name: str,
                               dst_collection_name: str,
                               contentDateThreshold: float,
-                              halfLifeHours: float):
+                              likedWeight: float,
+                              commentedWeight: float,
+                              recastedWeight: float,
+                              quotedWeight: float,
+                              followedWeight: float,
+                              halfLifeHours: float,
+                              bias: float):
 
     '''
     main function of update content statistics
@@ -65,6 +71,7 @@ def update_content_stats_main(src_database_name: str,
                     'createdAt': {
                         '$gte': (datetime.utcnow() - timedelta(days=contentDateThreshold))
                     },
+                    # consider 'visibility' is 'publish'
                     'visibility': 'publish'
                 }
             }, {
@@ -97,19 +104,19 @@ def update_content_stats_main(src_database_name: str,
                         '$sum': [
                             {
                                 '$multiply': [
-                                    '$engagements.like.count', 1
+                                    '$engagements.like.count', likedWeight
                                 ]
                             }, {
                                 '$multiply': [
-                                    '$engagements.comment.count', 1
+                                    '$engagements.comment.count', commentedWeight
                                 ]
                             }, {
                                 '$multiply': [
-                                    '$engagements.recast.count', 1
+                                    '$engagements.recast.count', recastedWeight
                                 ]
                             }, {
                                 '$multiply': [
-                                    '$engagements.quote.count', 1
+                                    '$engagements.quote.count', quotedWeight
                                 ]
                             }
                         ]
@@ -147,7 +154,7 @@ def update_content_stats_main(src_database_name: str,
                             {
                                 '$add': [
                                     # add bias = 1
-                                    '$aggregator.engagementScore', 1
+                                    '$aggregator.engagementScore', bias
                                 ]
                             }, '$aggregator.ageScore'
                         ]
