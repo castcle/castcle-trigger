@@ -1,3 +1,9 @@
+'''
+main function of personalize content model trainer
+1. feature preparation
+2. model training
+3. model saveing
+'''
 import os
 import pickle
 import bson.objectid
@@ -7,32 +13,6 @@ import pandas as pd
 import xgboost as xgb
 from mongo_client import mongo_client
 
-# define save model artifact to database function
-def save_model_to_mongodb(dst_database_name: str,
-                          dst_collection_name: str, 
-                          model_name: str, 
-                          account_id, #! using user id, in future version change to account id
-                          model_artifact,
-                          features_list):
-
-    pickled_model = pickle.dumps(model_artifact) # pickling the model
-
-    document = mongo_client[dst_database_name][dst_collection_name].update_one(
-        {
-            'account': account_id,
-            'model': model_name,
-        }, {
-            '$set': {
-                'account': account_id,
-                'model': model_name,
-                'artifact': pickled_model,
-                'trainedAt': datetime.now(),
-                'features' : features_list
-            }
-        }, upsert= True)
-
-    return None
-
 # define feature preparation function from content id list
 def prepare_features(updatedAtThreshold: float,
                      app_db: str,
@@ -40,6 +20,10 @@ def prepare_features(updatedAtThreshold: float,
                      content_stats_collection: str,
                      creator_stats_collection: str,
                      engagement_collection: str):
+
+    '''
+    feature preparation using both "contentStats" & "creatorStats" then summary engagement behavior for each user
+    '''
     
     # define cursor of content features
     contentFeaturesCursor = [
@@ -89,9 +73,6 @@ def prepare_features(updatedAtThreshold: float,
     # assign result to dataframe
     # alias 'contentFeatures_1'
     content_features = pd.DataFrame(list(mongo_client[analytics_db][content_stats_collection].aggregate(contentFeaturesCursor)))
-
-#     #! only in testing
-#     pprint(list(mongo_client[analytics_db][content_stats_collection].aggregate(contentFeaturesCursor)))
 
     # define cursor of engagement transaction
     transactionEngagementsCursor = [
@@ -207,10 +188,37 @@ def prepare_features(updatedAtThreshold: float,
     ## in case of 'creatorStats' does not update yet -> fill NaN
     transaction_engagements.fillna(0,inplace=True)
 
-
-    
     return transaction_engagements
 
+# define save model artifact to database function
+def save_model_to_mongodb(dst_database_name: str,
+                          dst_collection_name: str, 
+                          model_name: str, 
+                          account_id, #! using user id, in future version change to account id
+                          model_artifact,
+                          features_list):
+
+    '''
+    upserts model artifact from model training into database
+    '''
+
+    pickled_model = pickle.dumps(model_artifact) # pickling the model
+
+    document = mongo_client[dst_database_name][dst_collection_name].update_one(
+        {
+            'account': account_id,
+            'model': model_name,
+        }, {
+            '$set': {
+                'account': account_id,
+                'model': model_name,
+                'artifact': pickled_model,
+                'trainedAt': datetime.now(),
+                'features' : features_list
+            }
+        }, upsert= True)
+
+    return None
 
 # define main function for training as follow personalize content
 def personalized_content_trainer_main(updatedAtThreshold: float, # define content age
@@ -223,7 +231,14 @@ def personalized_content_trainer_main(updatedAtThreshold: float, # define conten
                                       dst_collection_name: str,
                                       model_name: str):
     
-    # 1. query & preparation
+    '''
+    main function of personalize content model trainer
+    1. feature preparation
+    2. model training
+    3. model saveing
+    '''
+
+    # 1. feature preparation
     # prepare_features
     transaction_engagements = prepare_features(updatedAtThreshold = updatedAtThreshold,
                                                app_db = app_db,
@@ -236,6 +251,7 @@ def personalized_content_trainer_main(updatedAtThreshold: float, # define conten
     
     # select only user with ever engaged more than 2 contents 
     select_user = select_user[select_user['contentId'] > 2]
+
     # 2. model training
     ## model training
     ml_artifacts = [] # pre-define model artifacts

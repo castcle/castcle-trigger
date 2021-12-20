@@ -147,7 +147,11 @@ def cold_start_by_counytry_modeling(client,
                      content_stats_collection: str,
                      creator_stats_collection: str):
     
-    # define cursor of content features
+        '''
+        feature preparation using both "contentStats" & "creatorStats" then summary engagement behavior for each user
+        '''
+
+        # define cursor of content features
         contentFeaturesCursor = [
          {
             # join with creator stats
@@ -206,6 +210,10 @@ def cold_start_by_counytry_modeling(client,
 
     def save_model_to_mongodb(collection, model_name, account, model):
     
+        '''
+        upserts model artifact from model training into database
+        '''
+
         pickled_model = pickle.dumps(model) # pickling the model
     
         document = collection.update_one(
