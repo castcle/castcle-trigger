@@ -1,8 +1,9 @@
 '''
 main function of personalize content model trainer
-1. feature preparation
-2. model training
-3. model saveing
+1. check database
+2. feature preparation
+3. model training
+4. model saveing
 '''
 import os
 import pickle
@@ -233,70 +234,80 @@ def personalized_content_trainer_main(updatedAtThreshold: float, # define conten
     
     '''
     main function of personalize content model trainer
-    1. feature preparation
-    2. model training
-    3. model saveing
+    1. check database
+    2. feature preparation
+    3. model training
+    4. model saveing
     '''
 
-    # 1. feature preparation
-    # prepare_features
-    transaction_engagements = prepare_features(updatedAtThreshold = updatedAtThreshold,
-                                               app_db = app_db,
-                                               analytics_db = analytics_db,
-                                               content_stats_collection = content_stats_collection,
-                                               creator_stats_collection = creator_stats_collection,
-                                               engagement_collection = engagement_collection)
+    # 1. check database
+    if len(list(mongo_client[app_db][engagement_collection].find())) == 0 or len(list(mongo_client[analytics_db][content_stats_collection].find())) == 0 or len(list(mongo_client[analytics_db][creator_stats_collection].find())) == 0:
 
-    select_user = transaction_engagements.groupby('accountId')['contentId'].agg('count').reset_index()
-    
-    # select only user with ever engaged more than 2 contents 
-    select_user = select_user[select_user['contentId'] > 2]
+        print('there is no document in', app_db, engagement_collection)
+        print('or', analytics_db, content_stats_collection)
+        print('or', analytics_db, creator_stats_collection)
 
-    # 2. model training
-    ## model training
-    ml_artifacts = [] # pre-define model artifacts
+    else:
 
-    # loop through user id of selected user
-    for user in list(select_user.accountId.unique()):
+        # 2. feature preparation
+        # prepare_features
+        transaction_engagements = prepare_features(updatedAtThreshold = updatedAtThreshold,
+                                                app_db = app_db,
+                                                analytics_db = analytics_db,
+                                                content_stats_collection = content_stats_collection,
+                                                creator_stats_collection = creator_stats_collection,
+                                                engagement_collection = engagement_collection)
+
+        select_user = transaction_engagements.groupby('accountId')['contentId'].agg('count').reset_index()
         
-        # filter for only selected user
-        focused_transaction_engagements = transaction_engagements[transaction_engagements['accountId'] == user]  
-        
-        # summary engagements of selected user
-        portion = focused_transaction_engagements.groupby('accountId').agg( 
-                                like_count = ('like','sum'),
-                                comment_count = ('comment','sum'),
-                                recast_count = ('recast','sum'),
-                                quote_count = ('quote','sum')
-                                ).reset_index().replace(0,1)
+        # select only user with ever engaged more than 2 contents 
+        select_user = select_user[select_user['contentId'] > 2]
 
-        # formalize features
-        portion = portion[['like_count','comment_count','recast_count','quote_count']].div(portion.sum(axis=1)[0]).div(-1)+1
-        focused_transaction_engagements.loc[:,'like'] = focused_transaction_engagements.loc[:,'like'] * portion.loc[0,'like_count']
-        focused_transaction_engagements.loc[:,'comment'] = focused_transaction_engagements.loc[:,'comment'] * portion.loc[0,'comment_count']
-        focused_transaction_engagements.loc[:,'recast'] = focused_transaction_engagements.loc[:,'recast'] * portion.loc[0,'recast_count']
-        focused_transaction_engagements.loc[:,'quote'] = focused_transaction_engagements.loc[:,'quote'] * portion.loc[0,'quote_count']
-        focused_transaction_engagements['engagements'] = focused_transaction_engagements['like'] + focused_transaction_engagements['comment'] + focused_transaction_engagements['recast'] + focused_transaction_engagements['quote']  
+        # 3. model training
+        ## model training
+        ml_artifacts = [] # pre-define model artifacts
 
-        # separate features & label
-        features = focused_transaction_engagements.drop(['_id','engagements','accountId','contentId','like','comment','recast','quote'],axis = 1)
-        label = focused_transaction_engagements['engagements']
-    
-        # define estimator
-        xg_reg = xgb.XGBRegressor(random_state = 123)
-        
-        # fitting model
-        xg_reg.fit(features, label)
-        
-        ml_artifacts.append(xg_reg) # collect list of artifacts
+        # loop through user id of selected user
+        for user in list(select_user.accountId.unique()):
+            
+            # filter for only selected user
+            focused_transaction_engagements = transaction_engagements[transaction_engagements['accountId'] == user]  
+            
+            # summary engagements of selected user
+            portion = focused_transaction_engagements.groupby('accountId').agg( 
+                                    like_count = ('like','sum'),
+                                    comment_count = ('comment','sum'),
+                                    recast_count = ('recast','sum'),
+                                    quote_count = ('quote','sum')
+                                    ).reset_index().replace(0,1)
 
-        # 3. model saveing
-        # upsert to database
-        save_model_to_mongodb(dst_database_name = dst_database_name,
-                              dst_collection_name = dst_collection_name,
-                              model_name= model_name,
-                              account_id = user,   
-                              model_artifact = xg_reg,
-                              features_list = list(features.columns))
+            # formalize features
+            portion = portion[['like_count','comment_count','recast_count','quote_count']].div(portion.sum(axis=1)[0]).div(-1)+1
+            focused_transaction_engagements.loc[:,'like'] = focused_transaction_engagements.loc[:,'like'] * portion.loc[0,'like_count']
+            focused_transaction_engagements.loc[:,'comment'] = focused_transaction_engagements.loc[:,'comment'] * portion.loc[0,'comment_count']
+            focused_transaction_engagements.loc[:,'recast'] = focused_transaction_engagements.loc[:,'recast'] * portion.loc[0,'recast_count']
+            focused_transaction_engagements.loc[:,'quote'] = focused_transaction_engagements.loc[:,'quote'] * portion.loc[0,'quote_count']
+            focused_transaction_engagements['engagements'] = focused_transaction_engagements['like'] + focused_transaction_engagements['comment'] + focused_transaction_engagements['recast'] + focused_transaction_engagements['quote']  
+
+            # separate features & label
+            features = focused_transaction_engagements.drop(['_id','engagements','accountId','contentId','like','comment','recast','quote'],axis = 1)
+            label = focused_transaction_engagements['engagements']
+        
+            # define estimator
+            xg_reg = xgb.XGBRegressor(random_state = 123)
+            
+            # fitting model
+            xg_reg.fit(features, label)
+            
+            ml_artifacts.append(xg_reg) # collect list of artifacts
+
+            # 4. model saveing
+            # upsert to database
+            save_model_to_mongodb(dst_database_name = dst_database_name,
+                                dst_collection_name = dst_collection_name,
+                                model_name= model_name,
+                                account_id = user,   
+                                model_artifact = xg_reg,
+                                features_list = list(features.columns))
     
     return None
