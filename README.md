@@ -4,7 +4,7 @@ Cascle's feed algorithm has tailored from 2 regimes i.e. **App** and **Analytics
 
 Moreover, **Aggregators** are respond to logically filter contents from **Inventory** in different ways. **Ranker** consumes features from **Feature Extractors** , Trained model artifact from **Model Training** and aggregated/filtered contents from **Aggregators** to ranking/scoring tend of engagement for the user using **Model Prediction** then feeds a certain amount to user's UI. More precisely, user interaction or engagement will be recorded to database for purpose of further **Analytics** and model evaluation.
 
-![castcle_ds_overviewdrawio drawio (6)](https://user-images.githubusercontent.com/90676485/147076065-834d801b-94fd-4be7-a366-c98fe015ae5c.png)
+![castcle_ds_overviewdrawio drawio (7)](https://user-images.githubusercontent.com/90676485/147076633-6a638b28-27d2-40d3-9afb-b12987f639e7.png)
 
 ## 2. Workflow Process
 Data science workflow process of Castcle can be illustrated by the bottom diagram of the below figure exhibits overall workflow process interacts across databases i.e. blue blocks represent collections in `app-db` and green blocks represents collections in `analytics-db` databases in Mongodb Atlas, respectively. The bold arrows stand for presence of entity key relation between collections, the dot arrows reflect data extraction by either aggregation or calculation, and the two-headed arrows represents swap event.
