@@ -61,12 +61,11 @@ In this section we will describe only collections those are interacted as output
  1. [requirements.txt](https://github.com/castcle/castcle-trigger/blob/develop/requirements.txt): contains necessary libraries.
  2. [serverless.yml](https://github.com/castcle/castcle-trigger/blob/develop/serverless.yml): contains configuration.
  3. python caller files (.py): responses for calling main function in [modules](https://github.com/castcle/castcle-trigger/tree/develop/modules),
- - [castcle-trigger](https://github.com/castcle/castcle-trigger)
-  - [x] [content_stats_update.py](https://github.com/castcle/castcle-trigger/blob/develop/content_stats_update.py): responses for calling to execute    [update_content_stats.py](https://github.com/castcle/castcle-trigger/blob/develop/modules/update_content_stats/update_content_stats.py) to update `analytics-db.contentStats`.
-  - [x] [creator_stats_update.py](https://github.com/castcle/castcle-trigger/blob/develop/creator_stats_update.py): responses for calling to execute    [update_creator_stats.py](https://github.com/castcle/castcle-trigger/blob/develop/modules/update_creator_stats/update_creator_stats.py) to update `analytics-db.creatorStats`.
-  - [x] [coldstart_trainer.py](https://github.com/castcle/castcle-trigger/blob/develop/coldstart_trainer.py): responses for calling to execute [coldstart_trainer.py](https://github.com/castcle/castcle-trigger/blob/develop/modules/coldstart_prediction/coldstart_trainer.py) to update `analytics-db.mlArtifacts_country`.
-  - [x] [personalize_content_trainer.py](https://github.com/castcle/castcle-trigger/blob/develop/personalize_content_trainer.py): responses for calling to execute [personalize_content_trainer.py](https://github.com/castcle/castcle-trigger/blob/develop/modules/personalized_content/personalize_content_trainer.py) to update `analytics-db.mlArtifacts`.
-  - [x] [topic_classification.py](https://github.com/castcle/castcle-trigger/blob/develop/topic_classification.py): responses for calling to execute [topic_classification.py](https://github.com/castcle/castcle-trigger/blob/develop/modules/topic_classify/topic_classification.py) to update `analytics-db.topics` and `app-db.contentinfo`.
+ - [x] [content_stats_update.py](https://github.com/castcle/castcle-trigger/blob/develop/content_stats_update.py): responses for calling to execute    [update_content_stats.py](https://github.com/castcle/castcle-trigger/blob/develop/modules/update_content_stats/update_content_stats.py) to update `analytics-db.contentStats`.
+ - [x] [creator_stats_update.py](https://github.com/castcle/castcle-trigger/blob/develop/creator_stats_update.py): responses for calling to execute    [update_creator_stats.py](https://github.com/castcle/castcle-trigger/blob/develop/modules/update_creator_stats/update_creator_stats.py) to update `analytics-db.creatorStats`.
+ - [x] [coldstart_trainer.py](https://github.com/castcle/castcle-trigger/blob/develop/coldstart_trainer.py): responses for calling to execute [coldstart_trainer.py](https://github.com/castcle/castcle-trigger/blob/develop/modules/coldstart_prediction/coldstart_trainer.py) to update `analytics-db.mlArtifacts_country`.
+ - [x] [personalize_content_trainer.py](https://github.com/castcle/castcle-trigger/blob/develop/personalize_content_trainer.py): responses for calling to execute [personalize_content_trainer.py](https://github.com/castcle/castcle-trigger/blob/develop/modules/personalized_content/personalize_content_trainer.py) to update `analytics-db.mlArtifacts`.
+ - [x] [topic_classification.py](https://github.com/castcle/castcle-trigger/blob/develop/topic_classification.py): responses for calling to execute [topic_classification.py](https://github.com/castcle/castcle-trigger/blob/develop/modules/topic_classify/topic_classification.py) to update `analytics-db.topics` and `app-db.contentinfo`.
 
 ## 5. Model Explanation: Cold-Start
 This model will be used to ranking/scoring within threshold contents based on engagement behavior in each specified country. The model will be re-trained everyday then stored in `analytics-db.mlArtifacts_country` collection. These models support users those do not have their own personalized model and can be used to give a wider range of content recommendation.
@@ -85,7 +84,7 @@ This model will be used to ranking/scoring within threshold contents based on en
   - Collection contains "countryCode", model artifacts, and timestamp
 
   4. Model workflow
-  This file explain only model training section. If you would like to see another section, [click here](https://github.com/castcle/castcle-ds-predict/edit/develop/README.md)
+  This file explain only model training section. If you would like to see another section, [click here](https://github.com/castcle/castcle-ds-predict/blob/develop/README.m)
   
    4.1. Engagement data preparation
      
