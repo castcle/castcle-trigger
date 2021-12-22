@@ -57,7 +57,7 @@ def update_content_stats_main(src_database_name: str,
         # 1. check database
         if len(list(mongo_client[src_database_name][src_collection_name].find())) == 0:
 
-            print('there is no document in', src_database_name, collection_name)
+            print('there is no document in', src_database_name, src_collection_name)
 
         else:
 
