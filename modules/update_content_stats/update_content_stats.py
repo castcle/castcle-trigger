@@ -55,7 +55,11 @@ def update_content_stats_main(src_database_name: str,
     try:
 
         # 1. check database
-        if len(list(mongo_client[src_database_name][src_collection_name].find())) > 0:
+        if len(list(mongo_client[src_database_name][src_collection_name].find())) == 0:
+
+            print('there is no document in', src_database_name, collection_name)
+
+        else:
 
             # 2. clear old contents
             # perform content removal according to 'updatedAt'
@@ -184,10 +188,6 @@ def update_content_stats_main(src_database_name: str,
 
             # print message on complete aggregation
             print('this aggregation has completed at', datetime.utcnow())
-
-        else:
-
-            print('there is no document in', src_database_name, collection_name)
 
     except Exception as error:
         print("ERROR", error)
