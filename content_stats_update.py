@@ -26,7 +26,6 @@ def handle(event, context):
                               commentedWeight=1.0,
                               recastedWeight=1.0,
                               quotedWeight=1.0,
-                              followedWeight=0.01,
                               halfLifeHours=24.0,
                               bias=1.0)
 
