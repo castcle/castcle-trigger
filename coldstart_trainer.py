@@ -25,6 +25,7 @@ def handle(event, context):
     # call modules main function
     coldstart_main_result = coldstart_train_main(mongo_client)
 
+
     print('update content statistics start')
 
     # return output as status code & timestamp
