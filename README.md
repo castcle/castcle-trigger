@@ -127,8 +127,8 @@ This model will be used to ranking/scoring within threshold contents based on en
     - "artifact"
     - "features"
     - "trainedAt"
-
-![Cold-start](https://user-images.githubusercontent.com/90676485/146301272-4d2cbb07-5810-48b1-ac91-0fddeb04905c.jpg)
+    
+![Cold-start (1)](https://user-images.githubusercontent.com/90676485/147532352-1af3e94d-93d4-43f5-af1c-643cb62c260a.jpg)
 
 ## 6. Model Explanation: Personalized Content Model
 This model will be used to ranking/scoring the requested contents based on userâ€™s engagement behaviors. The model will be re-trained everyday then stored in `analytics-db.mlArtifacts`. These models support users that have their own personalized model meaning that they have at least one engagement history and can be used to give a wider range of content recommendation combined with cold start model.
@@ -189,5 +189,5 @@ This model will be used to ranking/scoring the requested contents based on userâ
     - "artifact"
     - "features"
     - "trainedAt"
-
-![Personalized-content](https://user-images.githubusercontent.com/90676485/146510177-fe471f11-21e2-4864-b04e-ec3a49cfcf3d.jpg)
+    
+![Personalized_content](https://user-images.githubusercontent.com/90676485/147532327-d78bc510-9953-4c35-99d8-8953db47cb76.jpg)
