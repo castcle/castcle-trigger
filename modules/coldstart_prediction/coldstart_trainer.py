@@ -225,7 +225,7 @@ def cold_start_by_counytry_modeling(client,
     
     # select country that can be trianed
     
-    aggregated_transaction_engagements = transaction_engagements_with_fcontentFeature.groupby('countryCode')['contentId'].agg('count').reset_index()
+    aggregated_transaction_engagements = transaction_engagements_with_contentFeatures.groupby('countryCode')['contentId'].agg('count').reset_index()
     selected_country = aggregated_transaction_engagements[aggregated_transaction_engagements['contentId'] > 2]
 
     # define save model artifact to database function
@@ -243,7 +243,7 @@ def cold_start_by_counytry_modeling(client,
                 'model': str(model_name),
                 'artifact': pickled_model,
                 'trainedAt': datetime.utcnow(),
-                'features' : list(Xlr.columns)
+                'features' : list(features.columns)
             }
            }, upsert= True)
         
@@ -282,7 +282,7 @@ def cold_start_by_counytry_modeling(client,
         xgboost_model = xgb.XGBRegressor(random_state = 123)
         
         # Fit to the model 
-        xgboost_model.fit(Xlr, ylr)
+        xgboost_model.fit(features, label)
     
         pprint(n)
         
@@ -300,7 +300,7 @@ def cold_start_by_counytry_modeling(client,
     mlArtifacts_base_model = mlArtifacts[mlArtifacts['account'] == based_model].drop(['account'],axis = 1)
     
     # get country list
-    country_list = list(set([x.lower() for x in iso3166.countries_by_alpha2.keys()]).difference(set(select_user['countryCode'])))
+    country_list = list(set([x.lower() for x in iso3166.countries_by_alpha2.keys()]).difference(set(selected_country['countryCode'])))
     
     # loop for all country
     for i in country_list:
