@@ -1,24 +1,37 @@
+
+# main function of cold start model trainer
+# 1. feature preparation
+# 2. model training
+# 3. model saveing
+
+
+
 def cold_start_by_counytry_modeling(client,
                                     saved_model = 'mlArtifacts_country',
                                     model_name = 'xgboost',
                                     based_model = 'th',
                                     updatedAtThreshold = 30.0):    
+# import package
     import pandas as pd
     import xgboost as xgb
     import pickle
     from datetime import datetime
     from pprint import pprint
-    import iso3166    
+    import iso3166 
+    from datetime import datetime, timedelta
     
- 
+# connnect to database
+
     appDb = client['app-db']
     analyticsDb = client['analytics-db']
+    
+    mlArtifacts_country = analyticsDb[saved_model]
+    
+# define cursor of engagement transaction
 
     def prepare_features_country(updatedAtThreshold: float,
                      app_db: str,
-                     engagement_collection: str):
-        from datetime import datetime, timedelta
-        
+                     engagement_collection: str): 
     
         transactionEngagementsCountry = [
             {
@@ -132,26 +145,28 @@ def cold_start_by_counytry_modeling(client,
                 }
             }
         ]
-    
+        # assign result to dataframe
         transaction_engagements_country = pd.DataFrame(list(client[app_db][engagement_collection].aggregate(transactionEngagementsCountry)))
     
         return transaction_engagements_country
 
-    trans = prepare_features_country(updatedAtThreshold = updatedAtThreshold, # number of days to keep content
+    transaction_engagements_country = prepare_features_country(updatedAtThreshold = updatedAtThreshold, # number of days to keep content
                                       app_db = 'app-db',
                                       engagement_collection = 'engagements')
-    trans['countryCode'] = trans['countryCode'].str.lower()
-    
+    transaction_engagements_country['countryCode'] = transaction_engagements_country['countryCode'].str.lower()
+
+
+# define feature preparation function from content id list
+
     def prepare_features(client, 
                      analytics_db: str,
                      content_stats_collection: str,
                      creator_stats_collection: str):
     
-        '''
-        feature preparation using both "contentStats" & "creatorStats" then summary engagement behavior for each user
-        '''
 
-        # define cursor of content features
+#     feature preparation using both "contentStats" & "creatorStats" then summary engagement behavior for each user
+
+    # define cursor of content features
         contentFeaturesCursor = [
          {
             # join with creator stats
@@ -188,6 +203,9 @@ def cold_start_by_counytry_modeling(client,
             }
         ]
 
+    # assign result to dataframe
+    # alias 'contentFeatures'
+
         content_features = pd.DataFrame(list(client[analytics_db][content_stats_collection].aggregate(contentFeaturesCursor))).rename({'_id':'contentId'},axis = 1)
     
         return content_features
@@ -197,23 +215,22 @@ def cold_start_by_counytry_modeling(client,
                                         content_stats_collection = 'contentStats',
                                         creator_stats_collection = 'creatorStats')
     
-    
-    mlArtifacts_country = analyticsDb[saved_model]
 
-    contentFeatures_1 = contentFeatures.fillna(0)
-    trans_add = trans.merge(contentFeatures_1, on = 'contentId',how ='left')
-    trans_add['label'] = trans_add['like']+trans_add['comment'] +trans_add['recast'] +trans_add['quote']  
-    trans_add = trans_add
+    contentFeatures_clean = contentFeatures.fillna(0)
+    transaction_engagements_with_contentFeatures = transaction_engagements_country.merge(contentFeatures_clean, on = 'contentId',how ='left')
+    transaction_engagements_with_contentFeatures['label'] = (transaction_engagements_with_contentFeatures['like']
+                                                              +transaction_engagements_with_contentFeatures['comment']
+                                                              +transaction_engagements_with_contentFeatures['recast']
+                                                              +transaction_engagements_with_contentFeatures['quote'])  
     
-    select_user = trans_add.groupby('countryCode')['contentId'].agg('count').reset_index()
-    select_user = select_user[select_user['contentId'] > 2]
+    # select country that can be trianed
+    
+    aggregated_transaction_engagements = transaction_engagements_with_fcontentFeature.groupby('countryCode')['contentId'].agg('count').reset_index()
+    selected_country = aggregated_transaction_engagements[aggregated_transaction_engagements['contentId'] > 2]
 
+    # define save model artifact to database function
     def save_model_to_mongodb(collection, model_name, account, model):
     
-        '''
-        upserts model artifact from model training into database
-        '''
-
         pickled_model = pickle.dumps(model) # pickling the model
     
         document = collection.update_one(
@@ -229,59 +246,77 @@ def cold_start_by_counytry_modeling(client,
                 'features' : list(Xlr.columns)
             }
            }, upsert= True)
+        
     ml_artifacts = [] # pre-define model artifacts
-
-    for n in list(select_user.countryCode.unique()):
     
-        focus_trans = trans_add[trans_add['countryCode'] == n]  
-        portion = focus_trans.groupby('countryCode').agg( 
+    # loop through trainable country of selected country
+    for n in list(selected_country.countryCode.unique()):
+        
+        # filter for only selected country
+        selected_transaction_engagements = transaction_engagements_with_contentFeatures[transaction_engagements_with_contentFeatures['countryCode'] == n]  
+        
+        # summary engagements of selected country
+        country_weight = selected_transaction_engagements.groupby('countryCode').agg( 
                                 like_count = ('like','sum'),
                                 comment_count = ('comment','sum'),
                                 recast_count = ('recast','sum'),
                                 quote_count = ('quote','sum')
                                                 ).reset_index().replace(0,1)
-    
-        portion = portion[['like_count','comment_count','recast_count','quote_count']].div(portion.sum(axis=1)[0]).div(-1)+1
-        focus_trans.loc[:,'like'] = focus_trans.loc[:,'like']*portion.loc[0,'like_count']
-        focus_trans.loc[:,'comment'] = focus_trans.loc[:,'comment']*portion.loc[0,'comment_count']
-        focus_trans.loc[:,'recast'] = focus_trans.loc[:,'recast']*portion.loc[0,'recast_count']
-        focus_trans.loc[:,'quote'] = focus_trans.loc[:,'quote']*portion.loc[0,'quote_count']
-        focus_trans['label'] = focus_trans['like']+focus_trans['comment'] +focus_trans['recast'] +focus_trans['quote']  
+        
+         # formalize label
+        country_weight = country_weight[['like_count','comment_count','recast_count','quote_count']].div(country_weight.sum(axis=1)[0]).div(-1)+1
+        selected_transaction_engagements.loc[:,'like'] = selected_transaction_engagements.loc[:,'like']*country_weight.loc[0,'like_count']
+        selected_transaction_engagements.loc[:,'comment'] = selected_transaction_engagements.loc[:,'comment']*country_weight.loc[0,'comment_count']
+        selected_transaction_engagements.loc[:,'recast'] = selected_transaction_engagements.loc[:,'recast']*country_weight.loc[0,'recast_count']
+        selected_transaction_engagements.loc[:,'quote'] = selected_transaction_engagements.loc[:,'quote']*country_weight.loc[0,'quote_count']
+        selected_transaction_engagements['label'] = (selected_transaction_engagements['like']
+                                                     +selected_transaction_engagements['comment']
+                                                     +selected_transaction_engagements['recast']
+                                                     +selected_transaction_engagements['quote'])  
+        
+        # separate features & label
+        features = selected_transaction_engagements.drop(['label','countryCode','contentId','like','comment','recast','quote'],axis = 1)
+        label  = selected_transaction_engagements.label
 
-        Xlr = focus_trans.drop(['label','countryCode','contentId','like','comment','recast','quote'],axis = 1)
-        ylr = focus_trans.label
-
-        xg_reg = xgb.XGBRegressor(random_state = 123)
-        xg_reg.fit(Xlr, ylr)
+        # define estimator
+        xgboost_model = xgb.XGBRegressor(random_state = 123)
+        
+        # Fit to the model 
+        xgboost_model.fit(Xlr, ylr)
     
         pprint(n)
-        ml_artifacts.append(xg_reg) # collect list of artifacts
+        
+        # append result
+        ml_artifacts.append(xgboost_model) # collect list of artifacts
     
         # upsert 
         save_model_to_mongodb(collection=mlArtifacts_country,
                           account=n,
                           model_name = model_name,
-                          model=xg_reg) 
+                          model=xgboost_model) 
         
     # add Base model
     mlArtifacts = pd.DataFrame(list(mlArtifacts_country.find()))
-    mlArtifacts_base = mlArtifacts[mlArtifacts['account'] == based_model].drop(['account'],axis = 1)
+    mlArtifacts_base_model = mlArtifacts[mlArtifacts['account'] == based_model].drop(['account'],axis = 1)
     
+    # get country list
     country_list = list(set([x.lower() for x in iso3166.countries_by_alpha2.keys()]).difference(set(select_user['countryCode'])))
+    
+    # loop for all country
     for i in country_list:
     # update collection  
         pprint(i)
         mlArtifacts_country.update_one(
                {
                 'account': i,
-                'model': mlArtifacts_base.iloc[0,1],
+                'model': mlArtifacts_base_model.iloc[0,1],
                }, {
                 '$set': {
                     'account': i,
-                    'model': str(mlArtifacts_base.iloc[0,1]),
-                    'artifact': mlArtifacts_base.iloc[0,2],
+                    'model': str(mlArtifacts_base_model.iloc[0,1]),
+                    'artifact': mlArtifacts_base_model.iloc[0,2],
                     'trainedAt': datetime.utcnow(),
-                    'features' : mlArtifacts_base.iloc[0,3]
+                    'features' : mlArtifacts_base_model.iloc[0,3]
                 }
                }, upsert= True)
     
