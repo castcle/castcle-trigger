@@ -258,7 +258,7 @@ def personalized_content_trainer_main(updatedAtThreshold: float, # define conten
                                                 creator_stats_collection = creator_stats_collection,
                                                 engagement_collection = engagement_collection)
 
-        select_user = transaction_engagements.groupby('accountId')['contentId'].agg('count').reset_index()
+        select_user = transaction_engagements[transaction_engagements['engagements']==1].groupby('accountId')['contentId'].agg('count').reset_index()
         
         # select only user with ever engaged more than 2 contents 
         select_user = select_user[select_user['contentId'] > 2]
