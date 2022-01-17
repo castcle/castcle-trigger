@@ -92,6 +92,7 @@ provider:
 functions:
   contentStatsUpdate:
     name: ${self:provider.stage}-mongodb-trigger-content-stats-update
+    memorySize: 512
     warmup:
       default:
         enabled: false
