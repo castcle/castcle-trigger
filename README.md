@@ -4,7 +4,7 @@ Cascle's feed algorithm has tailored from 2 regimes i.e. **App** and **Analytics
 
 Moreover, **Aggregators** are respond to logically filter contents from **Inventory** in different ways. **Ranker** consumes features from **Feature Extractors** , Trained model artifact from **Model Training** and aggregated/filtered contents from **Aggregators** to ranking/scoring tend of engagement for the user using **Model Prediction** then feeds a certain amount to user's UI. More precisely, user interaction or engagement will be recorded to database for purpose of further **Analytics** and model evaluation.
 
-![castcle_ds_overviewdrawio drawio](https://user-images.githubusercontent.com/90676485/146522100-d2492e44-b897-478a-94f5-86b6c990bd5b.png)
+![castcle_ds_overviewdrawio drawio (7)](https://user-images.githubusercontent.com/90676485/147076633-6a638b28-27d2-40d3-9afb-b12987f639e7.png)
 
 ## 2. Workflow Process
 Data science workflow process of Castcle can be illustrated by the bottom diagram of the below figure exhibits overall workflow process interacts across databases i.e. blue blocks represent collections in `app-db` and green blocks represents collections in `analytics-db` databases in Mongodb Atlas, respectively. The bold arrows stand for presence of entity key relation between collections, the dot arrows reflect data extraction by either aggregation or calculation, and the two-headed arrows represents swap event.
@@ -61,12 +61,11 @@ In this section we will describe only collections those are interacted as output
  1. [requirements.txt](https://github.com/castcle/castcle-trigger/blob/develop/requirements.txt): contains necessary libraries.
  2. [serverless.yml](https://github.com/castcle/castcle-trigger/blob/develop/serverless.yml): contains configuration.
  3. python caller files (.py): responses for calling main function in [modules](https://github.com/castcle/castcle-trigger/tree/develop/modules),
- - [castcle-trigger](https://github.com/castcle/castcle-trigger)
-  - [x] [content_stats_update.py](https://github.com/castcle/castcle-trigger/blob/develop/content_stats_update.py): responses for calling to execute    [update_content_stats.py](https://github.com/castcle/castcle-trigger/blob/develop/modules/update_content_stats/update_content_stats.py) to update `analytics-db.contentStats`.
-  - [x] [creator_stats_update.py](https://github.com/castcle/castcle-trigger/blob/develop/creator_stats_update.py): responses for calling to execute    [update_creator_stats.py](https://github.com/castcle/castcle-trigger/blob/develop/modules/update_creator_stats/update_creator_stats.py) to update `analytics-db.creatorStats`.
-  - [x] [coldstart_trainer.py](https://github.com/castcle/castcle-trigger/blob/develop/coldstart_trainer.py): responses for calling to execute [coldstart_trainer.py](https://github.com/castcle/castcle-trigger/blob/develop/modules/coldstart_prediction/coldstart_trainer.py) to update `analytics-db.mlArtifacts_country`.
-  - [x] [personalize_content_trainer.py](https://github.com/castcle/castcle-trigger/blob/develop/personalize_content_trainer.py): responses for calling to execute [personalize_content_trainer.py](https://github.com/castcle/castcle-trigger/blob/develop/modules/personalized_content/personalize_content_trainer.py) to update `analytics-db.mlArtifacts`.
-  - [x] [topic_classification.py](https://github.com/castcle/castcle-trigger/blob/develop/topic_classification.py): responses for calling to execute [topic_classification.py](https://github.com/castcle/castcle-trigger/blob/develop/modules/topic_classify/topic_classification.py) to update `analytics-db.topics` and `app-db.contentinfo`.
+ - [x] [content_stats_update.py](https://github.com/castcle/castcle-trigger/blob/develop/content_stats_update.py): responses for calling to execute    [update_content_stats.py](https://github.com/castcle/castcle-trigger/blob/develop/modules/update_content_stats/update_content_stats.py) to update `analytics-db.contentStats`.
+ - [x] [creator_stats_update.py](https://github.com/castcle/castcle-trigger/blob/develop/creator_stats_update.py): responses for calling to execute    [update_creator_stats.py](https://github.com/castcle/castcle-trigger/blob/develop/modules/update_creator_stats/update_creator_stats.py) to update `analytics-db.creatorStats`.
+ - [x] [coldstart_trainer.py](https://github.com/castcle/castcle-trigger/blob/develop/coldstart_trainer.py): responses for calling to execute [coldstart_trainer.py](https://github.com/castcle/castcle-trigger/blob/develop/modules/coldstart_prediction/coldstart_trainer.py) to update `analytics-db.mlArtifacts_country`.
+ - [x] [personalize_content_trainer.py](https://github.com/castcle/castcle-trigger/blob/develop/personalize_content_trainer.py): responses for calling to execute [personalize_content_trainer.py](https://github.com/castcle/castcle-trigger/blob/develop/modules/personalized_content/personalize_content_trainer.py) to update `analytics-db.mlArtifacts`.
+ - [x] [topic_classification.py](https://github.com/castcle/castcle-trigger/blob/develop/topic_classification.py): responses for calling to execute [topic_classification.py](https://github.com/castcle/castcle-trigger/blob/develop/modules/topic_classify/topic_classification.py) to update `analytics-db.topics` and `app-db.contentinfo`.
 
 ## 5. Model Explanation: Cold-Start
 This model will be used to ranking/scoring within threshold contents based on engagement behavior in each specified country. The model will be re-trained everyday then stored in `analytics-db.mlArtifacts_country` collection. These models support users those do not have their own personalized model and can be used to give a wider range of content recommendation.
@@ -85,7 +84,7 @@ This model will be used to ranking/scoring within threshold contents based on en
   - Collection contains "countryCode", model artifacts, and timestamp
 
   4. Model workflow
-  This file explain only model training section. If you would like to see another section, [click here](https://github.com/castcle/castcle-ds-predict/edit/develop/README.md)
+  This file explain only model training section. If you would like to see another section, [click here](https://github.com/castcle/castcle-ds-predict/blob/develop/README.m)
   
    4.1. Engagement data preparation
      
@@ -128,8 +127,8 @@ This model will be used to ranking/scoring within threshold contents based on en
     - "artifact"
     - "features"
     - "trainedAt"
-
-![Cold-start](https://user-images.githubusercontent.com/90676485/146301272-4d2cbb07-5810-48b1-ac91-0fddeb04905c.jpg)
+    
+![Cold-start (1)](https://user-images.githubusercontent.com/90676485/147532352-1af3e94d-93d4-43f5-af1c-643cb62c260a.jpg)
 
 ## 6. Model Explanation: Personalized Content Model
 This model will be used to ranking/scoring the requested contents based on userâ€™s engagement behaviors. The model will be re-trained everyday then stored in `analytics-db.mlArtifacts`. These models support users that have their own personalized model meaning that they have at least one engagement history and can be used to give a wider range of content recommendation combined with cold start model.
@@ -190,5 +189,5 @@ This model will be used to ranking/scoring the requested contents based on userâ
     - "artifact"
     - "features"
     - "trainedAt"
-
-![Personalized-content](https://user-images.githubusercontent.com/90676485/146510177-fe471f11-21e2-4864-b04e-ec3a49cfcf3d.jpg)
+    
+![Personalized_content](https://user-images.githubusercontent.com/90676485/147532327-d78bc510-9953-4c35-99d8-8953db47cb76.jpg)
