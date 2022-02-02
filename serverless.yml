@@ -101,7 +101,7 @@ functions:
       command:
         - content_stats_update.handle
     events:
-      - schedule: cron(22 * * * ? *)
+      - schedule: cron(*/15 * * * ? *)
   creatorStatsUpdate:
     name: ${self:provider.stage}-mongodb-trigger-creator-stats-update
     warmup:
