@@ -1,4 +1,5 @@
 '''
+version: 2.0
 modules topic classification
 function
     1. ingest data
@@ -130,7 +131,11 @@ def classify_text(message: str,
     # Optional. If not specified, the language is automatically detected.
     # For list of supported languages:
     # https://cloud.google.com/natural-language/docs/languages
-    document = {"content": message, "type_": type_, "language": language}
+    document = {
+        "content": message, 
+        "type_": type_, 
+        "language": language
+        }
 
     response = client.classify_text(request = {'document': document})
     
@@ -266,8 +271,8 @@ def get_topic_document(reformatted_dataframe):
 
                 print('topics:', topics_list) #! just for mornitoring
 
-            except UnicodeEncodeError: 
-
+            except UnicodeEncodeError as error: 
+                print(f"[Exception] {error}")
                 pass
     else:
         
