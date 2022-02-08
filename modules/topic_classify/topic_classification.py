@@ -353,9 +353,9 @@ def message_classify(reformatted_dataframe):
 
             try:
                 #! log
-                print('classifying message:', message)
+                print('classifying message:', translatedText)
                 # perform classify text
-                topics_list = classify_text(message, _id, language, updatedAt)
+                topics_list = classify_text(translatedText, _id, language, updatedAt)
 
                 print('topics:', topics_list) #! just for mornitoring
 
