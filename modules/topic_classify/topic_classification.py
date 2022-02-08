@@ -1,4 +1,5 @@
 '''
+version: 2.0
 modules topic classification
 function
     1. ingest data
@@ -130,7 +131,11 @@ def classify_text(message: str,
     # Optional. If not specified, the language is automatically detected.
     # For list of supported languages:
     # https://cloud.google.com/natural-language/docs/languages
-    document = {"content": message, "type_": type_, "language": language}
+    document = {
+        "content": message, 
+        "type_": type_, 
+        "language": language
+        }
 
     response = client.classify_text(request = {'document': document})
     
@@ -180,8 +185,49 @@ def classify_text(message: str,
         
     return classify_result
 
+def call_translation_api(message) -> str:
+    """
+    Call Google NLP translator https://cloud.google.com/translate
+
+    Translate every languages to english
+
+    input: 
+        message to be translated
+    output:
+        translated message, ENGLISH
+    """
+
+    def translate_text_with_model(target, text, model="nmt") -> str:
+        """Translates text into the target language.
+
+        Make sure your project is allowlisted.
+
+        Target must be an ISO 639-1 language code.
+        See https://g.co/cloud/translate/v2/translate-reference#supported_languages
+        """
+        from google.cloud import translate_v2 as translate
+
+        translate_client = translate.Client()
+
+        if isinstance(text, bytes):
+            text = text.decode("utf-8")
+
+        # Text can also be a sequence of strings, in which case this method
+        # will return a sequence of results for each text.
+        result = translate_client.translate(text, target_language=target, model=model)
+
+        print(u"Text: {}".format(result["input"]))
+        print(u"Translation: {}".format(result["translatedText"]))
+        print(u"Detected source language: {}".format(result["detectedSourceLanguage"]))
+        return result["translatedText"]
+
+    # if message is not english, we will translate it to English
+    translatedText = translate_text_with_model(target="en", text=message)
+
+    return translatedText
+
 # implement both languge & topic labeling
-def get_topic_document(reformatted_dataframe):
+def message_classify(reformatted_dataframe):
     
     '''
     calls clean text function together with topic classify function as condition as follow, 
@@ -193,8 +239,28 @@ def get_topic_document(reformatted_dataframe):
     4. message is unknown langage => language = "n/a" and no topic
     '''
 
-    # define threshold
-    message_length_threshold = 21 # changed from 20
+    def ggl_api_chk_rdy(message) -> bool:
+        """
+        Check message whether it is ready for calling google classify API
+
+        Input:
+            message (content)
+        Output:
+            ready or not (True or False)
+        """
+
+        # define threshold
+        message_length_threshold = 21 # changed from 20
+        # tokenize text by slice for 1st row (input has only single row)
+
+        splitted = message.split(' ')
+
+        cannot_use_google_classify = True \
+                        if len(splitted) < message_length_threshold else False
+
+        return cannot_use_google_classify
+
+    
     
     # perform clean text
     _id = reformatted_dataframe['_id'][0]
@@ -230,25 +296,26 @@ def get_topic_document(reformatted_dataframe):
 
         # case non-Thai but detectable language
         try:
-
-            language = lang_detect(message)
+            # change to gcld3
+            lang, reliable = gcld(message)
+            language = lang
     
         # case non-Thai and undetectable language
-        except LangDetectException:
-    
+        except Exception as e:
+            print("[Exception] Error:", e)
+            print("[Exception] message", message)
             language = "n/a"
 
-    print('language:', language) #! just for mornitoring
-    
-    # tokenize text by slice for 1st row (input has only single row)
-    splitted = message.split(' ')
+    print('[INFO] language:', language) #! just for mornitoring
+
+    cannot_use_google_classify = ggl_api_chk_rdy(message)
     
     # use google language API only if language = English
     if language == 'en':
         
         # check threshold of word length
         # case of insufficient text to classify topic
-        if len(splitted) < message_length_threshold:
+        if cannot_use_google_classify:
 
             # return only content id
             topics_list = {'_id': _id,
@@ -257,6 +324,32 @@ def get_topic_document(reformatted_dataframe):
 
         # case of able to classify text
         else:
+            try:
+                #! log
+                print('classifying message:', message)
+                # perform classify text
+                topics_list = classify_text(message, _id, language, updatedAt)
+
+                print('topics:', topics_list) #! just for mornitoring
+
+            except UnicodeEncodeError as error: 
+                print(f"[Exception] {error}")
+                pass
+    # non english
+    else:
+        # if translatedText is True do ... stuff
+        translatedText = call_translation_api(message)
+
+        cannot_use_google_classify = ggl_api_chk_rdy(translatedText)
+
+        if cannot_use_google_classify:
+
+            # return only content id
+            topics_list = {'_id': _id,
+                            'language': language,
+                            'updatedAt': updatedAt}
+        # If the translated message can call Google Classify API
+        elif not cannot_use_google_classify:
 
             try:
                 #! log
@@ -266,15 +359,9 @@ def get_topic_document(reformatted_dataframe):
 
                 print('topics:', topics_list) #! just for mornitoring
 
-            except UnicodeEncodeError: 
-
+            except UnicodeEncodeError as error: 
+                print(f"[Exception] {error}")
                 pass
-    else:
-        
-            # return only content id
-            topics_list = {'_id': _id,
-                           'language': language,
-                           'updatedAt': updatedAt}
     
     return topics_list 
 
@@ -529,7 +616,7 @@ def topic_classify_main(event,
     logging.debug('debug 2')
     
     ## perform category labeling
-    topics_list = get_topic_document(reformatted_dataframe)
+    topics_list = message_classify(reformatted_dataframe)
 
     print('topics is:', topics_list) #!! checkpoint
     
