@@ -341,6 +341,7 @@ def message_classify(reformatted_dataframe):
         print("[INFO] Not English, Translate then try to classify")
         # if translatedText is True do ... stuff
         _translatedText = call_translation_api(raw_message)
+        _translatedText_cleaned = clean_text(_translatedText)
 
         cannot_use_google_classify = ggl_api_chk_rdy(_translatedText)
 
