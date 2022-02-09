@@ -266,6 +266,7 @@ def message_classify(reformatted_dataframe):
     _id = reformatted_dataframe['_id'][0]
     updatedAt = reformatted_dataframe['updatedAt'][0]
     message = clean_text(reformatted_dataframe['message'][0])
+    raw_message = reformatted_dataframe['message'][0]
 
     # extract language
     print('message is:')
@@ -337,10 +338,11 @@ def message_classify(reformatted_dataframe):
                 pass
     # non english
     else:
+        print("[INFO] Not English, Translate then try to classify")
         # if translatedText is True do ... stuff
-        translatedText = call_translation_api(message)
+        _translatedText = call_translation_api(raw_message)
 
-        cannot_use_google_classify = ggl_api_chk_rdy(translatedText)
+        cannot_use_google_classify = ggl_api_chk_rdy(_translatedText)
 
         if cannot_use_google_classify:
 
@@ -353,10 +355,10 @@ def message_classify(reformatted_dataframe):
 
             try:
                 #! log
-                print('classifying message:', translatedText)
+                print('classifying message:', _translatedText)
                 target_language = "en"
                 # perform classify text
-                topics_list = classify_text(translatedText, _id, target_language, updatedAt)
+                topics_list = classify_text(_translatedText, _id, target_language, updatedAt)
 
                 print('topics:', topics_list) #! just for mornitoring
 
