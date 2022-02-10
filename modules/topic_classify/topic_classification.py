@@ -227,7 +227,7 @@ def call_translation_api(message) -> str:
     return translatedText
 
 # implement both languge & topic labeling
-def message_classify(reformatted_dataframe):
+def message_classify(reformatted_dataframe) -> dict:
     
     '''
     calls clean text function together with topic classify function as condition as follow, 
@@ -371,20 +371,35 @@ def message_classify(reformatted_dataframe):
 
 # define mapping function then upsert to collection 'topics'
 # there are 2 minor consecutive functions i.e upsert raw slug & mapping object ids, respectively
-def upsert_to_topics(topics_list, 
+def upsert_topic_to_topics(topics_list, 
                     topic_database_name: str, 
                     topic_collection_name: str): 
 
     '''
-    if message has topics/categories is detected, reformat to json for each topic and assigns children/parents relationship then upsert to database twice then upserts topics into database hierachically to stamp topic slugs
+    if the message has detected topics/categories, 
+        reformat to json for each topic and assigns children/parents relationship 
+        then upsert to database twice then upserts topics into database 
+        hierachically to stamp topic slugs
+    Input:
+        topics_list: dict
+            {
+                '_id': ObjectId('id'), 
+                'language': 'en', 
+                'categories': [
+                    'finance', 'investing', 'currencies-and-foreign-exchange'
+                    ], 
+                'confidence': 0.8999999761581421, 
+                'updatedAt': Timestamp('2022-02-10 06:03:33.682000+0000', tz='tzlocal()')
+            }
+
     '''
     
-    # case 'categories' present in 'topic_list'
+    # case 'categories' present in 'topics_list'
     if 'categories' in topics_list:
     
         # minor function 1: upsert raw slug
         # assign fields to variables
-        topics = topics_list['categories']
+        topics = topics_list['categories'] # categories
         updatedAt = topics_list['updatedAt']
 
         # looping trough sub categories
@@ -394,57 +409,111 @@ def upsert_to_topics(topics_list,
             if (len(topics) > 1):
 
                 # sub-case: parent with children
+                # getting parent or slug from google api response
                 if index == 0:
 
-                    temp = {'slug': topics[index], 'children': [topics[index + 1]]}
+                    temp = {
+                        'slug': topics[index], 
+                        'children': [topics[index + 1]]
+                        }
 
-                    mongo_client[topic_database_name][topic_collection_name].update_one({'slug': temp['slug']}, [{
-                        '$project': {
-                            'childrenSlug': {'$setUnion': [{'$ifNull': ['$childrenSlug', []]}, temp['children']]},
-                            'parents': 1,
-                            'children': 1,
-                            'slug': 1,
-                            'createdAt': {'$ifNull': ['$createdAt', updatedAt]},
-                            'updatedAt': updatedAt 
-                        }}], upsert=True)
+                    mongo_client[topic_database_name][topic_collection_name]\
+                        .update_one(
+                            {
+                                'slug': temp['slug']
+                            }, [
+                                {
+                                    '$project': {
+                                        'childrenSlug': {
+                                            '$setUnion': [
+                                                {
+                                                    '$ifNull': ['$childrenSlug', []]
+                                                }, 
+                                                temp['children']
+                                            ]
+                                        },
+                                        'parents': 1,
+                                        'children': 1,
+                                        'slug': 1,
+                                        'createdAt': {
+                                            '$ifNull': ['$createdAt', updatedAt]
+                                        },
+                                        'updatedAt': updatedAt 
+                                    }
+                                }
+                            ], 
+                            upsert=True
+                        )
 
                 # sub-case: last children
                 elif index == len(topics) - 1:
 
-                    temp = {'slug': topics[index], 'parents': [topics[index - 1]]}
+                    temp = {
+                        'slug': topics[index], 
+                        'parents': [topics[index - 1]]
+                        }
 
-                    mongo_client[topic_database_name][topic_collection_name].update_one({'slug': temp['slug']}, [{
-                        '$project': {
-                            'parentsSlug': {'$setUnion': [{'$ifNull':['$parentsSlug', []]}, temp['parents']]},
-                            'parents': 1,
-                            'children': 1,
-                            'slug': 1,
-                            'createdAt': {'$ifNull': ['$createdAt', updatedAt]},
-                            'updatedAt': updatedAt
-                        }}], upsert=True)
+                    mongo_client[topic_database_name][topic_collection_name]\
+                        .update_one(
+                            {
+                                'slug': temp['slug']
+                            }, [
+                                {
+                                    '$project': {
+                                        'parentsSlug': {
+                                            '$setUnion': [
+                                                {
+                                                    '$ifNull':['$parentsSlug', []]
+                                                }, 
+                                            temp['parents']]
+                                        },
+                                        'parents': 1,
+                                        'children': 1,
+                                        'slug': 1,
+                                        'createdAt': {
+                                            '$ifNull': ['$createdAt', updatedAt]
+                                        },
+                                        'updatedAt': updatedAt
+                                    }
+                                }
+                            ], 
+                            upsert=True)
 
                 # sub-case: intermediate children
                 else:
 
-                    temp = {'slug': topics[index], 'parents': [topics[index - 1]], 'children': [topics[index + 1]]}
+                    temp = {
+                        'slug': topics[index], 
+                        'parents': [topics[index - 1]], 
+                        'children': [topics[index + 1]]
+                        }
 
-                    mongo_client[topic_database_name][topic_collection_name].update_one({'slug': temp['slug']}, [{
-                        '$project': {
-                            'childrenSlug': {'$setUnion': [{'$ifNull': ['$childrenSlug', []]}, temp['children']]},
-                            'parentsSlug': {'$setUnion': [{'$ifNull':['$parentsSlug', []]}, temp['parents']]}, 
-                            'parents': 1,
-                            'children': 1,
-                            'slug': 1,
-                            'createdAt': {'$ifNull': ['$createdAt', updatedAt]},
-                            'updatedAt': updatedAt
-                        }}], upsert=True)
+                    mongo_client[topic_database_name][topic_collection_name]\
+                        .update_one(
+                            {
+                                'slug': temp['slug']
+                            }, [{
+                                '$project': {
+                                    'childrenSlug': {'$setUnion': [{'$ifNull': ['$childrenSlug', []]}, temp['children']]},
+                                    'parentsSlug': {'$setUnion': [{'$ifNull':['$parentsSlug', []]}, temp['parents']]}, 
+                                    'parents': 1,
+                                    'children': 1,
+                                    'slug': 1,
+                                    'createdAt': {'$ifNull': ['$createdAt', updatedAt]},
+                                    'updatedAt': updatedAt
+                                }}], 
+                            upsert=True)
 
-            # case: non-hiearachy    
+            # case: non-hiearachy  
+            # If we only have 1 return category from Google API  
             else:
 
-                temp = {'slug': topics[index]}
+                temp = {
+                    'slug': topics[index]
+                    }
 
-                mongo_client[topic_database_name][topic_collection_name].update_one({'slug': temp['slug']}, [{'$project': {
+                mongo_client[topic_database_name][topic_collection_name]\
+                    .update_one({'slug': temp['slug']}, [{'$project': {
                     'slug': 1, 
                     'parents': 1,
                     'children': 1,
@@ -537,10 +606,13 @@ def upsert_to_topics(topics_list,
         # perform mapping object ids
         mongo_client[topic_database_name][topic_collection_name].aggregate(objectidMappingCursor)
 
+    elif 'categories' not in topics_list:
+        print("[Warnning] No Categories in 'topics_list'")
+
     return None
 
 # define mapping content id with topic id then upsert to 'contentTopics'
-def upsert_topics_to_contents(topics_list,
+def upsert_topicId_to_contentsInfo(topics_list,
                               topic_database_name: str, 
                               topic_collection_name: str,
                               contents_database_name: str,
@@ -550,6 +622,17 @@ def upsert_topics_to_contents(topics_list,
     upsert topic object IDs and language to database,
         - if topic is detected, finds correspond object ID then insert into database
         - insert language to the same database
+    input:
+        topics_list: dict
+            {
+                '_id': ObjectId('6204aab59b66685037403248'), 
+                'language': 'en', 
+                'categories': [
+                    'finance', 'investing', 'currencies-and-foreign-exchange'
+                    ], 
+                'confidence': 0.8999999761581421, 
+                'updatedAt': Timestamp('2022-02-10 06:03:33.682000+0000', tz='tzlocal()')
+            }
     '''
 
     # assign fields to variables
@@ -628,7 +711,7 @@ def topic_classify_main(event,
     logging.debug('debug 3')
     
     ## perform upsert category to 'topics' master collection
-    upsert_to_topics(topics_list, 
+    upsert_topic_to_topics(topics_list, 
                     topic_database_name=topic_database_name, 
                     topic_collection_name=topic_collection_name)
 
@@ -637,7 +720,7 @@ def topic_classify_main(event,
     logging.debug('debug 4')
 
     ## update original content by adding 'topics' field 
-    upsert_topics_to_contents(topics_list,
+    upsert_topicId_to_contentsInfo(topics_list,
                               topic_database_name=topic_database_name,
                               topic_collection_name=topic_collection_name,
                               contents_database_name=contents_database_name,
