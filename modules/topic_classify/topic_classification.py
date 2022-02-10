@@ -185,7 +185,7 @@ def classify_text(message: str,
         
     return classify_result
 
-def call_translation_api(message) -> str:
+def call_translation_api(message) -> tuple:
     """
     Call Google NLP translator https://cloud.google.com/translate
 
@@ -281,11 +281,11 @@ def message_classify(reformatted_dataframe) -> dict:
 
         print('Thai letter(s) found')
 
-        lang, reliable = gcld(message)
+        _lang, reliable = gcld(message)
         
-        if lang == 'th' and reliable == True:
+        if _lang == 'th' and reliable == True:
             # case TH reliable
-            language = lang
+            language = _lang
         else:
             print('not reliable')
             language = 'th'
@@ -298,8 +298,8 @@ def message_classify(reformatted_dataframe) -> dict:
         # case non-Thai but detectable language
         try:
             # change to gcld3
-            lang, reliable = gcld(message)
-            language = lang
+            _lang, reliable = gcld(message)
+            language = _lang
     
         # case non-Thai and undetectable language
         except Exception as e:
@@ -307,7 +307,7 @@ def message_classify(reformatted_dataframe) -> dict:
             print("[Exception] message", message)
             language = "n/a"
 
-    print('[INFO] language:', language) #! just for mornitoring
+    print('[INFO] Detected language:', language) #! just for mornitoring
 
     cannot_use_google_classify = ggl_api_chk_rdy(message)
     
@@ -350,7 +350,9 @@ def message_classify(reformatted_dataframe) -> dict:
             # return only content id
             topics_list = {'_id': _id,
                             'language': language,
-                            'updatedAt': updatedAt}
+                            'updatedAt': updatedAt,
+                            'translated': _translatedText
+                        }
         # If the translated message can call Google Classify API
         elif not cannot_use_google_classify:
 
@@ -360,14 +362,17 @@ def message_classify(reformatted_dataframe) -> dict:
                 target_language = "en"
                 # perform classify text
                 topics_list = classify_text(_translatedText_cleaned, _id, target_language, updatedAt)
+                
+                # add translated message to topics_list
+                topics_list["translatedEN"] = _translatedText_cleaned
 
-                print('topics:', topics_list) #! just for mornitoring
+                print('topics_list (translatedEN):', topics_list) #! just for mornitoring
 
             except UnicodeEncodeError as error: 
                 print(f"[Exception] {error}")
                 pass
     
-    return topics_list 
+    return topics_list
 
 # define mapping function then upsert to collection 'topics'
 # there are 2 minor consecutive functions i.e upsert raw slug & mapping object ids, respectively
@@ -612,7 +617,7 @@ def upsert_topic_to_topics(topics_list,
     return None
 
 # define mapping content id with topic id then upsert to 'contentTopics'
-def upsert_topicId_to_contentsInfo(topics_list,
+def upsert_topicId_to_contentinfo(topics_list,
                               topic_database_name: str, 
                               topic_collection_name: str,
                               contents_database_name: str,
@@ -637,8 +642,10 @@ def upsert_topicId_to_contentsInfo(topics_list,
 
     # assign fields to variables
     _id = topics_list['_id']
-    
+    translatedEN = topics_list.get('translatedEN', None)
+
     # check topic existence
+    # mostly english language
     if 'categories' in topics_list:
         
         language = topics_list['language']
@@ -658,8 +665,10 @@ def upsert_topicId_to_contentsInfo(topics_list,
                                     '$set': {
                                         'contentId': _id,
                                         'language': language,
-                                        'topics': topic_ids
-                                    }}], upsert=True) # change to True when using contents
+                                        'topics': topic_ids,
+#                                        'translatedEN': translatedEN
+                                    }}], 
+                                    upsert=True) # change to True when using contents
         
     # case get language but not categories
     elif 'language' in topics_list:
@@ -671,7 +680,9 @@ def upsert_topicId_to_contentsInfo(topics_list,
                                             '$set': {
                                                 'contentId': _id,
                                                 'language': language,
-                                            }}], upsert=True) # change to True when using contents
+#                                                'translatedEN': translatedEN
+                                            }}], 
+                                            upsert=True) # change to True when using contents
     
     return None
 
@@ -720,7 +731,7 @@ def topic_classify_main(event,
     logging.debug('debug 4')
 
     ## update original content by adding 'topics' field 
-    upsert_topicId_to_contentsInfo(topics_list,
+    upsert_topicId_to_contentinfo(topics_list,
                               topic_database_name=topic_database_name,
                               topic_collection_name=topic_collection_name,
                               contents_database_name=contents_database_name,
