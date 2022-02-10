@@ -197,7 +197,7 @@ def call_translation_api(message) -> tuple:
         translated message, ENGLISH
     """
 
-    def translate_text_with_model(target, text, model="nmt") -> str:
+    def translate_text_with_model(target, text, model="nmt") -> tuple:
         """Translates text into the target language.
 
         Make sure your project is allowlisted.
@@ -219,12 +219,12 @@ def call_translation_api(message) -> tuple:
         print(u"Text: {}".format(result["input"]))
         print(u"Translation: {}".format(result["translatedText"]))
         print(u"Detected source language: {}".format(result["detectedSourceLanguage"]))
-        return result["translatedText"]
+        return result["translatedText"], result["detectedSourceLanguage"]
 
     # if message is not english, we will translate it to English
-    translatedText = translate_text_with_model(target="en", text=message)
+    translatedText, _detectedSourceLanguage = translate_text_with_model(target="en", text=message)
 
-    return translatedText
+    return translatedText, _detectedSourceLanguage
 
 # implement both languge & topic labeling
 def message_classify(reformatted_dataframe) -> dict:
@@ -340,7 +340,7 @@ def message_classify(reformatted_dataframe) -> dict:
     else:
         print("[INFO] Not English, Translate then try to classify")
         # if translatedText is True do ... stuff
-        _translatedText = call_translation_api(raw_message)
+        _translatedText, _detectedSourceLanguage = call_translation_api(raw_message)
         _translatedText_cleaned = clean_text(_translatedText)
 
         cannot_use_google_classify = ggl_api_chk_rdy(_translatedText_cleaned)
@@ -371,6 +371,11 @@ def message_classify(reformatted_dataframe) -> dict:
             except UnicodeEncodeError as error: 
                 print(f"[Exception] {error}")
                 pass
+        
+        # In case not rely on gcld3
+        # Then we will use detectedSourceLanguage from Google Translator instead
+        if _detectedSourceLanguage != language:
+            topics_list['language'] = _detectedSourceLanguage
     
     return topics_list
 
