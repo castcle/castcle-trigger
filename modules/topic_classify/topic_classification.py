@@ -362,6 +362,9 @@ def message_classify(reformatted_dataframe) -> dict:
                 target_language = "en"
                 # perform classify text
                 topics_list = classify_text(_translatedText_cleaned, _id, target_language, updatedAt)
+
+                # reset to default language
+                topics_list["language"] = language
                 
                 # add translated message to topics_list
                 topics_list["translatedEN"] = _translatedText_cleaned
@@ -635,7 +638,7 @@ def upsert_topicId_to_contentinfo(topics_list,
     input:
         topics_list: dict
             {
-                '_id': ObjectId('6204aab59b66685037403248'), 
+                '_id': ObjectId('id'), 
                 'language': 'en', 
                 'categories': [
                     'finance', 'investing', 'currencies-and-foreign-exchange'
