@@ -674,7 +674,7 @@ def upsert_topicId_to_contentinfo(topics_list,
                                         'contentId': _id,
                                         'language': language,
                                         'topics': topic_ids,
-#                                        'translatedEN': translatedEN
+                                        'translatedEN': translatedEN
                                     }}], 
                                     upsert=True) # change to True when using contents
         
@@ -688,7 +688,7 @@ def upsert_topicId_to_contentinfo(topics_list,
                                             '$set': {
                                                 'contentId': _id,
                                                 'language': language,
-#                                                'translatedEN': translatedEN
+                                                'translatedEN': translatedEN
                                             }}], 
                                             upsert=True) # change to True when using contents
     
