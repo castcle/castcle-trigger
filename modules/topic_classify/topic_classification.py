@@ -1,4 +1,5 @@
 '''
+version: 2.0
 modules topic classification
 function
     1. ingest data
@@ -130,7 +131,11 @@ def classify_text(message: str,
     # Optional. If not specified, the language is automatically detected.
     # For list of supported languages:
     # https://cloud.google.com/natural-language/docs/languages
-    document = {"content": message, "type_": type_, "language": language}
+    document = {
+        "content": message, 
+        "type_": type_, 
+        "language": language
+        }
 
     response = client.classify_text(request = {'document': document})
     
@@ -180,8 +185,49 @@ def classify_text(message: str,
         
     return classify_result
 
+def call_translation_api(message) -> tuple:
+    """
+    Call Google NLP translator https://cloud.google.com/translate
+
+    Translate every languages to english
+
+    input: 
+        message to be translated
+    output:
+        translated message, ENGLISH
+    """
+
+    def translate_text_with_model(target, text, model="nmt") -> tuple:
+        """Translates text into the target language.
+
+        Make sure your project is allowlisted.
+
+        Target must be an ISO 639-1 language code.
+        See https://g.co/cloud/translate/v2/translate-reference#supported_languages
+        """
+        from google.cloud import translate_v2 as translate
+
+        translate_client = translate.Client()
+
+        if isinstance(text, bytes):
+            text = text.decode("utf-8")
+
+        # Text can also be a sequence of strings, in which case this method
+        # will return a sequence of results for each text.
+        result = translate_client.translate(text, target_language=target, model=model)
+
+        print(u"Text: {}".format(result["input"]))
+        print(u"Translation: {}".format(result["translatedText"]))
+        print(u"Detected source language: {}".format(result["detectedSourceLanguage"]))
+        return result["translatedText"], result["detectedSourceLanguage"]
+
+    # if message is not english, we will translate it to English
+    translatedText, _detectedSourceLanguage = translate_text_with_model(target="en", text=message)
+
+    return translatedText, _detectedSourceLanguage
+
 # implement both languge & topic labeling
-def get_topic_document(reformatted_dataframe):
+def message_classify(reformatted_dataframe) -> dict:
     
     '''
     calls clean text function together with topic classify function as condition as follow, 
@@ -193,13 +239,34 @@ def get_topic_document(reformatted_dataframe):
     4. message is unknown langage => language = "n/a" and no topic
     '''
 
-    # define threshold
-    message_length_threshold = 21 # changed from 20
+    def ggl_api_chk_rdy(message) -> bool:
+        """
+        Check message whether it is ready for calling google classify API
+
+        Input:
+            message (content)
+        Output:
+            ready or not (True or False)
+        """
+
+        # define threshold
+        message_length_threshold = 21 # changed from 20
+        # tokenize text by slice for 1st row (input has only single row)
+
+        splitted = message.split(' ')
+
+        cannot_use_google_classify = True \
+                        if len(splitted) < message_length_threshold else False
+
+        return cannot_use_google_classify
+
+    
     
     # perform clean text
     _id = reformatted_dataframe['_id'][0]
     updatedAt = reformatted_dataframe['updatedAt'][0]
     message = clean_text(reformatted_dataframe['message'][0])
+    raw_message = reformatted_dataframe['message'][0]
 
     # extract language
     print('message is:')
@@ -214,11 +281,11 @@ def get_topic_document(reformatted_dataframe):
 
         print('Thai letter(s) found')
 
-        lang, reliable = gcld(message)
+        _lang, reliable = gcld(message)
         
-        if lang == 'th' and reliable == True:
+        if _lang == 'th' and reliable == True:
             # case TH reliable
-            language = lang
+            language = _lang
         else:
             print('not reliable')
             language = 'th'
@@ -230,25 +297,26 @@ def get_topic_document(reformatted_dataframe):
 
         # case non-Thai but detectable language
         try:
-
-            language = lang_detect(message)
+            # change to gcld3
+            _lang, reliable = gcld(message)
+            language = _lang
     
         # case non-Thai and undetectable language
-        except LangDetectException:
-    
+        except Exception as e:
+            print("[Exception] Error:", e)
+            print("[Exception] message", message)
             language = "n/a"
 
-    print('language:', language) #! just for mornitoring
-    
-    # tokenize text by slice for 1st row (input has only single row)
-    splitted = message.split(' ')
+    print('[INFO] Detected language:', language) #! just for mornitoring
+
+    cannot_use_google_classify = ggl_api_chk_rdy(message)
     
     # use google language API only if language = English
     if language == 'en':
         
         # check threshold of word length
         # case of insufficient text to classify topic
-        if len(splitted) < message_length_threshold:
+        if cannot_use_google_classify:
 
             # return only content id
             topics_list = {'_id': _id,
@@ -257,7 +325,6 @@ def get_topic_document(reformatted_dataframe):
 
         # case of able to classify text
         else:
-
             try:
                 #! log
                 print('classifying message:', message)
@@ -266,34 +333,86 @@ def get_topic_document(reformatted_dataframe):
 
                 print('topics:', topics_list) #! just for mornitoring
 
-            except UnicodeEncodeError: 
-
+            except UnicodeEncodeError as error: 
+                print(f"[Exception] {error}")
                 pass
+    # non english
     else:
-        
+        print("[INFO] Not English, Translate then try to classify")
+        # if translatedText is True do ... stuff
+        _translatedText, _detectedSourceLanguage = call_translation_api(raw_message)
+        _translatedText_cleaned = clean_text(_translatedText)
+
+        cannot_use_google_classify = ggl_api_chk_rdy(_translatedText_cleaned)
+
+        if cannot_use_google_classify:
+
             # return only content id
             topics_list = {'_id': _id,
-                           'language': language,
-                           'updatedAt': updatedAt}
+                            'language': language,
+                            'updatedAt': updatedAt,
+                            'translated': _translatedText
+                        }
+        # If the translated message can call Google Classify API
+        elif not cannot_use_google_classify:
+
+            try:
+                #! log
+                print('classifying message:', _translatedText_cleaned)
+                target_language = "en"
+                # perform classify text
+                topics_list = classify_text(_translatedText_cleaned, _id, target_language, updatedAt)
+
+                # reset to default language
+                topics_list["language"] = language
+                
+                # add translated message to topics_list
+                topics_list["translatedEN"] = _translatedText_cleaned
+
+                print('topics_list (translatedEN):', topics_list) #! just for mornitoring
+
+            except UnicodeEncodeError as error: 
+                print(f"[Exception] {error}")
+                pass
+        
+        # In case not rely on gcld3
+        # Then we will use detectedSourceLanguage from Google Translator instead
+        if _detectedSourceLanguage != language:
+            topics_list['language'] = _detectedSourceLanguage
     
-    return topics_list 
+    return topics_list
 
 # define mapping function then upsert to collection 'topics'
 # there are 2 minor consecutive functions i.e upsert raw slug & mapping object ids, respectively
-def upsert_to_topics(topics_list, 
+def upsert_topic_to_topics(topics_list, 
                     topic_database_name: str, 
                     topic_collection_name: str): 
 
     '''
-    if message has topics/categories is detected, reformat to json for each topic and assigns children/parents relationship then upsert to database twice then upserts topics into database hierachically to stamp topic slugs
+    if the message has detected topics/categories, 
+        reformat to json for each topic and assigns children/parents relationship 
+        then upsert to database twice then upserts topics into database 
+        hierachically to stamp topic slugs
+    Input:
+        topics_list: dict
+            {
+                '_id': ObjectId('id'), 
+                'language': 'en', 
+                'categories': [
+                    'finance', 'investing', 'currencies-and-foreign-exchange'
+                    ], 
+                'confidence': 0.8999999761581421, 
+                'updatedAt': Timestamp('2022-02-10 06:03:33.682000+0000', tz='tzlocal()')
+            }
+
     '''
     
-    # case 'categories' present in 'topic_list'
+    # case 'categories' present in 'topics_list'
     if 'categories' in topics_list:
     
         # minor function 1: upsert raw slug
         # assign fields to variables
-        topics = topics_list['categories']
+        topics = topics_list['categories'] # categories
         updatedAt = topics_list['updatedAt']
 
         # looping trough sub categories
@@ -303,57 +422,111 @@ def upsert_to_topics(topics_list,
             if (len(topics) > 1):
 
                 # sub-case: parent with children
+                # getting parent or slug from google api response
                 if index == 0:
 
-                    temp = {'slug': topics[index], 'children': [topics[index + 1]]}
+                    temp = {
+                        'slug': topics[index], 
+                        'children': [topics[index + 1]]
+                        }
 
-                    mongo_client[topic_database_name][topic_collection_name].update_one({'slug': temp['slug']}, [{
-                        '$project': {
-                            'childrenSlug': {'$setUnion': [{'$ifNull': ['$childrenSlug', []]}, temp['children']]},
-                            'parents': 1,
-                            'children': 1,
-                            'slug': 1,
-                            'createdAt': {'$ifNull': ['$createdAt', updatedAt]},
-                            'updatedAt': updatedAt 
-                        }}], upsert=True)
+                    mongo_client[topic_database_name][topic_collection_name]\
+                        .update_one(
+                            {
+                                'slug': temp['slug']
+                            }, [
+                                {
+                                    '$project': {
+                                        'childrenSlug': {
+                                            '$setUnion': [
+                                                {
+                                                    '$ifNull': ['$childrenSlug', []]
+                                                }, 
+                                                temp['children']
+                                            ]
+                                        },
+                                        'parents': 1,
+                                        'children': 1,
+                                        'slug': 1,
+                                        'createdAt': {
+                                            '$ifNull': ['$createdAt', updatedAt]
+                                        },
+                                        'updatedAt': updatedAt 
+                                    }
+                                }
+                            ], 
+                            upsert=True
+                        )
 
                 # sub-case: last children
                 elif index == len(topics) - 1:
 
-                    temp = {'slug': topics[index], 'parents': [topics[index - 1]]}
+                    temp = {
+                        'slug': topics[index], 
+                        'parents': [topics[index - 1]]
+                        }
 
-                    mongo_client[topic_database_name][topic_collection_name].update_one({'slug': temp['slug']}, [{
-                        '$project': {
-                            'parentsSlug': {'$setUnion': [{'$ifNull':['$parentsSlug', []]}, temp['parents']]},
-                            'parents': 1,
-                            'children': 1,
-                            'slug': 1,
-                            'createdAt': {'$ifNull': ['$createdAt', updatedAt]},
-                            'updatedAt': updatedAt
-                        }}], upsert=True)
+                    mongo_client[topic_database_name][topic_collection_name]\
+                        .update_one(
+                            {
+                                'slug': temp['slug']
+                            }, [
+                                {
+                                    '$project': {
+                                        'parentsSlug': {
+                                            '$setUnion': [
+                                                {
+                                                    '$ifNull':['$parentsSlug', []]
+                                                }, 
+                                            temp['parents']]
+                                        },
+                                        'parents': 1,
+                                        'children': 1,
+                                        'slug': 1,
+                                        'createdAt': {
+                                            '$ifNull': ['$createdAt', updatedAt]
+                                        },
+                                        'updatedAt': updatedAt
+                                    }
+                                }
+                            ], 
+                            upsert=True)
 
                 # sub-case: intermediate children
                 else:
 
-                    temp = {'slug': topics[index], 'parents': [topics[index - 1]], 'children': [topics[index + 1]]}
+                    temp = {
+                        'slug': topics[index], 
+                        'parents': [topics[index - 1]], 
+                        'children': [topics[index + 1]]
+                        }
 
-                    mongo_client[topic_database_name][topic_collection_name].update_one({'slug': temp['slug']}, [{
-                        '$project': {
-                            'childrenSlug': {'$setUnion': [{'$ifNull': ['$childrenSlug', []]}, temp['children']]},
-                            'parentsSlug': {'$setUnion': [{'$ifNull':['$parentsSlug', []]}, temp['parents']]}, 
-                            'parents': 1,
-                            'children': 1,
-                            'slug': 1,
-                            'createdAt': {'$ifNull': ['$createdAt', updatedAt]},
-                            'updatedAt': updatedAt
-                        }}], upsert=True)
+                    mongo_client[topic_database_name][topic_collection_name]\
+                        .update_one(
+                            {
+                                'slug': temp['slug']
+                            }, [{
+                                '$project': {
+                                    'childrenSlug': {'$setUnion': [{'$ifNull': ['$childrenSlug', []]}, temp['children']]},
+                                    'parentsSlug': {'$setUnion': [{'$ifNull':['$parentsSlug', []]}, temp['parents']]}, 
+                                    'parents': 1,
+                                    'children': 1,
+                                    'slug': 1,
+                                    'createdAt': {'$ifNull': ['$createdAt', updatedAt]},
+                                    'updatedAt': updatedAt
+                                }}], 
+                            upsert=True)
 
-            # case: non-hiearachy    
+            # case: non-hiearachy  
+            # If we only have 1 return category from Google API  
             else:
 
-                temp = {'slug': topics[index]}
+                temp = {
+                    'slug': topics[index]
+                    }
 
-                mongo_client[topic_database_name][topic_collection_name].update_one({'slug': temp['slug']}, [{'$project': {
+                mongo_client[topic_database_name][topic_collection_name]\
+                    .update_one({'slug': temp['slug']}, [{'$project': {
                     'slug': 1, 
                     'parents': 1,
                     'children': 1,
@@ -446,10 +619,13 @@ def upsert_to_topics(topics_list,
         # perform mapping object ids
         mongo_client[topic_database_name][topic_collection_name].aggregate(objectidMappingCursor)
 
+    elif 'categories' not in topics_list:
+        print("[Warnning] No Categories in 'topics_list'")
+
     return None
 
 # define mapping content id with topic id then upsert to 'contentTopics'
-def upsert_topics_to_contents(topics_list,
+def upsert_topicId_to_contentinfo(topics_list,
                               topic_database_name: str, 
                               topic_collection_name: str,
                               contents_database_name: str,
@@ -459,12 +635,25 @@ def upsert_topics_to_contents(topics_list,
     upsert topic object IDs and language to database,
         - if topic is detected, finds correspond object ID then insert into database
         - insert language to the same database
+    input:
+        topics_list: dict
+            {
+                '_id': ObjectId('id'), 
+                'language': 'en', 
+                'categories': [
+                    'finance', 'investing', 'currencies-and-foreign-exchange'
+                    ], 
+                'confidence': 0.8999999761581421, 
+                'updatedAt': Timestamp('2022-02-10 06:03:33.682000+0000', tz='tzlocal()')
+            }
     '''
 
     # assign fields to variables
     _id = topics_list['_id']
-    
+    translatedEN = topics_list.get('translatedEN', None)
+
     # check topic existence
+    # mostly english language
     if 'categories' in topics_list:
         
         language = topics_list['language']
@@ -484,8 +673,10 @@ def upsert_topics_to_contents(topics_list,
                                     '$set': {
                                         'contentId': _id,
                                         'language': language,
-                                        'topics': topic_ids
-                                    }}], upsert=True) # change to True when using contents
+                                        'topics': topic_ids,
+                                        'translatedEN': translatedEN
+                                    }}], 
+                                    upsert=True) # change to True when using contents
         
     # case get language but not categories
     elif 'language' in topics_list:
@@ -497,7 +688,9 @@ def upsert_topics_to_contents(topics_list,
                                             '$set': {
                                                 'contentId': _id,
                                                 'language': language,
-                                            }}], upsert=True) # change to True when using contents
+                                                'translatedEN': translatedEN
+                                            }}], 
+                                            upsert=True) # change to True when using contents
     
     return None
 
@@ -529,7 +722,7 @@ def topic_classify_main(event,
     logging.debug('debug 2')
     
     ## perform category labeling
-    topics_list = get_topic_document(reformatted_dataframe)
+    topics_list = message_classify(reformatted_dataframe)
 
     print('topics is:', topics_list) #!! checkpoint
     
@@ -537,7 +730,7 @@ def topic_classify_main(event,
     logging.debug('debug 3')
     
     ## perform upsert category to 'topics' master collection
-    upsert_to_topics(topics_list, 
+    upsert_topic_to_topics(topics_list, 
                     topic_database_name=topic_database_name, 
                     topic_collection_name=topic_collection_name)
 
@@ -546,7 +739,7 @@ def topic_classify_main(event,
     logging.debug('debug 4')
 
     ## update original content by adding 'topics' field 
-    upsert_topics_to_contents(topics_list,
+    upsert_topicId_to_contentinfo(topics_list,
                               topic_database_name=topic_database_name,
                               topic_collection_name=topic_collection_name,
                               contents_database_name=contents_database_name,
