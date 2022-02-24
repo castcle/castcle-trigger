@@ -1,4 +1,4 @@
-def hashtag_remover(text: str):
+def hashtags_remover(text: str):
     """
     Remove hashtag from raw content
     """
