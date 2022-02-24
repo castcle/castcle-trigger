@@ -101,6 +101,13 @@ def lang_detect(text: str):
 # TH detector
 def gcld(text: str):
     import gcld3
+    from utils.url_remover import url_remover
+    from utils.hashtags_remover import hashtag_remover
+
+    # cleansing url
+    text = url_remover(text)
+    # cleansing hashtags
+    text = hashtag_remover(text)
     
     detector = gcld3.NNetLanguageIdentifier(min_num_bytes=10, max_num_bytes=1000)
     results = detector.FindLanguage(text=text)
