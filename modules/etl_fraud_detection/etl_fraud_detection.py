@@ -1,26 +1,12 @@
-import os
-import pymongo
+def etl_fraud_detection_main(mongo_client,
+                             source_db: str = "app-db",
+                             source_collection: str = "feeditems",
+                             target_db: str = "analytics-db",
+                             target_collection: str = "credentialfeatures",
+                             user_column: str = "seenCredential",
+                             document_limit: int = 500,
+                             document_threshold: int = 500) -> None:
 
-# from mongo_client import mongo_client
-
-
-def extract_features(source_db: str = "app-db",
-                     source_collection: str = "feeditems",
-                     target_db: str = "analytics-db",
-                     target_collection: str = "credentialfeatures",
-                     user_column: str = "seenCredential",
-                     document_limit: int = 500,
-                     document_threshold: int = 500) -> None:
-
-    # source_db = os.environ.get("SOURCE_DB", "app-db")
-    # source_collection = os.environ.get("SOURCE_COLLECTION", "feeditems")
-    # target_db = os.environ.get("TARGET_DB", "analytics-db")
-    # target_collection = os.environ.get("TARGET_COLLECTION", "credentialfeatures")
-    # user_column = os.environ.get("USER_COLUMN", "seenCredential")
-    # document_limit = os.environ.get("DOCUMENT_LIMIT", 500)
-    # document_threshold = os.environ.get("DOCUMENT_THRESHOLD", 500)
-
-    mongo_client = pymongo.MongoClient(os.environ.get("MONGO_URI"))
     result = mongo_client[source_db][source_collection].aggregate([
         {
             '$match': {
