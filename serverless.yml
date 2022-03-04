@@ -176,3 +176,15 @@ functions:
         - per_ct_trainer.handle
     events:
       - schedule: cron(0 7 * * ? *)
+
+  userEngagementStatUpdate:
+    name: ${self:provider.stage}-mongodb-trigger-user-engagement-stat-update
+    warmup:
+      default:
+        enabled: false
+    image:
+      name: app_image
+      command:
+        - user_engagement_stats_update.handle
+    events:
+      - schedule: cron(22 * * * ? *)
