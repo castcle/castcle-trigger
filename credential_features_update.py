@@ -2,7 +2,7 @@
 credential features update
 function
     update features of credential then insert into database if this update operation does not match
-    every cron(5 * * * * *)
+    every cron (*/5 * * * *)
 """
 
 from mongo_client import mongo_client, ping_mongodb
