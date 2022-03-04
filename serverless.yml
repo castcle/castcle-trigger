@@ -188,3 +188,15 @@ functions:
         - user_engagement_stats_update.handle
     events:
       - schedule: cron(22 * * * ? *)
+
+  credentialFeaturesUpdate:
+    name: ${self:provider.stage}-mongodb-trigger-credential-features-update
+    warmup:
+      default:
+        enabled: false
+    image:
+      name: app_image
+      command:
+        - credential_features_update.handle
+    events:
+      - schedule: cron(*/5 * * * ? *)
