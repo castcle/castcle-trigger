@@ -93,6 +93,7 @@ def user_classify_trainer_main(mongo_client):
         no_id=False)
 
     # 3. transform data
+    new_user_engagement_stats_df = transform_data(user_engagement_stats_df, topics_df)
 
 
-    return user_engagement_stats_df, topics_df
+    return new_user_engagement_stats_df
