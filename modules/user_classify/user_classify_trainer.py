@@ -116,7 +116,31 @@ def preprocessing(df: pd.DataFrame):
     for column in preprocessing_columns:
         df = flatten_json_like_data(df, column)
 
+    # drop userId column
+    df = df.drop(['userId'], axis=1, errors='ignore')
+
     return df
+
+def trainning_model(ready_df: pd.DataFrame, **kwargs):
+    """
+    Training Model : 
+        K-Means Clustering
+    """
+    model_name = kwargs.get('model_name', None).lower()
+
+    if model_name is None:
+        raise ValueError("model_name not specified")
+    
+    if model_name in ['kmeans', 'kmean']:
+
+        # checking
+        n_clusters = kwargs.get('n_clusters', 7)
+
+        from kmeans import KmeansClusteringModel
+        model = KmeansClusteringModel(ready_df, n_clusters=n_clusters)
+        model.fit(ready_df)
+
+        return model
 
 def user_classify_trainer_main(mongo_client):
 
@@ -137,4 +161,15 @@ def user_classify_trainer_main(mongo_client):
     # 4. Preprocessing
     preprocessed_df = preprocessing(new_user_engagement_stats_df)
 
-    return preprocessed_df
+    # 5. Training Model
+    model_config = {
+        'model_name': 'kmeans',
+        'n_clusters': 10
+    }
+    model = trainning_model(preprocessed_df, 
+            model_name=model_config['model_name'], 
+            n_clusters=model_config['n_clusters'])
+
+    # 6. Save model artifact to mongodb
+
+    return model
