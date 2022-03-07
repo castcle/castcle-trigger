@@ -5,7 +5,7 @@ from sklearn.metrics import classification_report
 from sklearn.model_selection import StratifiedShuffleSplit
 from typing import Dict, List, Union
 
-from models import OneClassClassifierBasedOnPCA
+from modules.fraud_detection_model_training.models import OneClassClassifierBasedOnPCA
 
 
 def evaluate_model(y_true: pd.Series,
@@ -34,13 +34,13 @@ def evaluate_model(y_true: pd.Series,
     return formatted_report
 
 
-def fraud_detection_trainer_main(mongo_client,
-                                 features: List,
-                                 source_db: str = "analytics-db",
-                                 source_collection: str = "credentialfeatures",
-                                 target_db: str = "analytics-db",
-                                 target_collection: str = "frauddetectionmlartifacts",
-                                 document_limit: int = 10000) -> None:
+def fraud_detection_model_training_main(mongo_client,
+                                        features: List,
+                                        source_db: str = "analytics-db",
+                                        source_collection: str = "credentialfeatures",
+                                        target_db: str = "analytics-db",
+                                        target_collection: str = "frauddetectionmlartifacts",
+                                        document_limit: int = 10000) -> None:
 
     fields = features + ["verificationStatus", "verifiedAt"]
     result = mongo_client[source_db][source_collection].aggregate([
