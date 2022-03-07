@@ -1,3 +1,3 @@
-from one_class_classifier_based_on_pca import OneClassClassifierBasedOnPCA
+from modules.fraud_detection_model_training.models.one_class_classifier_based_on_pca import OneClassClassifierBasedOnPCA
 
 __all__ = [OneClassClassifierBasedOnPCA]
