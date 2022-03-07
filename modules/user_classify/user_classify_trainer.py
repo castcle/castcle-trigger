@@ -35,16 +35,18 @@ def transform_data(user_engagement_stats_df: pd.DataFrame,
         """
         padding topics id if topicsId are not full
         """
-        pad_columns = ['countCommentContentTopic', 'countLikeContentTopic', 
+        pad_columns = {'countCommentContentTopic', 'countLikeContentTopic', 
                 'countQuoteContentTopic', 'countRecastContentTopic', 
-                'countReportContentTopic']
+                'countReportContentTopic'}
         # Temp dataframe
         new_user_engagement_stats_df = user_engagement_stats_df[pad_columns]
-        # Validate
-        if pad_columns in user_engagement_stats_df.columns:
+        # Validation
+        columns_name_set = set(user_engagement_stats_df.columns)
+        if pad_columns.issubset(columns_name_set):
             for countEngagementTypeTopic in pad_columns:
                 new_rows_countEngagementTypeTopic = []
-                for row_userCountEagement in user_engagement_stats_df[countEngagementTypeTopic]:
+                for row_index, row_userCountEagement in enumerate(user_engagement_stats_df[countEngagementTypeTopic]):
+                    print(user_engagement_stats_df[countEngagementTypeTopic].loc[row_index])
                     # case full padding
                     if len(row_userCountEagement) <= 0:
                         full_padding_user_count_engagement = dict.fromkeys(topics_df['_id'], 0)
@@ -52,7 +54,7 @@ def transform_data(user_engagement_stats_df: pd.DataFrame,
                     else:
                         full_padding_user_count_engagement = {}
                         existing_topicsId = user_engagement_stats_df\
-                            [countEngagementTypeTopic][row_userCountEagement]\
+                            [countEngagementTypeTopic].loc(row_index)\
                                 .keys()
                         for _id in topics_df['_id']:
                             if _id not in existing_topicsId:
