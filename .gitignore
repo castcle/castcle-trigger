@@ -132,3 +132,6 @@ dmypy.json
 node_modules/
 
 images
+
+# PyCharm
+.idea/
