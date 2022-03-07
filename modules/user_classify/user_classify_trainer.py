@@ -22,6 +22,8 @@ def query_data_to_df(mongo_client,
     if no_id:
         if '_id' in df.columns:
             del df['_id']
+    else:
+        df['_id'] = df['_id'].astype('str')
 
     return df
 
