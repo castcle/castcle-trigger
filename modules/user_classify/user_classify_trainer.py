@@ -84,6 +84,38 @@ def transform_data(user_engagement_stats_df: pd.DataFrame,
 
     return transformed_user_engagement_stats_df
 
+def preprocessing(df: pd.DataFrame):
+    """
+    Preprocessing DataFrame before inject into ML Modeling
+    """
+    def flatten_json_like_data(df: pd.DataFrame, source_col: str) -> pd.DataFrame:
+        """
+        Flattening values in JSON format to DataFrame columns
+        """
+        new_df = df.copy()
+        A = pd.json_normalize(df[source_col]).add_prefix(source_col+'.')
+        new_df = pd.concat([new_df, A], axis=1)
+        new_df.drop(columns=[source_col], axis=1, inplace=True)
+
+        # fill na
+        new_df.fillna(0)
+        
+        return new_df
+
+    preprocessing_columns = {
+        'countCommentContentTopic', 'countLikeContentTopic', 
+        'countQuoteContentTopic', 'countRecastContentTopic', 
+        'countReportContentTopic'
+    }
+
+    # pre dropping column
+    df = df.drop(['timestamp'], axis=1, errors='ignore')
+
+    for column in preprocessing_columns:
+        df = flatten_json_like_data(df, column)
+
+    return df
+
 def user_classify_trainer_main(mongo_client):
 
     # 1. get data from main collection
@@ -100,5 +132,7 @@ def user_classify_trainer_main(mongo_client):
     # 3. transform data
     new_user_engagement_stats_df = transform_data(user_engagement_stats_df, topics_df)
 
+    # 4. Preprocessing
+    preprocessed_df = preprocessing(new_user_engagement_stats_df)
 
-    return new_user_engagement_stats_df
+    return preprocessed_df
