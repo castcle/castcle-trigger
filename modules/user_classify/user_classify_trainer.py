@@ -142,6 +142,20 @@ def trainning_model(ready_df: pd.DataFrame, **kwargs):
 
         return model
 
+def saving_model(model) -> str:
+    """
+    Saving model object with pickle to MongoDB
+        by userId
+    """
+    import pickle
+    pickle_model = pickle.dumps(model)
+
+    document = collection_obj.update_one(
+        
+    )
+
+    return
+
 def user_classify_trainer_main(mongo_client):
 
     # 1. get data from main collection
