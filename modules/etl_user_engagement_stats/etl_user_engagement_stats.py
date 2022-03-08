@@ -149,11 +149,17 @@ def restructure_userEngagementStats(mongo_cursor):
 def loading(mongo_client, array_of_document: list,
         trgt_db_name: str='analytics-db', trgt_collection_name: str='userEngagementStats'):
     f"""
-    Load data into mongoDB
+    FullLoad data into mongoDB
     target database name: {trgt_db_name}
     target collection name: {trgt_collection_name}
     """
 
+    # 1. delete all documents
+    mongo_client[trgt_db_name][trgt_collection_name].delete_many(
+        {}
+    )
+
+    # 2. insert all documents
     mongo_client[trgt_db_name][trgt_collection_name].insert_many(array_of_document)
     print('[INFO] Load to mongodb successfully')
 
