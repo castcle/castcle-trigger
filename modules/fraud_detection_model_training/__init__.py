@@ -1,0 +1,3 @@
+from modules.fraud_detection_model_training.fraud_detection_model_training import fraud_detection_model_training_main
+
+__all__ = [fraud_detection_model_training_main]
