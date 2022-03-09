@@ -61,6 +61,11 @@ custom:
     test: 619b653f5eed5334ed0cf454
     staging: 6197e7e47c52acf715643c77
     prod: 619b67a86d52a17958345276
+  fraudDetectionPredictorEventBus:
+    dev: 6228b16dbcaa3d5df477c93b
+    #staging:
+    #prod:
+  
 
 provider:
   name: aws
