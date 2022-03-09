@@ -65,8 +65,14 @@ custom:
     dev: 6228b16dbcaa3d5df477c93b
     #staging:
     #prod:
-  
-
+  fraudDetectionModelTrainerEventBus:
+    dev: 6228b2f596fad6dccc081553
+    #staging:
+    #prod:
+  fraudDetectionFeatureUpdaterEventBus:
+    dev: 6228b3ca4e04ec74ccabf5cf
+    #staging:
+    #prod:
 provider:
   name: aws
   lambdaHashingVersion: 20201221
@@ -221,7 +227,7 @@ functions:
 
   fraudDetectionPredictor:
     name: ${self:provider.stage}-mongodb-trigger-fraud-detection-predictor
-    memorySize: 1024
+    memorySize: 512
     warmup:
       default:
         enabled: false
@@ -232,6 +238,40 @@ functions:
     events:
       - eventBridge:
           eventBus: arn:aws:events:us-east-1:044086777883:event-bus/aws.partner/mongodb.com/stitch.trigger/${self:custom.fraudDetectionPredictorEventBus.${self:provider.stage}}
+          pattern:
+            account:
+              - "044086777883"
+
+  fraudDetectionModelTrainer:
+    name: ${self:provider.stage}-mongodb-trigger-fraud-detection-model-trainer
+    memorySize: 512
+    warmup:
+      default:
+        enabled: false
+    image:
+      name: app_image
+      command:
+        - fraud_detection_model_trainer.handle
+    events:
+      - eventBridge:
+          eventBus: arn:aws:events:us-east-1:044086777883:event-bus/aws.partner/mongodb.com/stitch.trigger/${self:custom.fraudDetectionModelTrainerEventBus.${self:provider.stage}}
+          pattern:
+            account:
+              - "044086777883"
+
+  fraudDetectionFeatureUpdate:
+    name: ${self:provider.stage}-mongodb-trigger-fraud-detection-feature-updater
+    memorySize: 512
+    warmup:
+      default:
+        enabled: false
+    image:
+      name: app_image
+      command:
+        - fraud_detection_feature_updater.handle
+    events:
+      - eventBridge:
+          eventBus: arn:aws:events:us-east-1:044086777883:event-bus/aws.partner/mongodb.com/stitch.trigger/${self:custom.fraudDetectionFeatureUpdaterEventBus.${self:provider.stage}}
           pattern:
             account:
               - "044086777883"
