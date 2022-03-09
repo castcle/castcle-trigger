@@ -199,5 +199,9 @@ def user_classify_trainer_main(mongo_client):
             n_clusters=model_config['n_clusters'])
 
     # 6. Save model artifact to mongodb
+    saving_model(mongo_client=mongo_client, model=model, 
+        model_name=model_config['model_name'])
 
-    return model
+    return {
+        "message": "Success"
+    }
