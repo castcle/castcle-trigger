@@ -142,19 +142,33 @@ def trainning_model(ready_df: pd.DataFrame, **kwargs):
 
         return model
 
-def saving_model(model) -> str:
+def saving_model(mongo_client, model, model_name,
+    db_nm: str='analytics-db', coll_nm: str='mlArtifacts_userClassify'):
     """
     Saving model object with pickle to MongoDB
         by userId
     """
     import pickle
+    from datetime import datetime
     pickle_model = pickle.dumps(model)
 
+    collection_obj = mongo_client[db_nm][coll_nm]
+
     document = collection_obj.update_one(
-        
+        {
+            'model': model_name
+        }, {
+            '$set': {
+                'model': model_name,
+                'artifact': pickle_model,
+                'trainedAt': datetime.now()
+            }
+        }, upsert= True
     )
 
-    return
+    print('[INFO] Saving model successfully')
+
+    return None
 
 def user_classify_trainer_main(mongo_client):
 
