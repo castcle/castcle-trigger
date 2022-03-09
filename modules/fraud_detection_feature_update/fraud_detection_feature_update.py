@@ -49,3 +49,5 @@ def fraud_detection_feature_update_main(mongo_client,
                 "_id": document["_id"]
             }
         )
+        import time
+        time.sleep(0.01)
