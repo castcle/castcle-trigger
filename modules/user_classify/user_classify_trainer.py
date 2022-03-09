@@ -132,7 +132,10 @@ def trainning_model(ready_df: pd.DataFrame, **kwargs):
         raise ValueError("model_name not specified")
     
     if model_name in ['kmeans', 'kmean']:
-
+        # fix cannot call module
+        import sys
+        sys.path.append(".")
+        
         # checking
         n_clusters = kwargs.get('n_clusters', 7)
 
