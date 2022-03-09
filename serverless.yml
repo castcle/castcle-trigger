@@ -189,6 +189,18 @@ functions:
     events:
       - schedule: cron(22 * * * ? *)
 
+  userClassifyTrainer:
+    name: ${self:provider.stage}-mongodb-trigger-user-classify-trainer
+    warmup:
+      default:
+        enabled: false
+    image:
+      name: app_image
+      command:
+        - user_classify_trainer.handle
+    events:
+      - schedule: cron(0 * * * ? *)
+
   credentialFeaturesUpdate:
     name: ${self:provider.stage}-mongodb-trigger-credential-features-update
     warmup:
