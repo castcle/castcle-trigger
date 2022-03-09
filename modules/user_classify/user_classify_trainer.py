@@ -133,13 +133,13 @@ def trainning_model(ready_df: pd.DataFrame, **kwargs):
     
     if model_name in ['kmeans', 'kmean']:
         # fix cannot call module
-        import sys
-        sys.path.append(".")
+#        import sys
+#        sys.path.append(".")
         
         # checking
         n_clusters = kwargs.get('n_clusters', 7)
 
-        from kmeans import KmeansClusteringModel
+        from .kmeans import KmeansClusteringModel
         model = KmeansClusteringModel(ready_df, n_clusters=n_clusters)
         model.fit(ready_df)
 
