@@ -780,3 +780,5 @@ def etl_fraud_detection_main(mongo_client,
             },
             upsert=True
         )
+        import time
+        time.sleep(0.01)
