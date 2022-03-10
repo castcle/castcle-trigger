@@ -13,7 +13,7 @@ def handle(event, context):
         print("WarmUp - Lambda is warm!")
         return
 
-    from modules.user_classify.user_classify_trainer import user_classify_trainer_main
+    from modules.user_classify.user_classify_trainer_pred import user_classify_trainer_main
     
     print(json.dumps(event, indent=4))
     print(event)
