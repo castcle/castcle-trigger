@@ -202,7 +202,7 @@ def saving_prediction_result(mongo_client, result_df: pd.DataFrame,
 
         document = collection_obj.update_one(
             {
-                'model': model_name
+                'userId': ObjectId(userId)
             }, {
                 '$set': {
                     'model': model_name,
