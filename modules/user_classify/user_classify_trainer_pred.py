@@ -2,6 +2,7 @@
 #Author: Atitawat Pol-in
 #Version: 1.0.0
 import pandas as pd
+from bson.objectid import ObjectId
 
 def query_data_to_df(mongo_client, 
         src_database_name: str='analytics-db', src_collection_name: str='userEngagementStats',
@@ -170,6 +171,52 @@ def saving_model(mongo_client, model, model_name,
 
     return None
 
+def predict(fitted_model, data_df: pd.DataFrame):
+    """
+    Kmeans predict to data
+    input:
+        1. fitted model from kmeans
+        2. dataframe contains user_id
+    """
+
+    kmeans_class = fitted_model.labels_
+    userid_df = data_df[['userId']]
+    kmeans_class_row = len(kmeans_class)
+    userid_df_row = data_df.shape[0]
+
+    if kmeans_class_row == userid_df_row:
+        userid_df['class'] = kmeans_class
+    return userid_df
+
+def saving_prediction_result(mongo_client, result_df: pd.DataFrame, 
+    model_name: str, db_nm: str='analytics-db', coll_nm: str='userClustered'):
+    """
+    Saving result of model preduction
+    """
+    from datetime import datetime
+    collection_obj = mongo_client[db_nm][coll_nm]
+
+    for index, row in result_df.iterrows():
+        userId = row['userId']
+        user_class = row['class']
+
+        document = collection_obj.update_one(
+            {
+                'model': model_name
+            }, {
+                '$set': {
+                    'model': model_name,
+                    'userId': ObjectId(userId),
+                    'user_class': user_class,
+                    'predictedAt': datetime.now()
+                }
+            }, upsert= True
+        )
+
+    print('[INFO] prediction result saved successfully')
+
+    return None
+
 def user_classify_trainer_main(mongo_client):
 
     # 1. get data from main collection
@@ -192,7 +239,7 @@ def user_classify_trainer_main(mongo_client):
     # 5. Training Model
     model_config = {
         'model_name': 'kmeans',
-        'n_clusters': 10
+        'n_clusters': 7
     }
     model = trainning_model(preprocessed_df, 
             model_name=model_config['model_name'], 
@@ -201,6 +248,13 @@ def user_classify_trainer_main(mongo_client):
     # 6. Save model artifact to mongodb
     saving_model(mongo_client=mongo_client, model=model, 
         model_name=model_config['model_name'])
+
+    # 7. predict
+    result_df = predict(model, new_user_engagement_stats_df)
+
+    # 8. save cluster result
+    saving_prediction_result(mongo_client=mongo_client, result_df=result_df, 
+    model_name=model_config['model_name'])
 
     return {
         "message": "Success"
