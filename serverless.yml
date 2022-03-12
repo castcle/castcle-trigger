@@ -213,15 +213,15 @@ functions:
       - schedule: cron(0 * * * ? *)
 
 #fraudDetection
-  credentialFeaturesUpdate:
-    name: ${self:provider.stage}-mongodb-trigger-credential-features-update
+  fraudDetectionFeatureExtractor:
+    name: ${self:provider.stage}-mongodb-trigger-fraud-features-extractor
     warmup:
       default:
         enabled: false
     image:
       name: app_image
       command:
-        - credential_features_update.handle
+        - fraud_detection_feature_extractor.handle
     events:
       - schedule: cron(*/5 * * * ? *)
 
@@ -236,11 +236,7 @@ functions:
       command:
         - fraud_detection_predictor.handle
     events:
-      - eventBridge:
-          eventBus: arn:aws:events:us-east-1:044086777883:event-bus/aws.partner/mongodb.com/stitch.trigger/${self:custom.fraudDetectionPredictorEventBus.${self:provider.stage}}
-          pattern:
-            account:
-              - "044086777883"
+      - schedule: cron(*/1 * * * ? *)
 
   fraudDetectionModelTrainer:
     name: ${self:provider.stage}-mongodb-trigger-fraud-detection-model-trainer
@@ -253,11 +249,7 @@ functions:
       command:
         - fraud_detection_model_trainer.handle
     events:
-      - eventBridge:
-          eventBus: arn:aws:events:us-east-1:044086777883:event-bus/aws.partner/mongodb.com/stitch.trigger/${self:custom.fraudDetectionModelTrainerEventBus.${self:provider.stage}}
-          pattern:
-            account:
-              - "044086777883"
+      - schedule: cron(*/1 * * * ? *)
 
   fraudDetectionFeatureUpdate:
     name: ${self:provider.stage}-mongodb-trigger-fraud-detection-feature-updater
@@ -270,8 +262,4 @@ functions:
       command:
         - fraud_detection_feature_updater.handle
     events:
-      - eventBridge:
-          eventBus: arn:aws:events:us-east-1:044086777883:event-bus/aws.partner/mongodb.com/stitch.trigger/${self:custom.fraudDetectionFeatureUpdaterEventBus.${self:provider.stage}}
-          pattern:
-            account:
-              - "044086777883"
+      - schedule: cron(*/1 * * * ? *)
