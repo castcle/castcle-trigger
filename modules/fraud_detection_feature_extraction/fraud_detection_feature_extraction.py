@@ -1,12 +1,11 @@
-def etl_fraud_detection_main(mongo_client,
-                             source_db: str = "app-db",
-                             source_collection: str = "feeditems",
-                             target_db: str = "analytics-db",
-                             target_collection: str = "credentialfeatures",
-                             user_column: str = "seenCredential",
-                             document_limit: int = 500,
-                             document_threshold: int = 500) -> None:
-
+def fraud_detection_feature_extraction_main(mongo_client,
+                                            source_db: str = "app-db",
+                                            source_collection: str = "feeditems",
+                                            target_db: str = "analytics-db",
+                                            target_collection: str = "credentialfeatures",
+                                            user_column: str = "seenCredential",
+                                            document_limit: int = 500,
+                                            document_threshold: int = 500) -> None:
     result = mongo_client[source_db][source_collection].aggregate([
         {
             '$match': {
@@ -780,5 +779,3 @@ def etl_fraud_detection_main(mongo_client,
             },
             upsert=True
         )
-        import time
-        time.sleep(0.01)

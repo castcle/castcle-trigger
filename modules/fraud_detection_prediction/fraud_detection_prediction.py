@@ -176,5 +176,3 @@ def fraud_detection_prediction_main(mongo_client,
                     },
                     upsert=True
                 )
-                import time
-                time.sleep(0.01)

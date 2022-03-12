@@ -3,7 +3,7 @@ fraud detection model trainer
 function
     train a fraud detection model using the features of verified documents from the credentialfeatures
     and save it to the frauddetectionmlartifacts
-    run if any document from the credentialfeatures is verified (verificationStatus & verifiedAt exist in the document)
+    run every minute cron(*/1 * * * ? *)
 """
 
 from mongo_client import mongo_client, ping_mongodb

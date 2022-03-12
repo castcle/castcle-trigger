@@ -41,7 +41,6 @@ def fraud_detection_model_training_main(mongo_client,
                                         target_db: str = "analytics-db",
                                         target_collection: str = "frauddetectionmlartifacts",
                                         document_limit: int = 10000) -> None:
-
     fields = features + ["verificationStatus", "verifiedAt"]
     result = mongo_client[source_db][source_collection].aggregate([
         {
