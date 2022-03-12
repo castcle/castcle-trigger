@@ -6,7 +6,10 @@ def fraud_detection_feature_extraction_main(mongo_client,
                                             user_column: str = "seenCredential",
                                             document_limit: int = 500,
                                             document_threshold: int = 500) -> None:
+    """Extract features from historical activities of each user"""
+    # 1. extract and transform data
     result = mongo_client[source_db][source_collection].aggregate([
+        # select documents which have {user_column}, seenAt, and offScreenAt
         {
             '$match': {
                 f'{user_column}': {
@@ -19,12 +22,16 @@ def fraud_detection_feature_extraction_main(mongo_client,
                     '$exists': True
                 }
             }
-        }, {
+        },
+        # sort documents by {user_column} and seenAt
+        {
             '$sort': {
                 f'{user_column}': 1,
                 'seenAt': 1
             }
-        }, {
+        },
+        # calculate postReadingTimeSec for each document
+        {
             '$addFields': {
                 'postReadingTimeSec': {
                     '$divide': [
@@ -36,7 +43,9 @@ def fraud_detection_feature_extraction_main(mongo_client,
                     ]
                 }
             }
-        }, {
+        },
+        # calculate postReadingTimeDifferenceSec for each document
+        {
             '$group': {
                 '_id': f'${user_column}',
                 'documents': {
@@ -93,7 +102,10 @@ def fraud_detection_feature_extraction_main(mongo_client,
             }
         }, {
             '$unset': 'prevSeenAt'
-        }, {
+        },
+        # select only documents which have valid postReadingTimeSec (not-negative and not-null) and
+        # valid postReadingTimeDifferenceSec (not-null and already not-negative by the sorting before)
+        {
             '$match': {
                 'postReadingTimeSec': {
                     '$gte': 0
@@ -110,7 +122,9 @@ def fraud_detection_feature_extraction_main(mongo_client,
                     '$ne': None
                 }
             }
-        }, {
+        },
+        # select only the last N documents for each {user_column} but not below the threshold
+        {
             '$group': {
                 '_id': f'${user_column}',
                 'documents': {
@@ -119,7 +133,7 @@ def fraud_detection_feature_extraction_main(mongo_client,
             }
         }, {
             '$project': {
-                'last_500': {
+                'lastNDocs': {
                     '$slice': [
                         '$documents', -document_limit
                     ]
@@ -130,20 +144,22 @@ def fraud_detection_feature_extraction_main(mongo_client,
                 '$expr': {
                     '$gte': [
                         {
-                            '$size': '$last_500'
+                            '$size': '$lastNDocs'
                         }, document_threshold
                     ]
                 }
             }
         }, {
             '$unwind': {
-                'path': '$last_500'
+                'path': '$lastNDocs'
             }
         }, {
             '$replaceRoot': {
-                'newRoot': '$last_500'
+                'newRoot': '$lastNDocs'
             }
-        }, {
+        },
+        # select columns
+        {
             '$project': {
                 f'{user_column}': 1,
                 'seenAt': 1,
@@ -152,12 +168,19 @@ def fraud_detection_feature_extraction_main(mongo_client,
                 'postReadingTimeDifferenceSec': 1,
                 '_id': 0
             }
-        }, {
+        },
+        # sort documents by {user_column} and postReadingTimeSec
+        {
             '$sort': {
                 f'{user_column}': 1,
                 'postReadingTimeSec': 1
             }
-        }, {
+        },
+        # calculate firstSeenAt, lastSeenAt, count,
+        # postReadingTimeAbsSkew (with 95% of postReadingTime values which are below their 0.95-quantile value),
+        # postReadingTimeAbsKurt (with 95% of postReadingTime values which are below their 0.95-quantile value),
+        # and postReadingTimeNormStd (with 95% of postReadingTime values which are below their 0.95-quantile value)
+        {
             '$group': {
                 '_id': f'${user_column}',
                 'documents': {
@@ -512,12 +535,18 @@ def fraud_detection_feature_extraction_main(mongo_client,
                     }
                 ]
             }
-        }, {
+        },
+        # sort documents by {user_column} and postReadingTimeDifferenceSec
+        {
             '$sort': {
                 f'{user_column}': 1,
                 'postReadingTimeDifferenceSec': 1
             }
-        }, {
+        },
+        # calculate createdAt, updatedAt,
+        # and postReadingTimeDifferenceNormStd (with 95% of postReadingTimeDifference values
+        # which are below their 0.95-quantile value)
+        {
             '$group': {
                 '_id': f'${user_column}',
                 'documents': {
@@ -710,7 +739,11 @@ def fraud_detection_feature_extraction_main(mongo_client,
                 'createdAt': '$$NOW',
                 'updatedAt': '$$NOW'
             }
-        }, {
+        },
+        # select documents which have {user_column}, firstSeenAt, lastSeenAt, count, postReadingTimeAbsSkew,
+        # postReadingTimeAbsKurt, postReadingTimeNormStd, postReadingTimeDifferenceNormStd, createdAt, and updatedAt,
+        # and they are not-null
+        {
             '$match': {
                 f'{user_column}': {
                     '$exists': True,
@@ -753,12 +786,16 @@ def fraud_detection_feature_extraction_main(mongo_client,
                     '$ne': None
                 }
             }
-        }, {
+        },
+        # sort documents by {user_column}
+        {
             '$sort': {
                 f'{user_column}': 1
             }
         }
     ])
+
+    # 2. load data
     for document in result:
         mongo_client[target_db][target_collection].update_one(
             {
