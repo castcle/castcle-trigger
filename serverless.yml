@@ -214,7 +214,7 @@ functions:
 
 #fraudDetection
   fraudDetectionFeatureExtractor:
-    name: ${self:provider.stage}-mongodb-trigger-fraud-features-extractor
+    name: ${self:provider.stage}-mongodb-trigger-fraud-detection-feature-extractor
     warmup:
       default:
         enabled: false
@@ -251,7 +251,7 @@ functions:
     events:
       - schedule: cron(*/1 * * * ? *)
 
-  fraudDetectionFeatureUpdate:
+  fraudDetectionFeatureUpdater:
     name: ${self:provider.stage}-mongodb-trigger-fraud-detection-feature-updater
     memorySize: 512
     warmup:
