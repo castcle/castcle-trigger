@@ -190,7 +190,6 @@ def save_suspicious_data(mongo_client,
         mongo_client[target_db][target_collection].update_one(
             {
                 user_column: document[user_column]
-
             },
             {
                 "$setOnInsert": {
