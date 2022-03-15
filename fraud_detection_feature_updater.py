@@ -3,7 +3,7 @@ fraud detection feature updater
 function
     update verification statuses of the verified suspicious credentials to their features in the credentialfeatures
     for further model retraining
-    run if any document in the suspiciouscredentials is verified by the application
+    run every minute cron(*/1 * * * ? *)
 """
 
 from mongo_client import mongo_client, ping_mongodb

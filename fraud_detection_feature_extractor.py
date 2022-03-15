@@ -1,8 +1,9 @@
 """
-credential features update
+fraud detection feature extractor
 function
-    update features of credential then insert into database if this update operation does not match
-    every cron (*/5 * * * *)
+    extract features from historical activities of each credential then insert into the credentialfeatures
+    and will be used for prediction
+    run every 5 minutes cron(*/5 * * * ? *)
 """
 
 from mongo_client import mongo_client, ping_mongodb
@@ -14,12 +15,12 @@ def handle(event, context):
         print("WarmUp - Lambda is warm!")
         return
 
-    print("etl credential features start")
+    print("fraud detection feature extractor start")
 
     try:
-        from modules.etl_fraud_detection.etl_fraud_detection import etl_fraud_detection_main
+        from modules.fraud_detection_feature_extraction import fraud_detection_feature_extraction_main
 
-        etl_fraud_detection_main(
+        fraud_detection_feature_extraction_main(
             mongo_client,
             source_db="app-db",
             source_collection="feeditems",
@@ -30,6 +31,6 @@ def handle(event, context):
             document_threshold=500
         )
     except Exception as e:
-        print(f"[Exception] {e}")
+        print(f"ERROR: {e}")
 
-    print("etl credential features end")
+    print("fraud detection feature extractor end")

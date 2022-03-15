@@ -3,7 +3,7 @@ import pickle
 from datetime import datetime
 from sklearn.metrics import classification_report
 from sklearn.model_selection import StratifiedShuffleSplit
-from typing import Dict, List, Union
+from typing import Any, Dict, List, Union
 
 from modules.fraud_detection_model_training.models import OneClassClassifierBasedOnPCA
 
@@ -12,7 +12,6 @@ def evaluate_model(y_true: pd.Series,
                    y_pred: pd.Series,
                    labels: List,
                    target_names: List) -> Dict[str, Union[int, float]]:
-
     report = classification_report(
         y_true,
         y_pred,
@@ -34,14 +33,11 @@ def evaluate_model(y_true: pd.Series,
     return formatted_report
 
 
-def fraud_detection_model_training_main(mongo_client,
-                                        features: List,
-                                        source_db: str = "analytics-db",
-                                        source_collection: str = "credentialfeatures",
-                                        target_db: str = "analytics-db",
-                                        target_collection: str = "frauddetectionmlartifacts",
-                                        document_limit: int = 10000) -> None:
-
+def load_dataset(mongo_client,
+                 features: List,
+                 source_db: str = "analytics-db",
+                 source_collection: str = "credentialfeatures",
+                 document_limit: int = 10000) -> pd.DataFrame:
     fields = features + ["verificationStatus", "verifiedAt"]
     result = mongo_client[source_db][source_collection].aggregate([
         {
@@ -58,49 +54,75 @@ def fraud_detection_model_training_main(mongo_client,
             '$limit': document_limit
         }
     ])
-    df = pd.DataFrame(list(result))
-    bot_df = df[df["verificationStatus"] == False]
-    if len(bot_df) >= 5:
-        normal_class_num = 0
-        anomaly_class_num = 1
-        model_class_dict = {
-            normal_class_num: "bot_class",
-            anomaly_class_num: "human_class"
-        }
 
-        doc_ids = df["_id"].to_list()
-        df["isHuman"] = df["verificationStatus"].astype(int)
-        X = df[features]
-        y = df["isHuman"]
-        evaluation_report = []
-        sss = StratifiedShuffleSplit(n_splits=5, train_size=0.8, random_state=0)
-        for train_index, test_index in sss.split(X, y):
-            X_train, X_test = X.loc[train_index], X.loc[test_index]
-            y_train, y_test = y.loc[train_index], y.loc[test_index]
-            X_train_bot = X_train[y_train == normal_class_num]
-            model = OneClassClassifierBasedOnPCA()
-            model.fit(X_train_bot)
-            y_pred = model.predict(X_test)
-            evaluation_report.append(evaluate_model(
-                y_true=y_test,
-                y_pred=y_pred,
-                labels=list(model_class_dict.keys()),
-                target_names=list(model_class_dict.values())
-            ))
-        evaluation_report = pd.DataFrame(evaluation_report).mean().to_dict()
+    return pd.DataFrame(list(result))
 
-        X_bot = X[y == normal_class_num]
+
+def train_model(df: pd.DataFrame, features: List) -> Dict[str, Any]:
+    normal_class_num = 0
+    anomaly_class_num = 1
+    model_class_dict = {
+        normal_class_num: "bot_class",
+        anomaly_class_num: "human_class"
+    }
+    doc_ids = df["_id"].to_list()
+
+    X = df[features]
+    y = df["verificationStatus"].astype(int)
+    evaluation_report = []
+    sss = StratifiedShuffleSplit(n_splits=5, train_size=0.8, random_state=0)
+    for train_index, test_index in sss.split(X, y):
+        X_train, X_test = X.loc[train_index], X.loc[test_index]
+        y_train, y_test = y.loc[train_index], y.loc[test_index]
+        X_train_bot = X_train[y_train == normal_class_num]
         model = OneClassClassifierBasedOnPCA()
-        model.fit(X_bot)
-        pickled_model = pickle.dumps(model)
-        training_datetime = datetime.now()
-        record = {
-            "model": model.model_name,
-            "dataset": doc_ids,
-            "features": features,
-            "model_classes": [(key, value) for key, value in model_class_dict.items()],
-            "artifact": pickled_model,
-            "evaluationReport": evaluation_report,
-            "trainedAt": training_datetime
-        }
-        mongo_client[target_db][target_collection].insert_one(record)
+        model.fit(X_train_bot)
+        y_pred = model.predict(X_test)
+        evaluation_report.append(evaluate_model(
+            y_true=y_test,
+            y_pred=y_pred,
+            labels=list(model_class_dict.keys()),
+            target_names=list(model_class_dict.values())
+        ))
+    evaluation_report = pd.DataFrame(evaluation_report).mean().to_dict()
+
+    X_bot = X[y == normal_class_num]
+    model = OneClassClassifierBasedOnPCA()
+    model.fit(X_bot)
+    pickled_model = pickle.dumps(model)
+    training_datetime = datetime.now()
+
+    return {
+        "model": model.model_name,
+        "dataset": doc_ids,
+        "features": features,
+        "model_classes": [(key, value) for key, value in model_class_dict.items()],
+        "artifact": pickled_model,
+        "evaluationReport": evaluation_report,
+        "trainedAt": training_datetime
+    }
+
+
+def fraud_detection_model_training_main(mongo_client,
+                                        features: List,
+                                        source_db: str = "analytics-db",
+                                        source_collection: str = "credentialfeatures",
+                                        target_db: str = "analytics-db",
+                                        target_collection: str = "frauddetectionmlartifacts",
+                                        document_limit: int = 10000) -> None:
+    """Collect verified documents (dataset) to train a model"""
+    # 1. load a dataset
+    df = load_dataset(
+        mongo_client,
+        features,
+        source_db=source_db,
+        source_collection=source_collection,
+        document_limit=document_limit
+    )
+
+    if len(df[df["verificationStatus"] == False]) >= 5:
+        # 2. train a model
+        training_result = train_model(df, features)
+
+        # 3. save the training result, including the machine learning artifact
+        mongo_client[target_db][target_collection].insert_one(training_result)

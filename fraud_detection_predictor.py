@@ -3,7 +3,7 @@ fraud detection predictor
 function
     use a trained model to predict credentials whether they are bot or not,
     and save the suspicious ones to the suspiciouscredentials
-    run if any document is inserted to the credentialfeatures
+    run every minute cron(*/1 * * * ? *)
 """
 
 from mongo_client import mongo_client, ping_mongodb
