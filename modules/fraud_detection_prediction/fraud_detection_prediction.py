@@ -1,30 +1,28 @@
 import pandas as pd
 import pickle
 from datetime import datetime, timedelta
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Union
 
 
 def load_ml_artifact(mongo_client,
                      artifact_db: str = "analytics-db",
                      artifact_collection: str = "frauddetectionmlartifacts",
-                     model_name: str = "one-class classifier based on PCA") -> Dict[str, Any]:
-    ml_artifact = next(
-        mongo_client[artifact_db][artifact_collection].aggregate([
-            {
-                '$match': {
-                    'model': model_name
-                }
-            }, {
-                '$sort': {
-                    'trainedAt': -1
-                }
-            }, {
-                '$limit': 1
+                     model_name: str = "one-class classifier based on PCA") -> Union[Dict[str, Any], None]:
+    result = mongo_client[artifact_db][artifact_collection].aggregate([
+        {
+            '$match': {
+                'model': model_name
             }
-        ])
-    )
+        }, {
+            '$sort': {
+                'trainedAt': -1
+            }
+        }, {
+            '$limit': 1
+        }
+    ])
 
-    return ml_artifact
+    return next(result, None)
 
 
 def load_unverified_data(mongo_client,
@@ -221,46 +219,47 @@ def fraud_detection_prediction_main(mongo_client,
         model_name=model_name
     )
 
-    # 2. load unverified data
-    unverified_df = load_unverified_data(
-        mongo_client,
-        ml_artifact["features"],
-        source_db=source_db,
-        source_collection=source_collection,
-        user_column=user_column
-    )
-
-    if not unverified_df.empty:
-        # 3. predict suspicious users from unverified data
-        suspicious_df = predict_suspicious_users(
-            unverified_df,
-            ml_artifact,
-            suspicious_class_name="bot_class"
+    if ml_artifact:
+        # 2. load unverified data
+        unverified_df = load_unverified_data(
+            mongo_client,
+            ml_artifact["features"],
+            source_db=source_db,
+            source_collection=source_collection,
+            user_column=user_column
         )
 
-        if not suspicious_df.empty:
-            # 4. load verified data
-            verified_df = load_verified_data(
-                mongo_client,
-                ml_artifact["features"],
-                source_db=source_db,
-                source_collection=source_collection,
-                user_column=user_column
+        if not unverified_df.empty:
+            # 3. predict suspicious users from unverified data
+            suspicious_df = predict_suspicious_users(
+                unverified_df,
+                ml_artifact,
+                suspicious_class_name="bot_class"
             )
 
-            # 5. select only unverified or not on cooldown suspicious users
-            unverified_or_not_on_cooldown_suspicious_df = select_only_unverified_or_not_on_cooldown_suspicious_users(
-                suspicious_df,
-                verified_df,
-                user_column=user_column,
-                pred_cooldown_hours=pred_cooldown_hours
-            )
+            if not suspicious_df.empty:
+                # 4. load verified data
+                verified_df = load_verified_data(
+                    mongo_client,
+                    ml_artifact["features"],
+                    source_db=source_db,
+                    source_collection=source_collection,
+                    user_column=user_column
+                )
 
-            # 6. save suspicious data
-            save_suspicious_data(
-                mongo_client,
-                unverified_or_not_on_cooldown_suspicious_df,
-                target_db=target_db,
-                target_collection=target_collection,
-                user_column=user_column
-            )
+                # 5. select only unverified or not on cooldown suspicious users
+                unverified_or_not_on_cooldown_suspicious_df = select_only_unverified_or_not_on_cooldown_suspicious_users(
+                    suspicious_df,
+                    verified_df,
+                    user_column=user_column,
+                    pred_cooldown_hours=pred_cooldown_hours
+                )
+
+                # 6. save suspicious data
+                save_suspicious_data(
+                    mongo_client,
+                    unverified_or_not_on_cooldown_suspicious_df,
+                    target_db=target_db,
+                    target_collection=target_collection,
+                    user_column=user_column
+                )
