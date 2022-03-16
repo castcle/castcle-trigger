@@ -212,6 +212,21 @@ functions:
     events:
       - schedule: cron(0 * * * ? *)
 
+
+  feedPerformanceMonitorIntf:
+    name: ${self:provider.stage}-mongodb-trigger-feed-performance-monitor-intf
+    warmup:
+      default:
+        enabled: false
+    image:
+      name: app_image
+      command:
+        - feed_performance_monitor_intf.handle
+    events:
+      - schedule: cron(*/5 * * * ? *)
+
+
+
 #fraudDetection
   fraudDetectionFeatureExtractor:
     name: ${self:provider.stage}-mongodb-trigger-fraud-detection-feature-extractor
