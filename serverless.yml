@@ -249,7 +249,7 @@ functions:
       command:
         - fraud_detection_model_trainer.handle
     events:
-      - schedule: cron(*/1 * * * ? *)
+      - schedule: cron(55 * * * ? *)
 
   fraudDetectionFeatureUpdater:
     name: ${self:provider.stage}-mongodb-trigger-fraud-detection-feature-updater
