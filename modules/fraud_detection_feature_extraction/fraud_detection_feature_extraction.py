@@ -797,6 +797,7 @@ def fraud_detection_feature_extraction_main(mongo_client,
 
     # 2. load data
     for document in result:
+        # insert documents dynamically by {user_column}, firstSeenAt, lastSeenAt
         mongo_client[target_db][target_collection].update_one(
             {
                 user_column: document[user_column],
