@@ -8,7 +8,8 @@ def load_ml_artifact(mongo_client,
                      artifact_db: str = "analytics-db",
                      artifact_collection: str = "frauddetectionmlartifacts",
                      model_name: str = "one-class classifier based on PCA") -> Union[Dict[str, Any], None]:
-    result = mongo_client[artifact_db][artifact_collection].aggregate([
+    """Load the latest ML artifact containing a model and metadata"""
+    aggregation_cursor = mongo_client[artifact_db][artifact_collection].aggregate([
         {
             '$match': {
                 'model': model_name
@@ -22,7 +23,7 @@ def load_ml_artifact(mongo_client,
         }
     ])
 
-    return next(result, None)
+    return next(aggregation_cursor, None)
 
 
 def load_unverified_data(mongo_client,
@@ -30,8 +31,10 @@ def load_unverified_data(mongo_client,
                          source_db: str = "analytics-db",
                          source_collection: str = "credentialfeatures",
                          user_column: str = "seenCredential") -> pd.DataFrame:
+    """Load unverified data to predict whether they are a suspicious user to be a bot or not"""
+    # required fields
     fields = [user_column, "firstSeenAt", "lastSeenAt"] + features
-    result = mongo_client[source_db][source_collection].aggregate([
+    aggregation_cursor = mongo_client[source_db][source_collection].aggregate([
         {
             '$match': {
                 field: {
@@ -82,12 +85,13 @@ def load_unverified_data(mongo_client,
         }
     ])
 
-    return pd.DataFrame(list(result))
+    return pd.DataFrame(list(aggregation_cursor))
 
 
 def predict_suspicious_users(df: pd.DataFrame,
                              ml_artifact: Dict[str, Any],
                              suspicious_class_name: str = "bot_class") -> pd.DataFrame:
+    """Predict users whether they are a suspicious one to be a bot or not, and select only suspicious users"""
     model = pickle.loads(ml_artifact["artifact"])
     y_pred = model.predict(df[ml_artifact["features"]])
     model_class_dict = {item[0]: item[1] for item in ml_artifact["model_classes"]}
@@ -101,8 +105,10 @@ def load_verified_data(mongo_client,
                        source_db: str = "analytics-db",
                        source_collection: str = "credentialfeatures",
                        user_column: str = "seenCredential") -> pd.DataFrame:
+    """Load verified data used to select only unverified or not-on-cooldown suspicious users"""
+    # required fields
     fields = [user_column, "firstSeenAt", "lastSeenAt"] + features
-    result = mongo_client[source_db][source_collection].aggregate([
+    aggregation_cursor = mongo_client[source_db][source_collection].aggregate([
         {
             '$match': {
                 **{
@@ -160,14 +166,17 @@ def load_verified_data(mongo_client,
         }
     ])
 
-    return pd.DataFrame(list(result))
+    return pd.DataFrame(list(aggregation_cursor))
 
 
 def select_only_unverified_or_not_on_cooldown_suspicious_users(suspicious_df: pd.DataFrame,
                                                                verified_df: pd.DataFrame,
                                                                user_column: str = "seenCredential",
                                                                pred_cooldown_hours: int = 1) -> pd.DataFrame:
+    """Select only unverified or not-on-cooldown suspicious users by considering verified suspicious users"""
     suspicious_df = pd.merge(suspicious_df, verified_df, on=user_column, how="left")
+    # to check whether the last verification has been done within {pred_cooldown_hours} hour(s) or not, and select only
+    # suspicious users whose last verification occurs more than or equal to {pred_cooldown_hours} hour(s) ago
     suspicious_df["time_diff"] = datetime.now() - suspicious_df["verifiedAt"]
     cooldown_period = timedelta(hours=pred_cooldown_hours)
     suspicious_df = suspicious_df[
@@ -184,7 +193,9 @@ def save_suspicious_data(mongo_client,
                          target_db: str = "app-db",
                          target_collection: str = "suspiciouscredentials",
                          user_column: str = "seenCredential") -> None:
+    """Save the selected suspicious users to the target database and collection waiting for verification"""
     for document in df.to_dict(orient="records"):
+        # insert documents dynamically by {user_column}
         mongo_client[target_db][target_collection].update_one(
             {
                 user_column: document[user_column]
@@ -219,6 +230,7 @@ def fraud_detection_prediction_main(mongo_client,
         model_name=model_name
     )
 
+    # case: no prediction if an ML artifact does not exist
     if ml_artifact:
         # 2. load unverified data
         unverified_df = load_unverified_data(
@@ -229,6 +241,7 @@ def fraud_detection_prediction_main(mongo_client,
             user_column=user_column
         )
 
+        # case: no prediction if the unverified data is empty
         if not unverified_df.empty:
             # 3. predict suspicious users from unverified data
             suspicious_df = predict_suspicious_users(
@@ -237,6 +250,7 @@ def fraud_detection_prediction_main(mongo_client,
                 suspicious_class_name="bot_class"
             )
 
+            # case: do nothing if there is no suspicious user
             if not suspicious_df.empty:
                 # 4. load verified data
                 verified_df = load_verified_data(
@@ -247,7 +261,7 @@ def fraud_detection_prediction_main(mongo_client,
                     user_column=user_column
                 )
 
-                # 5. select only unverified or not on cooldown suspicious users
+                # 5. select only unverified or not-on-cooldown suspicious users
                 unverified_or_not_on_cooldown_suspicious_df = select_only_unverified_or_not_on_cooldown_suspicious_users(
                     suspicious_df,
                     verified_df,

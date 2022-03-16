@@ -9,7 +9,7 @@ def fraud_detection_feature_update_main(mongo_client,
                                         user_column: str = "seenCredential") -> None:
     """Collect verified documents to update features with their verification status"""
     # 1. collect verified documents
-    result = mongo_client[source_db][source_collection].aggregate([
+    aggregation_cursor = mongo_client[source_db][source_collection].aggregate([
         # select documents which have {user_column}, firstSeenAt, lastSeenAt, verificationStatus, and verifiedAt
         {
             '$match': {
@@ -33,7 +33,7 @@ def fraud_detection_feature_update_main(mongo_client,
     ])
 
     # 2. update features with their verification status
-    for document in result:
+    for document in aggregation_cursor:
         # update documents dynamically by {user_column}, firstSeenAt, lastSeenAt
         mongo_client[target_db][target_collection].update_one(
             {
