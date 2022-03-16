@@ -223,7 +223,7 @@ functions:
       command:
         - feed_performance_monitor_intf.handle
     events:
-      - schedule: cron(*/5 * * * ? *)
+      - schedule: cron(0 * * * ? *)
 
 
 
