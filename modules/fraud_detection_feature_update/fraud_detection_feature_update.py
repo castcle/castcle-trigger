@@ -34,6 +34,7 @@ def fraud_detection_feature_update_main(mongo_client,
 
     # 2. update features with their verification status
     for document in result:
+        # update documents dynamically by {user_column}, firstSeenAt, lastSeenAt
         mongo_client[target_db][target_collection].update_one(
             {
                 user_column: document[user_column],
