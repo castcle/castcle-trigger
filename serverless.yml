@@ -61,7 +61,18 @@ custom:
     test: 619b653f5eed5334ed0cf454
     staging: 6197e7e47c52acf715643c77
     prod: 619b67a86d52a17958345276
-
+  fraudDetectionPredictorEventBus:
+    dev: 6228b16dbcaa3d5df477c93b
+    #staging:
+    #prod:
+  fraudDetectionModelTrainerEventBus:
+    dev: 6228b2f596fad6dccc081553
+    #staging:
+    #prod:
+  fraudDetectionFeatureUpdaterEventBus:
+    dev: 6228b3ca4e04ec74ccabf5cf
+    #staging:
+    #prod:
 provider:
   name: aws
   lambdaHashingVersion: 20201221
@@ -176,3 +187,94 @@ functions:
         - per_ct_trainer.handle
     events:
       - schedule: cron(0 7 * * ? *)
+
+  userEngagementStatUpdate:
+    name: ${self:provider.stage}-mongodb-trigger-user-engagement-stat-update
+    warmup:
+      default:
+        enabled: false
+    image:
+      name: app_image
+      command:
+        - user_engagement_stats_update.handle
+    events:
+      - schedule: cron(22 * * * ? *)
+
+  userClassifyTrainer:
+    name: ${self:provider.stage}-mongodb-trigger-user-classify-trainer
+    warmup:
+      default:
+        enabled: false
+    image:
+      name: app_image
+      command:
+        - user_classify_trainer.handle
+    events:
+      - schedule: cron(0 * * * ? *)
+
+
+  feedPerformanceMonitorIntf:
+    name: ${self:provider.stage}-mongodb-trigger-feed-performance-monitor-intf
+    warmup:
+      default:
+        enabled: false
+    image:
+      name: app_image
+      command:
+        - feed_performance_monitor_intf.handle
+    events:
+      - schedule: cron(0 * * * ? *)
+
+
+
+#fraudDetection
+  fraudDetectionFeatureExtractor:
+    name: ${self:provider.stage}-mongodb-trigger-fraud-detection-feature-extractor
+    warmup:
+      default:
+        enabled: false
+    image:
+      name: app_image
+      command:
+        - fraud_detection_feature_extractor.handle
+    events:
+      - schedule: cron(*/5 * * * ? *)
+
+  fraudDetectionPredictor:
+    name: ${self:provider.stage}-mongodb-trigger-fraud-detection-predictor
+    memorySize: 512
+    warmup:
+      default:
+        enabled: false
+    image:
+      name: app_image
+      command:
+        - fraud_detection_predictor.handle
+    events:
+      - schedule: cron(*/1 * * * ? *)
+
+  fraudDetectionModelTrainer:
+    name: ${self:provider.stage}-mongodb-trigger-fraud-detection-model-trainer
+    memorySize: 512
+    warmup:
+      default:
+        enabled: false
+    image:
+      name: app_image
+      command:
+        - fraud_detection_model_trainer.handle
+    events:
+      - schedule: cron(55 * * * ? *)
+
+  fraudDetectionFeatureUpdater:
+    name: ${self:provider.stage}-mongodb-trigger-fraud-detection-feature-updater
+    memorySize: 512
+    warmup:
+      default:
+        enabled: false
+    image:
+      name: app_image
+      command:
+        - fraud_detection_feature_updater.handle
+    events:
+      - schedule: cron(*/1 * * * ? *)
