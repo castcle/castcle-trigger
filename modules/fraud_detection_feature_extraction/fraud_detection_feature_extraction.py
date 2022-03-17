@@ -8,7 +8,7 @@ def fraud_detection_feature_extraction_main(mongo_client,
                                             document_threshold: int = 500) -> None:
     """Extract features from historical activities of each user"""
     # 1. extract and transform data
-    result = mongo_client[source_db][source_collection].aggregate([
+    aggregation_cursor = mongo_client[source_db][source_collection].aggregate([
         # select documents which have {user_column}, seenAt, and offScreenAt
         {
             '$match': {
@@ -796,7 +796,7 @@ def fraud_detection_feature_extraction_main(mongo_client,
     ])
 
     # 2. load data
-    for document in result:
+    for document in aggregation_cursor:
         # insert documents dynamically by {user_column}, firstSeenAt, lastSeenAt
         mongo_client[target_db][target_collection].update_one(
             {
