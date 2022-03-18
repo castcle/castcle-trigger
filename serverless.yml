@@ -202,6 +202,7 @@ functions:
 
   userClassifyTrainer:
     name: ${self:provider.stage}-mongodb-trigger-user-classify-trainer
+    memorySize: 1024
     warmup:
       default:
         enabled: false
