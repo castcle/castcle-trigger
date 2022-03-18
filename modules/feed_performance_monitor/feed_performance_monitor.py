@@ -116,7 +116,7 @@ def _calculate(joined_df):
             "personalize_content_feed_score_in_percent": round(perC_engaged_score_percent, 2),
             "coldstart_feed_score_in_percent": round(coldS_engaged_score_percent, 2),
             "overall_feed_score_in_percent": round(overall_engaged_score_percent, 2),
-            "calculatedAt": datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
+            "calculatedAt": datetime.now()
         }
     }
 
