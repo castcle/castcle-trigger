@@ -216,6 +216,7 @@ functions:
 
   feedPerformanceMonitorIntf:
     name: ${self:provider.stage}-mongodb-trigger-feed-performance-monitor-intf
+    memorySize: 1024
     warmup:
       default:
         enabled: false
