@@ -50,11 +50,15 @@ def get_feed_data(mongo_client):
         return df
     
     def query_feeditems(mongo_client):
+        from datetime import datetime, timedelta
         cursor = mongo_client['app-db']['feeditems'].aggregate([
             {
                 '$match': {
                     'analytics': {
                         '$exists': True
+                    },
+                    'updatedAt' : {
+                        '$gte': (datetime.utcnow() - timedelta(days=1))
                     }
                 }
             }, {
