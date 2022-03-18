@@ -1,3 +1,4 @@
+import pandas as pd
 from datetime import datetime
 
 
@@ -31,6 +32,8 @@ def fraud_detection_feature_update_main(mongo_client,
             }
         }
     ])
+    print("INFO: updated features")
+    print(pd.DataFrame(list(aggregation_cursor)))
 
     # 2. update features with their verification status
     for document in aggregation_cursor:
