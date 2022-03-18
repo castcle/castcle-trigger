@@ -105,10 +105,16 @@ def _calculate(joined_df):
     overall_count = joined_df.shape[0]
     personal_suggested_count = joined_df.query('source == "personal"').shape[0]
     global_suggested_count = joined_df.query('source == "global"').shape[0]
-    
-    perC_engaged_score_percent = (personal_engaged_count/personal_suggested_count) * 100
-    coldS_engaged_score_percent = (global_engaged_count/global_suggested_count) * 100
-    overall_engaged_score_percent = (overall_engaged_count/overall_count) * 100
+
+    perC_engaged_score_percent = \
+        (personal_engaged_count/personal_suggested_count) * 100 \
+            if personal_suggested_count > 0 else 0
+    coldS_engaged_score_percent = \
+        (global_engaged_count/global_suggested_count) * 100 \
+            if global_suggested_count > 0 else 0
+    overall_engaged_score_percent = \
+        (overall_engaged_count/overall_count) * 100 \
+            if overall_count > 0 else 0
     
     print(f'Personalize content feed suggestions engaged percent: {perC_engaged_score_percent}')
     print(f'Coldstart feed suggestions engaged percent: {coldS_engaged_score_percent}')
