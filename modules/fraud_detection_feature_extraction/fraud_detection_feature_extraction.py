@@ -1,3 +1,6 @@
+import pandas as pd
+
+
 def fraud_detection_feature_extraction_main(mongo_client,
                                             source_db: str = "app-db",
                                             source_collection: str = "feeditems",
@@ -794,6 +797,8 @@ def fraud_detection_feature_extraction_main(mongo_client,
             }
         }
     ])
+    print("INFO: extracted features")
+    print(pd.DataFrame(list(aggregation_cursor)))
 
     # 2. load data
     for document in aggregation_cursor:
