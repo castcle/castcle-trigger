@@ -7,7 +7,7 @@ def get_feed_data(mongo_client):
                 '$match': {
                     'targetRef.$ref': 'content',
                     'updatedAt' : {
-                        '$gte': (datetime.utcnow() - timedelta(days=1)),
+                        '$gte': (datetime.utcnow() - timedelta(days=1))
                     }
                 }
             }, {
