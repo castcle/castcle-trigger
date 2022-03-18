@@ -1,10 +1,14 @@
 def get_feed_data(mongo_client):
     
     def query_content_seen_engaged(mongo_client):
+        from datetime import datetime, timedelta
         cursor = mongo_client['app-db']['engagements'].aggregate([
             {
                 '$match': {
-                    'targetRef.$ref': 'content'
+                    'targetRef.$ref': 'content',
+                    'updatedAt' : {
+                        '$gte': (datetime.utcnow() - timedelta(days=1))
+                    }
                 }
             }, {
                 '$set': {
