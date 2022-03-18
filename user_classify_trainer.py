@@ -18,8 +18,11 @@ def handle(event, context):
     print(json.dumps(event, indent=4))
     print(event)
 
-    # call modules main function
-    user_classify_trainer_main_result = user_classify_trainer_main(mongo_client)
+    try:
+        # call modules main function
+        user_classify_trainer_main_result = user_classify_trainer_main(mongo_client)
+    except Exception as e:
+        print(f'[Exception]: {e}')
 
     print('[INFO] Update model user classify successfully')
 
