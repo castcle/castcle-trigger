@@ -137,12 +137,21 @@ def fraud_detection_model_training_main(mongo_client,
         source_collection=source_collection,
         document_limit=document_limit
     )
+    print("INFO: dataset for training")
+    print(df)
 
     bot_document_count = len(df[df["verificationStatus"] == False])
+    print("INFO: the number of bot documents")
+    print(bot_document_count)
+    print("INFO: N cross validation")
+    print(n_cross_val)
     # case: train a model if the number of bot documents is not less than the n_cross_val
     if bot_document_count >= n_cross_val:
+        print("INFO: the number of bot documents is greater than or equal to N cross validation, start training")
         # 2. train a model
         training_result = train_model(df, features, n_cross_val)
+        print("INFO: trained model and result from training")
+        print(training_result)
 
         # 3. save the training result, including the machine learning artifact
         mongo_client[target_db][target_collection].insert_one(training_result)

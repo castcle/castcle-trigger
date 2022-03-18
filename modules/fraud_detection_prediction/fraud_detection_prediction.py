@@ -229,9 +229,12 @@ def fraud_detection_prediction_main(mongo_client,
         artifact_collection=artifact_collection,
         model_name=model_name
     )
+    print("INFO: ML artifact")
+    print(ml_artifact)
 
     # case: no prediction if an ML artifact does not exist
     if ml_artifact:
+        print("INFO: ML artifact is available, start loading unverified data")
         # 2. load unverified data
         unverified_df = load_unverified_data(
             mongo_client,
@@ -240,18 +243,25 @@ def fraud_detection_prediction_main(mongo_client,
             source_collection=source_collection,
             user_column=user_column
         )
+        print("INFO: unverified data")
+        print(unverified_df)
 
         # case: no prediction if the unverified data is empty
         if not unverified_df.empty:
+            print("INFO: unverified data is not empty, start predicting suspicious users")
             # 3. predict suspicious users from unverified data
             suspicious_df = predict_suspicious_users(
                 unverified_df,
                 ml_artifact,
                 suspicious_class_name="bot_class"
             )
+            print("INFO: suspicious users")
+            print(suspicious_df)
 
             # case: do nothing if there is no suspicious user
             if not suspicious_df.empty:
+                print("INFO: there are suspicious users, start loading verified data to select only unverified or "
+                      "not-on-cooldown suspicious users")
                 # 4. load verified data
                 verified_df = load_verified_data(
                     mongo_client,
@@ -260,6 +270,8 @@ def fraud_detection_prediction_main(mongo_client,
                     source_collection=source_collection,
                     user_column=user_column
                 )
+                print("INFO: verified data")
+                print(verified_df)
 
                 # 5. select only unverified or not-on-cooldown suspicious users
                 unverified_or_not_on_cooldown_suspicious_df = select_only_unverified_or_not_on_cooldown_suspicious_users(
@@ -268,6 +280,8 @@ def fraud_detection_prediction_main(mongo_client,
                     user_column=user_column,
                     pred_cooldown_hours=pred_cooldown_hours
                 )
+                print("INFO: unverified or not-on-cooldown suspicious users")
+                print(unverified_or_not_on_cooldown_suspicious_df)
 
                 # 6. save suspicious data
                 save_suspicious_data(
