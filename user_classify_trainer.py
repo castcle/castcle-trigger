@@ -21,13 +21,17 @@ def handle(event, context):
     try:
         # call modules main function
         user_classify_trainer_main_result = user_classify_trainer_main(mongo_client)
+        print('[INFO] Update model user classify successfully')
+        # return output as status code & timestamp
+        return {
+            "message": "User classify trained",
+            "trained_at": str(datetime.datetime.now())
+        }
     except Exception as e:
         print(f'[Exception]: {e}')
-
-    print('[INFO] Update model user classify successfully')
-
-    # return output as status code & timestamp
-    return {
-        "message": "User classify trained",
-        "trained_at": str(datetime.datetime.now())
-    }
+        print('[Warnning] Warnning!')
+        # return output as status code & timestamp
+        return {
+            "message": "User classify is not trained",
+            "trained_at": str(datetime.datetime.now())
+        }
