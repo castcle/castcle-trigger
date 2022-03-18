@@ -225,7 +225,7 @@ functions:
       command:
         - feed_performance_monitor_intf.handle
     events:
-      - schedule: cron(0 * * * ? *)
+      - schedule: cron(0 6 * * ? *)
 
 
 
