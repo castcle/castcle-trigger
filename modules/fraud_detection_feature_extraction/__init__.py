@@ -1,0 +1,4 @@
+from modules.fraud_detection_feature_extraction.fraud_detection_feature_extraction import \
+    fraud_detection_feature_extraction_main
+
+__all__ = [fraud_detection_feature_extraction_main]
