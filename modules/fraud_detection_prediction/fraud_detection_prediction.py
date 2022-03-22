@@ -84,8 +84,9 @@ def load_unverified_data(mongo_client,
             }
         }
     ])
+    df = pd.DataFrame(list(aggregation_cursor))
 
-    return pd.DataFrame(list(aggregation_cursor))
+    return df if not df.empty else pd.DataFrame(columns=["_id"] + fields)
 
 
 def predict_suspicious_users(df: pd.DataFrame,
@@ -165,8 +166,9 @@ def load_verified_data(mongo_client,
             }
         }
     ])
+    df = pd.DataFrame(list(aggregation_cursor))
 
-    return pd.DataFrame(list(aggregation_cursor))
+    return df if not df.empty else pd.DataFrame(columns=[user_column, "verifiedAt"])
 
 
 def select_only_unverified_or_not_on_cooldown_suspicious_users(suspicious_df: pd.DataFrame,
@@ -175,6 +177,7 @@ def select_only_unverified_or_not_on_cooldown_suspicious_users(suspicious_df: pd
                                                                pred_cooldown_hours: int = 1) -> pd.DataFrame:
     """Select only unverified or not-on-cooldown suspicious users by considering verified suspicious users"""
     suspicious_df = pd.merge(suspicious_df, verified_df, on=user_column, how="left")
+    suspicious_df["verifiedAt"] = pd.to_datetime(suspicious_df["verifiedAt"])
     # to check whether the last verification has been done within {pred_cooldown_hours} hour(s) or not, and select only
     # suspicious users whose last verification occurs more than or equal to {pred_cooldown_hours} hour(s) ago
     suspicious_df["time_diff"] = datetime.now() - suspicious_df["verifiedAt"]
