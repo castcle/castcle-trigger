@@ -33,7 +33,7 @@ def load_dataset(mongo_client,
     ])
     df = pd.DataFrame(list(aggregation_cursor))
 
-    return df if not df.empty else pd.DataFrame(columns=fields)
+    return df if not df.empty else pd.DataFrame(columns=["_id"] + fields)
 
 
 def train_model(df: pd.DataFrame, features: List, n_cross_val: int = 5) -> Dict[str, Any]:

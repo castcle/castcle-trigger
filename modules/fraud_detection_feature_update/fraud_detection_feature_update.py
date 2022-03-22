@@ -32,11 +32,12 @@ def fraud_detection_feature_update_main(mongo_client,
             }
         }
     ])
+    documents = list(aggregation_cursor)
     print("INFO: updated features")
-    print(pd.DataFrame(list(aggregation_cursor)))
+    print(pd.DataFrame(documents))
 
     # 2. update features with their verification status
-    for document in aggregation_cursor:
+    for document in documents:
         # update documents dynamically by {user_column}, firstSeenAt, lastSeenAt
         mongo_client[target_db][target_collection].update_one(
             {
