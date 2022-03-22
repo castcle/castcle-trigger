@@ -191,3 +191,71 @@ This model will be used to ranking/scoring the requested contents based on userâ
     - "trainedAt"
     
 ![Personalized_content](https://user-images.githubusercontent.com/90676485/147532327-d78bc510-9953-4c35-99d8-8953db47cb76.jpg)
+
+## 7. Fraud Detection
+
+### Overview
+
+A bot is a program used to produce automated tasks on a platform or service. Often, it is created for immoral purposes to make trouble for other people or generate fraudulent activities. Detecting and preventing bad bots becomes an essential capability to keep the quality of your platform or service.
+
+To detect bot users in the Castle application, we planned to build a model that can learn user behaviors to gain the ability to be suspicious of the users whose behaviors seem to be a bot and send them to administrators for later verification.
+
+For this feature, we separate the functionality into four parts: feature extraction, model training, prediction, and feature update.
+
+![fraud_detection]()
+
+### Four parts of fraud detection functionality
+
+**1. Feature extraction**
+> For each 500-latest-post reading of a user, we extract all features using descriptive statistics to generate the absolute skewness, absolute kurtosis, and standard deviation (normalized by the mean) of durations of reading a post and durations between pairs of consecutive seen posts. The following are the features extracted from the data:
+> - The absolute skewness of durations of reading a post (postReadingTimeAbsSkew)
+> - The absolute kurtosis of durations of reading a post (postReadingTimeAbsKurt)
+> - The normalized standard deviation of durations of reading a post (postReadingTimeNormStd)
+> - The normalized standard deviation of durations between pairs of consecutive seen posts (postReadingTimeDifferenceNormStd)
+
+**2. Model training**
+> To train a model for this fraud detection task, we use the verified data (the extracted features with verification status from the application) as a dataset for the training process. The algorithm we used to learn the dataset is the one-class classification based on principal component analysis (PCA) by defining the bot cases as inliers. For the human cases, we define them as outliers because they have an inconsistent pattern in the feature space, making it hard to learn a class boundary. In addition, we evaluate the performance of the trained model with the following metrics: accuracy, precision, recall, and f1-score.
+
+**3. Prediction**
+> We use the trained model to detect users whose behaviors are suspected to be a bot and send them to the verification process of the application to determine their status as true (actual bot) or false (false bot).
+
+**4. Feature update**
+> After the verification process by the application, each suspicious user will have the verification status to indicate which one is an actual bot or not. These updates will be valuable feedback and become new complements of the existing dataset used in the model improvement process in the future by retraining the model with a larger and fresher dataset.
+
+### Related data
+
+**1. app-db.feeditems**
+> - seenCredential
+> - seenAt
+> - offScreenAt
+
+**2. analytics-db.credentialfeatures**
+> - seenCredential
+> - firstSeenAt
+> - lastSeenAt
+> - count
+> - postReadingTimeAbsSkew
+> - postReadingTimeAbsKurt
+> - postReadingTimeNormStd
+> - postReadingTimeDifferenceNormStd
+> - verificationStatus
+> - verifiedAt
+> - createdAt
+> - updatedAt
+
+**3. app-db.suspiciouscredentials**
+> - seenCredential
+> - firstSeenAt
+> - lastSeenAt
+> - verificationStatus
+> - verifiedAt
+> - createdAt
+
+**4. analytics-db.frauddetectionmlartifacts**
+> - model
+> - dataset
+> - features
+> - model_classes
+> - artifact
+> - evaluationReport
+> - trainedAt
