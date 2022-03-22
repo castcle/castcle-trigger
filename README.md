@@ -202,7 +202,7 @@ To detect bot users in the Castle application, we planned to build a model that 
 
 For this feature, we separate the functionality into four parts: feature extraction, model training, prediction, and feature update.
 
-![fraud_detection]()
+![fraud_detection_workflow](https://user-images.githubusercontent.com/98333717/159420244-a64a45ef-6bda-4c84-9672-f0618ff7162d.png)
 
 ### Four parts of fraud detection functionality
 
