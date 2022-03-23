@@ -20,6 +20,7 @@ from mongo_client import mongo_client
 import base64
 import boto3
 from langdetect.lang_detect_exception import LangDetectException
+from datetime import datetime
 
 # assign credential for google cloud platform
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = './gcp_data_science_service_account_key.json'
@@ -685,7 +686,8 @@ def upsert_topicId_to_contentinfo(topics_list,
                                         'contentId': _id,
                                         'language': language,
                                         'topics': topic_ids,
-                                        'translatedEN': translatedEN
+                                        'translatedEN': translatedEN,
+                                        'updatedAt': datetime.now()
                                     }}], 
                                     upsert=True) # change to True when using contents
         
@@ -699,7 +701,8 @@ def upsert_topicId_to_contentinfo(topics_list,
                                             '$set': {
                                                 'contentId': _id,
                                                 'language': language,
-                                                'translatedEN': translatedEN
+                                                'translatedEN': translatedEN,
+                                                'updatedAt': datetime.now()
                                             }}], 
                                             upsert=True) # change to True when using contents
     
