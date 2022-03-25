@@ -796,7 +796,7 @@ def fraud_detection_feature_extraction_main(mongo_client,
                 f'{user_column}': 1
             }
         }
-    ])
+    ], allowDiskUse=True)
     documents = list(aggregation_cursor)
     print("INFO: extracted features")
     print(pd.DataFrame(documents))
