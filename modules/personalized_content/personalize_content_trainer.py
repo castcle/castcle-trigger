@@ -76,227 +76,110 @@ def prepare_features(updatedAtThreshold: float,
     content_features = pd.DataFrame(list(mongo_client[analytics_db][content_stats_collection].aggregate(contentFeaturesCursor)))
 
     # define cursor of engagement transaction
-    ''' work around
-        transactionEngagementsCursor = [
-            {   #!
-                # join to map account id
-                '$lookup': {
-                'from': 'users', 
-                'localField': 'user', 
-                'foreignField': '_id', 
-                'as': 'users'
+    transactionEngagementsCursor = [
+        {
+            # join to map account id
+            '$lookup': {
+            'from': 'users', 
+            'localField': 'user', 
+            'foreignField': '_id', 
+            'as': 'users'
+            }
+        }, {
+            # deconstruct users
+            '$unwind': {
+                'path': '$users'
+            }
+        }, {
+            # summarize by pairing of user ID & content ID
+            '$group': {
+                '_id': {
+                    'accountId': '$users.ownerAccount', # change from user id
+                    'contentId': '$targetRef.$id'
+                },
+                'engangements': {
+                    '$push': '$type'
                 }
-            }, {
-                # deconstruct users
-                '$unwind': {
-                    'path': '$users'
-                }
-            }, {
-                # summarize by pairing of user ID & content ID
-                '$group': {
-                    '_id': {
-                        'accountId': '$users.ownerAccount', # change from user id
-                        'contentId': '$targetRef.$id'
-                    },
-                    'engangements': {
-                        '$push': '$type'
+            }
+        }, {
+            # deconstruct for ease of adding fields
+            '$unwind': {
+                'path': '$engangements'
+            }
+        }, {
+            # add fields by matching engagement types
+            '$addFields': {
+                'like': {
+                    '$toInt': {
+                        '$eq': [
+                            '$engangements', 'like'
+                        ]
                     }
-                }
-            }, {
-                # deconstruct for ease of adding fields
-                '$unwind': {
-                    'path': '$engangements'
-                }
-            }, {
-                # add fields by matching engagement types
-                '$addFields': {
-                    'like': {
-                        '$toInt': {
-                            '$eq': [
-                                '$engangements', 'like'
-                            ]
-                        }
-                    },
-                    'comment': {
-                        '$toInt': {
-                            '$eq': [
-                                '$engangements', 'comment'
-                            ]
-                        }
-                    },
-                    'recast': {
-                        '$toInt': {
-                            '$eq': [
-                                '$engangements', 'recast'
-                            ]
-                        }
-                    },
-                    'quote': {
-                        '$toInt': {
-                            '$eq': [
-                                '$engangements', 'quote'
-                            ]
-                        }
+                },
+                'comment': {
+                    '$toInt': {
+                        '$eq': [
+                            '$engangements', 'comment'
+                        ]
                     }
-                }
-            }, {
-                # summarize to merge all added engagement types
-                '$group': {
-                    '_id': '$_id',
-                    'like': {
-                        '$first': '$like'
-                    },
-                    'comment': {
-                        '$first': '$comment'
-                    },
-                    'recast': {
-                        '$first': '$recast'
-                    },
-                    'quote': {
-                        '$first': '$quote'
+                },
+                'recast': {
+                    '$toInt': {
+                        '$eq': [
+                            '$engangements', 'recast'
+                        ]
                     }
-                }
-            }, {
-                # map output format as followed requirement
-                '$project': {
-                    '_id': 0,
-                    'accountId': '$_id.accountId',
-                    'contentId': '$_id.contentId',
-                    'like': '$like',
-                    'comment': '$comment',
-                    'recast': '$recast',
-                    'quote': '$quote',
-                    # alias 'label'
-                    'engagements': {
-                        '$sum': [
-                            '$like', 
-                            '$comment',
-                            '$recast',
-                            '$quote'
+                },
+                'quote': {
+                    '$toInt': {
+                        '$eq': [
+                            '$engangements', 'quote'
                         ]
                     }
                 }
             }
-        ]
-    '''
-    def tmp_transactionEngagementsCursor_to_df() -> pd.DataFrame:
-        #! work around for transactionEngagementsCursor
-        '''
-        Reduce the use of $lookup on mongo
-        '''
-        transactionEngagementsCursor = [
-            {
-                '$group': {
-                    '_id': {
-                        'accountId': '$user', 
-                        'contentId': '$targetRef.$id'
-                    }, 
-                    'engangements': {
-                        '$push': '$type'
-                    }
-                }
-            }, {
-                # deconstruct for ease of adding fields
-                '$unwind': {
-                    'path': '$engangements'
-                }
-            }, {
-                # add fields by matching engagement types
-                '$addFields': {
-                    'like': {
-                        '$toInt': {
-                            '$eq': [
-                                '$engangements', 'like'
-                            ]
-                        }
-                    },
-                    'comment': {
-                        '$toInt': {
-                            '$eq': [
-                                '$engangements', 'comment'
-                            ]
-                        }
-                    },
-                    'recast': {
-                        '$toInt': {
-                            '$eq': [
-                                '$engangements', 'recast'
-                            ]
-                        }
-                    },
-                    'quote': {
-                        '$toInt': {
-                            '$eq': [
-                                '$engangements', 'quote'
-                            ]
-                        }
-                    }
-                }
-            }, {
-                # summarize to merge all added engagement types
-                '$group': {
-                    '_id': '$_id',
-                    'like': {
-                        '$first': '$like'
-                    },
-                    'comment': {
-                        '$first': '$comment'
-                    },
-                    'recast': {
-                        '$first': '$recast'
-                    },
-                    'quote': {
-                        '$first': '$quote'
-                    }
-                }
-            }, {
-                # map output format as followed requirement
-                '$project': {
-                    '_id': 0,
-                    'accountId': '$_id.accountId',
-                    'contentId': '$_id.contentId',
-                    'like': '$like',
-                    'comment': '$comment',
-                    'recast': '$recast',
-                    'quote': '$quote',
-                    # alias 'label'
-                    'engagements': {
-                        '$sum': [
-                            '$like', 
-                            '$comment',
-                            '$recast',
-                            '$quote'
-                        ]
-                    }
+        }, {
+            # summarize to merge all added engagement types
+            '$group': {
+                '_id': '$_id',
+                'like': {
+                    '$first': '$like'
+                },
+                'comment': {
+                    '$first': '$comment'
+                },
+                'recast': {
+                    '$first': '$recast'
+                },
+                'quote': {
+                    '$first': '$quote'
                 }
             }
-        ]
-
-        # assign result to dataframe
-        #! remove $lookup on the first step
-        n_transaction_engagements = pd.DataFrame(list(mongo_client['app-db']['engagements'].aggregate(transactionEngagementsCursor)))
-
-        # get users with .find instead then left join to get 'ownerAccount'
-        users = pd.DataFrame(list(mongo_client['app-db']['users'].find({})))
-        l_j_OwnerAccount = n_transaction_engagements.merge(
-                users[['_id', 'ownerAccount']], 
-                how='left', left_on='accountId', 
-                right_on='_id')\
-                    .dropna()
-        l_j_OwnerAccount['accountId'] = l_j_OwnerAccount['ownerAccount']
-        l_j_OwnerAccount = l_j_OwnerAccount[
-            ['accountId', 'contentId', 
-            'like', 'comment', 
-            'recast', 'quote', 
-            'engagements']
-        ]
-        l_j_OwnerAccount.drop_duplicates()
-        
-        return l_j_OwnerAccount
+        }, {
+            # map output format as followed requirement
+            '$project': {
+                '_id': 0,
+                'accountId': '$_id.accountId',
+                'contentId': '$_id.contentId',
+                'like': '$like',
+                'comment': '$comment',
+                'recast': '$recast',
+                'quote': '$quote',
+                # alias 'label'
+                'engagements': {
+                    '$sum': [
+                        '$like', 
+                        '$comment',
+                        '$recast',
+                        '$quote'
+                    ]
+                }
+            }
+        }
+    ]
 
     # assign result to dataframe
-    transaction_engagements = tmp_transactionEngagementsCursor_to_df()
-#!    transaction_engagements = pd.DataFrame(list(mongo_client[app_db][engagement_collection].aggregate(transactionEngagementsCursor)))
+    transaction_engagements = pd.DataFrame(list(mongo_client[app_db][engagement_collection].aggregate(transactionEngagementsCursor)))
     
     # join together
     transaction_engagements = transaction_engagements.merge(content_features,
