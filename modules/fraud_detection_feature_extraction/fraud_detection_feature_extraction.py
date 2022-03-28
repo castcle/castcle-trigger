@@ -1,6 +1,3 @@
-import pandas as pd
-
-
 def fraud_detection_feature_extraction_main(mongo_client,
                                             source_db: str = "app-db",
                                             source_collection: str = "feeditems",
@@ -796,10 +793,10 @@ def fraud_detection_feature_extraction_main(mongo_client,
                 f'{user_column}': 1
             }
         }
-    ])
+    ], allowDiskUse=True)
     documents = list(aggregation_cursor)
-    print("INFO: extracted features")
-    print(pd.DataFrame(documents))
+    print(f"INFO: the number of documents is {len(documents)}")
+    print(f"INFO: extracted features are {documents}")
 
     # 2. load data
     for document in documents:
