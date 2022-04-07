@@ -21,7 +21,7 @@ def handle(event, context):
                               src_collection_name='contents',
                               dst_database_name='analytics-db',
                               dst_collection_name='contentStats',
-                              contentDateThreshold=30.0, # day unit
+                              contentDateThreshold=7, # day unit
                               likedWeight=1.0,
                               commentedWeight=1.0,
                               recastedWeight=1.0,
