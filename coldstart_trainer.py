@@ -17,7 +17,7 @@ def handle(event, context):
         print("WarmUp - Lambda is warm!")
         return
 
-    from modules.coldstart_prediction.coldstart_trainer import coldstart_train_main
+    from modules.coldstart.coldstart_trainer import coldstart_train_main
     
     print(json.dumps(event, indent=4))
     print(event)
