@@ -322,13 +322,16 @@ def cold_start_by_counytry_modeling(client,
     
     return None
         
-def coldstart_train_main(client):
+def coldstart_train_main(
+    client, 
+    updatedAtThreshold=7.0
+    ):
     
     cold_start_by_counytry_modeling(client,
                                     saved_model = 'mlArtifacts_country',
                                     model_name = 'xgboost',
                                     based_model = 'th',
-                                    updatedAtThreshold = 30.0) 
+                                    updatedAtThreshold = updatedAtThreshold) 
     
 
     
