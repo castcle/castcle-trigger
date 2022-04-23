@@ -25,7 +25,7 @@ def handle(event, context):
     # call modules main function
     coldstart_main_result = coldstart_train_main(
                                 mongo_client,
-                                updatedAtThreshold=7.0
+                                updatedAtThreshold=30.0
                                 )
 
     print('update content statistics start')
