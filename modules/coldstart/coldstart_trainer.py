@@ -7,10 +7,11 @@
 
 
 def cold_start_by_counytry_modeling(client,
+                                    updatedAtThreshold,    
                                     saved_model = 'mlArtifacts_country',
                                     model_name = 'xgboost',
-                                    based_model = 'th',
-                                    updatedAtThreshold = 30.0):    
+                                    based_model = 'th'
+                                    ):
 # import package
     import pandas as pd
     import xgboost as xgb
@@ -324,14 +325,15 @@ def cold_start_by_counytry_modeling(client,
         
 def coldstart_train_main(
     client, 
-    updatedAtThreshold=7.0
+    updatedAtThreshold
     ):
     
     cold_start_by_counytry_modeling(client,
+                                    updatedAtThreshold = updatedAtThreshold,
                                     saved_model = 'mlArtifacts_country',
                                     model_name = 'xgboost',
-                                    based_model = 'th',
-                                    updatedAtThreshold = updatedAtThreshold) 
+                                    based_model = 'th'
+                                    ) 
     
 
     
