@@ -22,7 +22,8 @@ def handle(event, context):
         import topic_classify_main
 
     # call modules main function
-    topic_classify_main(event,   
+    topic_classify_main(event,
+                        mongo_client,   
                         topic_database_name='analytics-db', 
                         topic_collection_name='topics',
                         contents_database_name = 'app-db',

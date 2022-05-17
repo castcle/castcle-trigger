@@ -708,8 +708,24 @@ def upsert_topicId_to_contentinfo(topics_list,
     
     return None
 
+def _check_contentId_exists(event, mongo_client) -> bool:
+    '''
+        Check if the contentId exists in contentInfo
+    '''
+    contentId = ObjectId(event['detail']['fullDocument']['_id'])
+    length_query_result = len(list(mongo_client['app-db']['analytics-db'].find({
+        'contentId': contentId
+    })))
+
+    if length_query_result != 0:
+        return True
+    else:
+        return False
+
+
 # define main function
-def topic_classify_main(event,   
+def topic_classify_main(event,
+                        mongo_client,
                         topic_database_name:str, 
                         topic_collection_name:str,
                         contents_database_name:str,
@@ -721,6 +737,11 @@ def topic_classify_main(event,
     2. detect topics & language
     3. upsert to databases
     ''' 
+
+    is_exists = _check_contentId_exists(event, mongo_client)
+    if is_exists:
+        print(f"This contentId already exists in contentInfo: {event['detail']['fullDocument']['_id']}")
+        return None
 
     logging.info("Start topic classification")
     
