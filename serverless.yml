@@ -113,8 +113,11 @@ functions:
         - content_stats_update.handle
     events:
       - schedule: cron(*/5 * * * ? *)
+
+
   creatorStatsUpdate:
     name: ${self:provider.stage}-mongodb-trigger-creator-stats-update
+    enabled: true
     warmup:
       default:
         enabled: false
