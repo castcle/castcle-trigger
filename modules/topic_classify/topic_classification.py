@@ -749,6 +749,7 @@ def topic_classify_main(event,
     logging.debug('debug 1')
     
     ## perform ingest data
+    print('data_ingest :', event) #!! checkpoint
     reformatted_dataframe = data_ingest(event)
 
     print('input data:', reformatted_dataframe) #!! checkpoint
