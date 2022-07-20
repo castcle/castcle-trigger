@@ -152,6 +152,20 @@ functions:
           pattern:
             account:
               - "044086777883"
+
+  topicClassificationV2:
+    name: ${self:provider.stage}-mongodb-trigger-topic-classificati-v2
+    memorySize: 2048
+    warmup:
+      default:
+        enabled: false
+    image:
+      name: app_image
+      command:
+        - topic_classification_v2.handle
+    events:
+      - schedule: cron(0 */12 * * ? *)
+
   personalizeContentTrainer:
     name: ${self:provider.stage}-mongodb-trigger-personalize-content-trainer
     warmup:
