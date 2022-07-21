@@ -33,7 +33,7 @@ def update_topic(
     Update columns instend insert
     """
     filter = { 'contentId': contentId}
-    print(filter)
+    #print(filter)
     # Values to be updated.
     newvalues = { "$set": {
                 'topic_classify': {'class':topic,'score':score}
@@ -93,12 +93,12 @@ def topic_classify_main(
     # retrive content 
     mycol_contentfiltering = client[target_db][target_collection]
     mycol_contentfiltering = list(mycol_contentfiltering.aggregate([
-                        {'$match': {'topic': None}}, 
-                            {'$project': {'_id':0, 'contentId':1, 'massageInEN':1, 'topic':1}}
+                        {'$match': {'topic_classify': None}}, 
+                            {'$project': {'_id':0, 'contentId':1, 'massageInEN':1, 'topic_classify':1}}
                             ,{'$limit':100000}
                                                             ]))
     mycol_contentfiltering_df = pd.DataFrame(mycol_contentfiltering)
-    mycol_contentfiltering_df['topic'] = None
+    mycol_contentfiltering_df['topic_classify'] = None
     mycol_contentfiltering_df['massageInEN'] = mycol_contentfiltering_df['massageInEN'].apply(clean_text)
     mycol_contentfiltering_df = mycol_contentfiltering_df.rename(columns={'contentID': 'contentId'})
     print("Query content filtering that not have topic.")
