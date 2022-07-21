@@ -36,8 +36,7 @@ def update_topic(
     print(filter)
     # Values to be updated.
     newvalues = { "$set": {
-                'topic': topic,
-                'score': score
+                'topic_classify': {'class':topic,'score':score}
                 }}
 
     # Using update_one() method for single
@@ -120,7 +119,7 @@ def topic_classify_main(
                 topic = 'etc'
                 score = 0.0
             #print(contentId, topic, score)
-            update_topic(contentId, topic, score, client)
+            update_topic(contentId, topic, score, client, target_db, target_collection)
         except Exception as e: 
             print('error content:', contentId)
             print(e)
