@@ -16,7 +16,7 @@ def handle(event, context):
 
     from modules.update_content_stats.update_content_stats import update_content_stats_main
 
-    # call modules main function
+    # call modules main function 
     update_content_stats_main(src_database_name='app-db',
                               src_collection_name='contents',
                               dst_database_name='analytics-db',
