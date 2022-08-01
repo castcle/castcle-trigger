@@ -1,9 +1,8 @@
 """
-fraud detection feature extractor
+suggest services default content for user have no relationship
 function
-    extract features from historical activities of each credential then insert into the credentialfeatures
-    and will be used for prediction
-    run every 5 minutes cron(*/5 * * * ? *)
+    calculate popularity model for content for each country then insert data to default guest db and will be used for prediction
+    run every 1 day cron(0 0 * * *)
 """
 
 from mongo_client import mongo_client, ping_mongodb
@@ -15,7 +14,7 @@ def handle(event, context):
         print("WarmUp - Lambda is warm!")
         return
 
-    print("fraud detection feature extractor start")
+    print("suggest services default content start")
 
     try:
         from modules.suggest_services_default_content import suggest_services_default_content_main
@@ -26,4 +25,4 @@ def handle(event, context):
     except Exception as e:
         print(f"ERROR: {e}")
 
-    print("fraud detection feature extractor end")
+    print("suggest services default content end")
