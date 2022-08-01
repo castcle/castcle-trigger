@@ -17,7 +17,7 @@ def handle(event, context):
     print("suggest services default content start")
 
     try:
-        from modules.suggest_services_default_content import suggest_services_default_content_main
+        from modules.suggest_services.suggest_services_default_content import suggest_services_default_content_main
 
         suggest_services_default_content_main(
             mongo_client
