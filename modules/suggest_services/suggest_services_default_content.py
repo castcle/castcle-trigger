@@ -67,7 +67,7 @@ def suggest_services_default_content_main(mongo_client):
   df = polularity_database(mongo_client)
   updates = []
   for _, row in df.iterrows():
-      updates.append(UpdateOne({'_id': row.get('_id')}, {'$set': {'eventStrength': row.get('eventStrength'),'countryCode': row.get('countryCode'),'createdAt': row.get('createdAt'),'type': row.get('type'),'score': row.get('score'),}}, upsert=True))
+      updates.append(UpdateOne({'_id': row.get('_id')}, {'$set': {'eventStrength': row.get('eventStrength'),'countryCode': row.get('countryCode'),'createdAt': row.get('createdAt'),'type': row.get('type'),'score': row.get('score'),'originalId': row.get('originalId')}}, upsert=True))
   
   col = mongo_client['analytics-db']['default_guest']
   col.bulk_write(updates)
