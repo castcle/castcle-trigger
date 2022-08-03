@@ -17,26 +17,37 @@ def polularity_database(mongo_client):
     # agg engagements and contents, then group by total_type, total_user to send informayion to api 
   query_data_content = list(mycol_engagements.aggregate([
             {'$match': { 'visibility': "publish" }},
-            { '$match':{'$expr': {'$lt': ["$createdAt",
-                                { '$dateSubtract': { 'startDate': "$$NOW", 'unit': "day", 'amount': 7 }}]}}},
-            { '$addFields': {'comment': '$engagements.comment.count','like': '$engagements.like.count','quote': '$engagements.quote.count','recast': '$engagements.recast.count',}},
-            {'$project': {'_id' : 1, 'author':1,'comment':1 , 'like':1 ,  'quote':1 ,  'recast':1 , 'createdAt':1,'type':1}},
+            {'$match':{'$expr': {'$lt': ["$createdAt",
+                              { '$dateSubtract': { 'startDate': "$$NOW", 'unit': "day", 'amount': 7 }}]}}},
+            {'$addFields': {'comment': '$engagements.comment.count','like': '$engagements.like.count','quote': '$engagements.quote.count','recast': '$engagements.recast.count',}},
+            {'$project': {'_id' : 1, 'author':1,'comment':1 , 'like':1 ,  'quote':1 ,  'recast':1 , 'createdAt':1,'type':1,'isRecast':1,'originalPost':1}},
+            { 
+              '$addFields': { 
+                  'originalId': { 
+                    '$cond': [ 
+                        
+                        { '$eq': [ "isRecast", True] }
+                        , '$originalPost._id' , '$_id' 
+                    ] 
+                  } 
+              } 
+            },
             {'$lookup': {
                         'from': 'users',
                         'localField': 'author.id',
                         'foreignField': '_id',
                         'as': 'user_relationship_all'
                     }},
-            {'$project': {'_id' : 1 ,'user_relationship_all.ownerAccount':1,'createdAt':1,'type':1,'payload':1,'comment':1 , 'like':1 ,  'quote':1 ,  'recast':1 }},
+            {'$project': {'_id' : 1 ,'user_relationship_all.ownerAccount':1,'createdAt':1,'type':1,'payload':1,'comment':1 , 'like':1 ,  'quote':1 ,  'recast':1 ,'originalId':1}},
             {'$lookup': {
-                'from': 'accounts',
-                'localField': 'user_relationship_all.ownerAccount',
-                'foreignField': '_id',
-                'as': 'content_relationship_all'
-            }},
-            { '$addFields': {'message': '$payload.message','continentCode': '$content_relationship_all.geolocation.continentCode','countryCode': '$content_relationship_all.geolocation.countryCode'}},
-            {'$project': {'_id' : 1 ,'author.id':1,'createdAt':1,'type':1,'message':1,'continentCode':1,'countryCode':1,'comment':1 , 'like':1 ,  'quote':1 ,  'recast':1}},
-            ])) 
+                  'from': 'accounts',
+                  'localField': 'user_relationship_all.ownerAccount',
+                  'foreignField': '_id',
+                  'as': 'content_relationship_all'
+              }},
+              { '$addFields': {'message': '$payload.message','continentCode': '$content_relationship_all.geolocation.continentCode','countryCode': '$content_relationship_all.geolocation.countryCode'}},
+              {'$project': {'_id' : 1 ,'author.id':1,'createdAt':1,'type':1,'message':1,'continentCode':1,'countryCode':1,'comment':1 , 'like':1 ,  'quote':1 ,  'recast':1,'originalId':1}}
+          ])) 
   df = pd.DataFrame(query_data_content)
   df1=  df.copy()
   df1['comment'] =df1['comment'].mul(1.5)
@@ -46,7 +57,7 @@ def polularity_database(mongo_client):
   df1['continentCode'] = df1.loc[:,'continentCode'].apply(lambda x: str(x).strip("[']"))
   df1['countryCode'] = df1.loc[:,'countryCode'].apply(lambda x: str(x).strip("[']"))
   df1['eventStrength']= df1.loc[:,('comment', 'like','quote', 'recast')].sum(axis=1)
-  item_popularity_df = df1[['_id','eventStrength','countryCode','createdAt','type']]
+  item_popularity_df = df1[['_id','eventStrength','countryCode','createdAt','type','originalId']]
   item_popularity_df['score']= item_popularity_df['eventStrength'] / item_popularity_df.groupby('countryCode')['eventStrength'].transform('sum')
   item_popularity_df = item_popularity_df.round(6)
   return item_popularity_df
