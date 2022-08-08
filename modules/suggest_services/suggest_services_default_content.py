@@ -17,7 +17,7 @@ def polularity_database(mongo_client):
     # agg engagements and contents, then group by total_type, total_user to send informayion to api 
   query_data_content = list(mycol_engagements.aggregate([
             {'$match': { 'visibility': "publish" }},
-            {'$match':{'$expr': {'$lt': ["$createdAt",
+            {'$match':{'$expr': {'$gte': ["$createdAt",
                               { '$dateSubtract': { 'startDate': "$$NOW", 'unit': "day", 'amount': 7 }}]}}},
             {'$addFields': {'comment': '$engagements.comment.count','like': '$engagements.like.count','quote': '$engagements.quote.count','recast': '$engagements.recast.count',}},
             {'$project': {'_id' : 1, 'author':1,'comment':1 , 'like':1 ,  'quote':1 ,  'recast':1 , 'createdAt':1,'type':1,'isRecast':1,'originalPost':1}},
