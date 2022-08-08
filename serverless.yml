@@ -243,7 +243,7 @@ functions:
       command:
         - suggest_services_default_content.handle
     events:
-      - schedule: cron(*/5 * * * ? *)
+      - schedule: cron(0 */1 * * ? *)
 
 
 #fraudDetection
