@@ -45,8 +45,8 @@ def polularity_database(mongo_client):
                   'foreignField': '_id',
                   'as': 'content_relationship_all'
               }},
-              { '$addFields': {'message': '$payload.message','continentCode': '$content_relationship_all.geolocation.continentCode','countryCode': '$content_relationship_all.geolocation.countryCode'}},
-              {'$project': {'_id' : 1 ,'author.id':1,'createdAt':1,'type':1,'message':1,'continentCode':1,'countryCode':1,'comment':1 , 'like':1 ,  'quote':1 ,  'recast':1,'originalId':1}}
+              { '$addFields': {'message': '$payload.message','continentCode': '$content_relationship_all.geolocation.continentCode','countryCode': '$content_relationship_all.geolocation.countryCode','languages': '$content_relationship_all.preferences.languages'}},
+              {'$project': {'_id' : 1 ,'author.id':1,'createdAt':1,'type':1,'message':1,'continentCode':1,'countryCode':1,'comment':1 , 'like':1 ,  'quote':1 ,  'recast':1,'originalId':1,'languages':1}}
           ])) 
   df = pd.DataFrame(query_data_content)
   df1=  df.copy()
@@ -56,9 +56,10 @@ def polularity_database(mongo_client):
   df1['recast'] =df1['recast'].mul(2.0)
   df1['continentCode'] = df1.loc[:,'continentCode'].apply(lambda x: str(x).strip("[']"))
   df1['countryCode'] = df1.loc[:,'countryCode'].apply(lambda x: str(x).strip("[']"))
+  df1['languages'] = df1.loc[:,'languages'].apply(lambda x: str(x).strip("[']"))
   df1['eventStrength']= df1.loc[:,('comment', 'like','quote', 'recast')].sum(axis=1)
-  item_popularity_df = df1[['_id','eventStrength','countryCode','createdAt','type','originalId']]
-  item_popularity_df['score']= item_popularity_df['eventStrength'] / item_popularity_df.groupby('countryCode')['eventStrength'].transform('sum')
+  item_popularity_df = df1[['_id','eventStrength','countryCode','createdAt','type','originalId','languages']]
+  item_popularity_df['score']= item_popularity_df['eventStrength'] / item_popularity_df.groupby('languages')['eventStrength'].transform('sum')
   item_popularity_df = item_popularity_df.round(6)
   return item_popularity_df
   
@@ -67,8 +68,7 @@ def suggest_services_default_content_main(mongo_client):
   df = polularity_database(mongo_client)
   updates = []
   for _, row in df.iterrows():
-      updates.append(UpdateOne({'_id': row.get('_id')}, {'$set': {'eventStrength': row.get('eventStrength'),'countryCode': row.get('countryCode'),'createdAt': row.get('createdAt'),'type': row.get('type'),'score': row.get('score'),'originalId': row.get('originalId')}}, upsert=True))
-  
+    updates.append(UpdateOne({'_id': row.get('_id')}, {'$set': {'eventStrength': row.get('eventStrength'),'countryCode': row.get('countryCode'),'createdAt': row.get('createdAt'),'type': row.get('type'),'score': row.get('score'),'languages': row.get('languages'),'originalId': row.get('originalId')}}, upsert=True))
   col = mongo_client['analytics-db']['default_guest']
   col.bulk_write(updates)
   return None
