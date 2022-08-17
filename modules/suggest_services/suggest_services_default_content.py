@@ -7,6 +7,7 @@ from logging.config import dictConfig
 import json
 from mongo_client import mongo_client
 from bson.objectid import ObjectId
+from sklearn.preprocessing import MinMaxScaler
 import os
 import random
 
@@ -134,7 +135,7 @@ def process_na(interactions_full_df: pd.DataFrame,con_data: pd.DataFrame):
     train['continentCode'] = train.loc[:,'continentCode'].apply(lambda x: str(x).strip("[']"))
     train['language'] = train['language'].fillna('en')
     return train
-    
+
 def Popularity(train: pd.DataFrame, condition: str):
   #Computes the most popular items
   train_C = train.groupby(['contentId','title',f'{condition}']).agg({'timestamp':  'max', 'eventStrength': 'sum'}).sort_values(ascending=False,by=['eventStrength']).reset_index()
