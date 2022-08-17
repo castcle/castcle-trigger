@@ -134,6 +134,17 @@ def process_na(interactions_full_df: pd.DataFrame,con_data: pd.DataFrame):
     train['continentCode'] = train.loc[:,'continentCode'].apply(lambda x: str(x).strip("[']"))
     train['language'] = train['language'].fillna('en')
     return train
+    
+def Popularity(train: pd.DataFrame, condition: str):
+  #Computes the most popular items
+  train_C = train.groupby(['contentId','title',f'{condition}']).agg({'timestamp':  'max', 'eventStrength': 'sum'}).sort_values(ascending=False,by=['eventStrength']).reset_index()
+  columnsC = [f'{condition}']
+  train_C['model'] = train_C[columnsC].to_dict(orient='records')
+  train_C['updatedAt'] = pd.Timestamp.now()  
+  # ก่อนทำต้องเลือกข้อมูลมาก่อน
+  scaler = MinMaxScaler()
+  train_C['score'] = scaler.fit_transform(train_C[['eventStrength']])
+  return train_C
 
 def suggest_services_default_content_main(mongo_client):
     interactions_df= query_engage(mongo_client)
