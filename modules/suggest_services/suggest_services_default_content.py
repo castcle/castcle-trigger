@@ -9,6 +9,7 @@ from logging.config import dictConfig
 import json
 from mongo_client import mongo_client
 from bson.objectid import ObjectId
+from sklearn.preprocessing import MinMaxScaler
 import os
 import random
 
@@ -63,6 +64,17 @@ def polularity_database(mongo_client):
   item_popularity_df = item_popularity_df.round(6)
   return item_popularity_df
   
+
+def Popularity(train: pd.DataFrame, condition: str):
+  #Computes the most popular items
+  train_C = train.groupby(['contentId','title',f'{condition}']).agg({'timestamp':  'max', 'eventStrength': 'sum'}).sort_values(ascending=False,by=['eventStrength']).reset_index()
+  columnsC = [f'{condition}']
+  train_C['model'] = train_C[columnsC].to_dict(orient='records')
+  train_C['updatedAt'] = pd.Timestamp.now()  
+  # ก่อนทำต้องเลือกข้อมูลมาก่อน
+  scaler = MinMaxScaler()
+  train_C['score'] = scaler.fit_transform(train_C[['eventStrength']])
+  return train_C
 
 def suggest_services_default_content_main(mongo_client):
   df = polularity_database(mongo_client)
