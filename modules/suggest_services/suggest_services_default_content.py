@@ -164,6 +164,7 @@ def suggest_services_default_content_main(mongo_client):
 
   final =  pd.concat([train_C[list_col_for_final],train_L[list_col_for_final]]).reset_index(drop=True)
   final['updatedAt'] = pd.Timestamp.now()  
+  final['score'] = final['score'].round(4)
   df = final
   updates = []
   for _, row in df.iterrows():
