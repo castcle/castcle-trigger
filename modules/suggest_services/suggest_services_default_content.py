@@ -165,10 +165,8 @@ def suggest_services_default_content_main(mongo_client):
   final =  pd.concat([train_C[list_col_for_final],train_L[list_col_for_final]]).reset_index(drop=True)
   final['updatedAt'] = pd.Timestamp.now()  
   final['score'] = final['score'].round(4)
-  df = final
-  updates = []
-  for _, row in df.iterrows():
-      updates.append(UpdateOne({'_id': row.get('contentId')}, {'$set': {'contentId': row.get('contentId'),'title': row.get('title'),'timestamp': row.get('timestamp'),'eventStrength': row.get('eventStrength'),'model': row.get('model'),'score': row.get('score'),'updatedAt': row.get('updatedAt')}}, upsert=True))
-  col = mongo_client['analytics-db']['default_guest']
-  col.bulk_write(updates)
+  df = final.drop_duplicates(subset= ['contentId']).reset_index(drop=True)
+  db = mongo_client['analytics-db']['default_guest']
+  db.delete_many({})
+  db.insert_many(df.to_dict("records"))
   return None
