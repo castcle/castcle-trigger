@@ -1,4 +1,3 @@
-import joblib
 import pandas as pd
 from pymongo import MongoClient , UpdateOne
 import pandas as pd
@@ -39,6 +38,7 @@ def query_engage(client):
 def query_contents(client):
   mycol_engagements = client['app-db']['contents']
   query_content= list(mycol_engagements.aggregate([  
+                      {'$match': { 'visibility': "publish" }},
 #                       {'$match':{'$expr': {'$gte': ["$createdAt",
 #                                   { '$dateSubtract': { 'startDate': "$$NOW", 'unit': "day", 'amount': 14 }}]}}},
                       {'$project': {'_id' : 1 ,'author.id':1,'createdAt':1,'type':1,'payload':1,'originalId':1}},
