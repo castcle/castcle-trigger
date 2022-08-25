@@ -48,7 +48,7 @@ def query_contents(client):
                           'foreignField': '_id',
                           'as': 'user_relationship_all'
                       }},
-                      {'$project': {'_id' : 1 ,'user_relationship_all.ownerAccount':1,'createdAt':1,'type':1,'payload':1,'originalId':1}},
+                      {'$project': {'_id' : 1 ,'user_relationship_all.ownerAccount':1,'createdAt':1,'type':1,'payload':1,'originalId':1,'author.id':1}},
                       {'$lookup': {
                           'from': 'accounts',
                           'localField': 'user_relationship_all.ownerAccount',
@@ -56,14 +56,14 @@ def query_contents(client):
                           'as': 'content_relationship_all'
                       }},
                       # {'$unwind': '$content_relationship_all'},
-                      { '$addFields': {'message': '$payload.message','continentCode': '$content_relationship_all.geolocation.continentCode','countryCode': '$content_relationship_all.geolocation.countryCode'}},
+                      { '$addFields': {'message': '$payload.message','continentCode': '$content_relationship_all.geolocation.continentCode','countryCode': '$content_relationship_all.geolocation.countryCode','author':'$author.id' }},
                       # {'$unwind': '$content_relationship_all'},
-                      {'$project': {'_id' : 1 ,'createdAt':1,'type':1,'message':1,'continentCode':1,'countryCode':1,'originalId':1}},  
+                      {'$project': {'_id' : 1 ,'createdAt':1,'type':1,'message':1,'continentCode':1,'countryCode':1,'originalId':1,'author':1}},  
 
   ])) 
   df = pd.DataFrame(query_content)
-  df = df.rename(columns = {'_id':'contentId', 'type': 'content_type','message':'message','createdAt':'createdAt','continentCode':'continentCode','countryCode':'countryCode','originalId':'originalId'})
-#   df.columns = ['contentId','content_type','createdAt','message','continentCode','countryCode']
+  
+  df = df.rename(columns = {'_id':'contentId'})
   list_ob =list([d['_id'] for d in query_content])
   mycol_default_guest= client['analytics-db']['contentfiltering']
       # agg engagements and contents, then group by total_type, total_user to send informayion to api 
@@ -72,8 +72,7 @@ def query_contents(client):
                         { '$match': {'contentId': { '$in': list_ob }}},
                       { '$addFields': {'class': '$topic_classify.class'}},
                         {'$project': {'contentId' : 1,'language': 1 ,'class':1}},
-  #                       { '$sort': { 'score': -1 } },
-                        # { '$limit': maxResults}
+
                         ]))  
   more_content= pd.DataFrame(query_default_guest)
   dat_final= df.merge(more_content, on='contentId', how='left')
@@ -81,9 +80,10 @@ def query_contents(client):
 
 def precess_ingest(articles_df: pd.DataFrame,interactions_df: pd.DataFrame):
   # clean articles_df
-  articles_df.columns = ['contentId', 'content_type', 'createdAt', 'title', 'continentCode','countryCode','_id','language','class']
+  articles_df = articles_df.rename(columns = {'contentId':'contentId', 'type': 'content_type','message':'title','createdAt':'createdAt','continentCode':'continentCode','countryCode':'countryCode','originalId':'originalId','author':'author'})
   articles_df = articles_df.dropna(subset = ['title','_id'])
   articles_df['contentId']= articles_df.loc[:,'contentId'].apply(lambda x: ''.join(str(x)))
+  articles_df['author']= articles_df.loc[:,'author'].apply(lambda x: ''.join(str(x)))
 
   # clean interaction
   interactions_df['personId']= interactions_df['personId'].apply(lambda x: ''.join(str(x)))
@@ -128,7 +128,7 @@ def precess_ingest(articles_df: pd.DataFrame,interactions_df: pd.DataFrame):
   return interactions_full_df, con_data
 
 def process_na(interactions_full_df: pd.DataFrame,con_data: pd.DataFrame):
-  train = interactions_full_df.merge(con_data[['contentId', 'content_type', 'createdAt', 'title', 'continentCode','countryCode', 'language', 'class']], how="left", on='contentId')
+  train = interactions_full_df.merge(con_data[['contentId', 'content_type', 'createdAt', 'title', 'continentCode','countryCode', 'language', 'class','author']], how="left", on='contentId')
   train['countryCode'] = train.loc[:,'countryCode'].apply(lambda x: str(x).replace("[]",'us'))
   train['countryCode'] = train.loc[:,'countryCode'].apply(lambda x: str(x).strip("[']"))
   train['continentCode'] = train.loc[:,'continentCode'].apply(lambda x: str(x).replace("[]",'us'))
@@ -138,7 +138,7 @@ def process_na(interactions_full_df: pd.DataFrame,con_data: pd.DataFrame):
 
 def Popularity(train: pd.DataFrame, condition: str):
   #Computes the most popular items
-  train_C = train.groupby(['contentId','title',f'{condition}']).agg({'timestamp':  'max', 'eventStrength': 'sum'}).sort_values(ascending=False,by=['eventStrength']).reset_index()
+  train_C = train.groupby(['contentId','title',f'{condition}']).agg({'author':  'max','timestamp':  'max', 'eventStrength': 'sum'}).sort_values(ascending=False,by=['eventStrength']).reset_index()
   columnsC = [f'{condition}']
   train_C['model'] = train_C[columnsC].to_dict(orient='records')
   train_C['updatedAt'] = pd.Timestamp.now()  
@@ -160,7 +160,7 @@ def suggest_services_default_content_main(mongo_client):
 
   train_L = Popularity(train, condition= 'language')
 
-  list_col_for_final = ['contentId', 'title', 'timestamp', 'eventStrength','model', 'score']
+  list_col_for_final = ['contentId', 'title', 'timestamp', 'eventStrength','model', 'score','author']
 
   final =  pd.concat([train_C[list_col_for_final],train_L[list_col_for_final]]).reset_index(drop=True)
   final['updatedAt'] = pd.Timestamp.now()  
