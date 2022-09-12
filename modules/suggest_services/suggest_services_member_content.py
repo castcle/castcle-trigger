@@ -46,7 +46,7 @@ def query_engage(client):
   mycol_engagements = client['app-db']['engagements']
   query_engagements = list(mycol_engagements.aggregate([
                       {'$match':{'$expr': {'$gte': ["$createdAt",
-                                  { '$dateSubtract': { 'startDate': "$$NOW", 'unit': "month", 'amount': 4 }}]}}},
+                                  { '$dateSubtract': { 'startDate': "$$NOW", 'unit': "month", 'amount': 2 }}]}}},
                       {'$project': {'_id' : 1 ,'user' : 1 ,'targetRef':1,'type':1,'createdAt':1}}
   ])) 
   print(len(query_engagements))
@@ -223,16 +223,21 @@ def suggest_content_member_main(mongo_client):
 
     ae.compile(loss = 'mse',optimizer='adam')
 
-    ModelCheckpoint = tf.keras.callbacks.ModelCheckpoint
-    load_model = tf.keras.models.load_model
+    def get_callbacks():
+      """
+      This function should create and return a tuple (early_stopping, learning_rate_reduction) callbacks.
+      The callbacks should be instantiated according to the above requirements.
+      """
+      early_stopping = tf.keras.callbacks.EarlyStopping(patience=100, mode='min',monitor='val_loss')
+      learning_rate_reduction = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.2,
+                                patience=5,min_lr=1e-5)
+      return early_stopping, learning_rate_reduction #, model_checkpoint_callback    
 
-    filename = 'model.h5'
-    checkpoint = ModelCheckpoint(filename, monitor='val_loss', verbose =1 , save_best_only=True, mode='min')
+    early_stopping, learning_rate_reduction = get_callbacks() 
+    history=ae.fit(x_train,x_train,epochs=50, batch_size=32,
+                      validation_data =(x_val,y_val) , callbacks = [early_stopping, learning_rate_reduction], shuffle =True)
 
-    history=ae.fit(x_train,x_train,epochs=10, batch_size=32,
-                      validation_data =(x_val,y_val) , callbacks = [checkpoint], shuffle =True)
-
-
+  
     preds = ae(users_items_pivot_matrix_df)
 
     preds = preds.numpy()
