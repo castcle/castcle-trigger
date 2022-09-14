@@ -46,7 +46,7 @@ def query_engage(client):
   mycol_engagements = client['app-db']['engagements']
   query_engagements = list(mycol_engagements.aggregate([
                       {'$match':{'$expr': {'$gte': ["$createdAt",
-                                  { '$dateSubtract': { 'startDate': "$$NOW", 'unit': "month", 'amount': 2 }}]}}},
+                                  { '$dateSubtract': { 'startDate': "$$NOW", 'unit': "month", 'amount': 4}}]}}},
                       {'$project': {'_id' : 1 ,'user' : 1 ,'targetRef':1,'type':1,'createdAt':1}}
   ])) 
   print(len(query_engagements))
@@ -249,7 +249,7 @@ def suggest_content_member_main(mongo_client):
     preds_df.columns = ['user','content', 'score']
 
     df = preds_df.reset_index()
-    df['updatedAt'] = pd.Timestamp.now()  
+    # df['updatedAt'] = pd.Timestamp.now()  
     db = mongo_client['analytics-db']['results_recommend']
     db.delete_many({})
     db.insert_many(df.to_dict("records"))
