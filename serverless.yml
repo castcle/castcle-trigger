@@ -235,6 +235,31 @@ functions:
     events:
       - schedule: cron(0 6 * * ? *)
 
+  suggestServicesDefaultContent:
+    name: ${self:provider.stage}-mongodb-trigger-suggest-services-default-content
+    memorySize: 1024
+    warmup:
+      default:
+        enabled: false
+    image:
+      name: app_image
+      command:
+        - suggest_services_default_content.handle
+    events:
+      - schedule: cron(0 */1 * * ? *)
+
+  suggestServicesMemberContent:
+    name: ${self:provider.stage}-mongodb-trigger-suggest-services-member-content
+    memorySize: 1024
+    warmup:
+      default:
+        enabled: false
+    image:
+      name: app_image
+      command:
+        - suggest_services_member_content.handle
+    events:
+      - schedule: cron(0 */1 * * ? *)
 
 
 #fraudDetection
