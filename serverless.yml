@@ -237,7 +237,7 @@ functions:
 
   suggestServicesDefaultContent:
     name: ${self:provider.stage}-mongodb-trigger-suggest-services-default-content
-    memorySize: 1024
+    memorySize: 2048
     warmup:
       default:
         enabled: false
@@ -250,7 +250,7 @@ functions:
 
   suggestServicesMemberContent:
     name: ${self:provider.stage}-mongodb-trigger-suggest-services-member-content
-    memorySize: 1024
+    memorySize: 2048
     warmup:
       default:
         enabled: false
